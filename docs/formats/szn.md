@@ -66,7 +66,7 @@ zusätzlich den Anzeigetext aus `[AREA_TEXT]` der `LocNN.GER` (ger.md).
 | `Filename` | String | – | Figurenanimation (`.a16`), `FUN_0044a770` |
 | `Type` | Int | 0 | Figurentyp; existiert bereits eine Figur mit anderem Typ (`+0x6BB*4`), wird sie zerstört und neu erzeugt. In den Daten: 1, 2, 12 |
 | `SFXLeft`, `SFXRight`, `SFXAlt` | String | NULL | Schrittgeräusche; nur wenn `SFXLeft` gesetzt, `FUN_0044a8f0` |
-| `PerCor` | Int | 100 | bei Figur `+0x16EC` (Perspektivkorrektur?, UNVERIFIED); kommt in keiner Datei vor |
+| `PerCor` | Int | 100 | Figur `+0x16EC`: Prozentfaktor nur für den **senkrechten** Laufschritt (siehe unten); kommt in keiner Datei vor → immer 100 = wirkungslos |
 | `RedAdd`, `GreenAdd`, `BlueAdd` | Int | 0 | Farbaddition (Tönung), `FUN_004473e0`; Werte auch negativ |
 | `RedAddN`, `GreenAddN`, `BlueAddN`, `ColorAddXN`, `ColorAddYN`, `ColorAddRangeN` | Int | 0 | N = 1…10: ortsabhängige Tönung; `ColorAddRangeN ≠ 0` setzt Flag `+0x16D4` |
 | `X`, `Y` | Int | 0 | Startposition, vtable `+0x14` |
@@ -91,6 +91,20 @@ Schlüssel gelesen werden (ein Puffer für alle Aufrufe). Ablauf je Figur:
    Ohne Wegkarte bleibt `+0x16E0` unverändert.
 8. `ZoomVal` (Vorgabe 0) → `+0x16E8`; Sektionsname nach `+0x15C` kopiert;
    `SetPos(X, Y)` (Slot `+0x14`), Slot `+0x24(0)`; `Direction` → `+0x15CC`, `FUN_00435b80`.
+
+### Laufschritt und `PerCor` (`CActor_Update` `0x00435340`, `0x0043551F`–`0x00435616`)
+Pro Schritt in Richtung `d` (0–7) mit den Tabellen `dx[d]` (`+0x1720`) und `dy[d]`
+(`+0x18A0`) und der Ebenenskala `zoom` (`+0x28`, double):
+```
+sx = dx[d] · zoom · 0.01
+sy = (PerCor == 100) ? dy[d] · zoom · 0.01
+                     : (dy[d] · PerCor) · 0.01 · zoom · 0.01   // Ganzzahlprodukt zuerst
+x += __ftol(sx + 0.5);   y += __ftol(sy + 0.5)                 // ftol schneidet ab
+```
+Rundung: `+0.5` und Abschneiden Richtung 0 – für negative Schritte also **nicht**
+symmetrisch (−2.7 → −2, +2.7 → 3). Nachbilden. Modus `+0x1AD0 == 3` gleicht die
+Schritte für Diagonalen aus (größere Achse bestimmt den Schritt) und wechselt auf 2 –
+Details mit der Laufanalyse in Phase 4.
 
 ## `[COMPILER]`
 `Loc`, `Szn`, `VideoN`, `SoundN` – wird vom Lader **nicht** gelesen, nur vom Editor-

@@ -242,3 +242,4 @@
 004473e0	CLayer_SetColor	f
 00437640	CAudioBuffer_GetPos	f
 00436230	CArea_DrawText	f
+00435340	CActor_Update	f

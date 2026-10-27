@@ -87,7 +87,7 @@
 ### Phase 3 – Rest / Laufzeitprüfungen
 - Im Testlauf prüfen: LUT-Kumulation bei getönten Figuren sichtbar? Klick Down/Up doppelt?
   Animationsraten messen.
-- Blitter-Kombination Zoom + Tiefe (`0x0043A0B0`) im Detail; `PerCor` (unbenutzt).
+- Zoom+Tiefe-Blitter und `PerCor` geklärt (RENDERER.md, szn.md); Laufmodus 3 in Phase 4.
 
 ### Entscheidungen offen (Nutzer)
 1. MM-Timer im Hauptthread (TIMING.md).

@@ -47,7 +47,20 @@ Zoom (`0x00439C30`): Nächster Nachbar mit 7-Bit-Festkomma:
 `stepX = (srcW << 7) / dstW`, `stepY = (srcH << 7) / dstH` (unsigned, abgerundet);
 Quellspalte `(i · stepX) >> 7`, Quellzeile `(j · stepY) >> 7`; Start um die
 Clipping-Ränder (`+0x34C` links, `+0x350` oben, je `· step >> 7`) verschoben. Danach
-Alpha wie oben. (Kombination Zoom + Tiefe `0x0043A0B0` analog, im Detail noch zu lesen.)
+Alpha wie oben.
+
+Genauer (`0x00439C30`, `0x0043A0B0`):
+- Zielrechteck gesamt `+0x24…+0x30` (für die Schrittweite), sichtbarer Ausschnitt
+  `*(RECT*)+0x20` (für Schleifengröße und Zielposition).
+- Quellursprung `o = ((clipL · stepX) >> 7) + ((clipT · stepY) >> 7) · srcW`
+  (`clipL/T` = `+0x34C/+0x350`). Spaltentabelle `col[i] = (i · stepX) >> 7`,
+  Zeile `row[j] = (j · stepY) >> 7`, Quellpixel `o + row[j] · srcW + col[i]`.
+  **Eigenheit:** Ursprung und Zeile werden getrennt abgerundet
+  (`(clipT·s>>7) + (j·s>>7)` ≠ `((clipT+j)·s>>7)`) – bei geclippten, skalierten
+  Ebenen kann das Bild um eine Quellzeile/-spalte versetzt sein. Nachbilden.
+- Zoom + Tiefe (`0x0043A0B0`): wie Zoom, zusätzlich pro **Zielpixel** Test
+  `depth[clipT + j][clipL + i] > Z` (Tiefenkarte in Szenenkoordinaten, Zeilenlänge 640).
+- Spaltentabelle wird pro Aufruf angelegt und freigegeben (nur Speicher, kein Effekt).
 
 Ausschnitt (ohne Zoom): Bild-Offsets `+0x34C…+0x358` (Clipping links/oben/rechts/unten)
 bzw. bei `DirtyAlpha` das Alpha-Rechteck `+0x35C…+0x368`; Breite `+0x380`, Höhe `+0x384`.
