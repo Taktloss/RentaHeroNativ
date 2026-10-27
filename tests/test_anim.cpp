@@ -158,3 +158,38 @@ TEST(anim_stop_fires_end) {
     fireEvent(r.g, *r.L->endEvent, 1);
     CHECK(r.fired.size() == 1 && r.fired[0].first == 5);
 }
+
+TEST(event_timer_oneshot_and_periodic) {
+    EngineGlobals g;
+    std::uint32_t clock = 1000;
+    g.now = [&] { return clock; };
+    std::vector<int> fired;
+    g.eventProc = [&](Event& e, int t) { fired.push_back(e.param * 100 + t); };
+    Event once, tick;
+    once.setHandler(3);
+    tick.setHandler(4);
+    setEventTimer(g, once, 250, 0);
+    setEventTimer(g, tick, 100, 1);
+    CHECK(once.enabled && g.timerEvents[0] == &once && g.timerEvents[1] == &tick);
+    clock = 1099;
+    pollTimers(g);
+    fireTimers(g);
+    CHECK(fired.empty());
+    clock = 1100;
+    pollTimers(g);
+    CHECK(tick.pending && tick.type == 0x15 && fired.empty());  // nur markiert
+    fireTimers(g);
+    CHECK(fired == std::vector<int>({4 * 100 + 0x15}));
+    clock = 1250;
+    pollTimers(g);  // tick fällig (1200), once fällig (1250)
+    fireTimers(g);
+    CHECK(fired.size() == 3 && !once.timerRunning && tick.timerDue == 1300);
+    setEventTimer(g, once, 50, 0);  // erneut: kein zweiter Listenplatz
+    CHECK(g.timerEvents[2] == nullptr);
+    {
+        Event tmp;
+        setEventTimer(g, tmp, 10, 0);
+        CHECK(g.timerEvents[2] == &tmp);
+    }
+    CHECK(g.timerEvents[2] == nullptr && g.runningTimers.size() == 2);  // Dtor meldet ab
+}

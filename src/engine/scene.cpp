@@ -78,7 +78,8 @@ void Scene::dispatchEvents() {
     }
     if (!editor_) {
         fireEvent(g_, g_.clickEvent, g_.clickEvent.type);
-        // CEvent_FireTimers (0x0043F4A0) und Inventarleiste +0x5B4 (+0x428/+0x424) folgen.
+        fireTimers(g_);
+        // Inventarleiste +0x5B4 (+0x428/+0x424) folgt.
     }
 }
 
