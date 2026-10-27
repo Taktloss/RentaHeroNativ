@@ -14,7 +14,9 @@ im Binary (`%s->SetEvent(MakeEventValue(CLICKED_%s))`, `switch (thisEvent->Param
 - sonst: Figur vorhanden → `FUN_00435330(figur)`; dann `CSzene_OnClick(x, y)`.
   **Die Nachrichtenart wird nicht weitergegeben** (Disassembly `0x00402779`–`0x00402783`:
   nur `push y; push x`) – jeder Tasten-Down/Up-Event führt also zu `CSzene_OnClick`.
-  Wie Mehrfachauslösung verhindert wird, ist noch offen (UNVERIFIED).
+  Klicks innerhalb eines Frames fallen zusammen, weil Ereignisse nur markiert und erst in
+  `CSzene_DispatchEvents` ausgelöst werden (Abschnitt 4). Ob Down und Up in getrennten
+  Frames zweimal auslösen, ist noch im Testlauf zu prüfen (UNVERIFIED).
 
 ## 2. `CSzene_OnClick` (`0x0044C950`)
 Speichert `x, y` in `CSzene+0x500/+0x504`. Bildschirmaufteilung (Szene 640×360 ab y = 60):
@@ -25,12 +27,13 @@ Speichert `x, y` in `CSzene+0x500/+0x504`. Bildschirmaufteilung (Szene 640×360 
 - **y < 60** (oberer Balken): bei `x ≥ 0x245` (581) und Objekt `+0x9F8` → `FUN_004416e0`;
   sonst nichts.
 - **60 ≤ y < 480**: `area = CSzene_HitTest(x, y - 60)` → `CSzene+0x2C8`.
-  - Treffer: Ereignis `area+0xB0` mit **Typ 0x0B** auslösen.
+  - Treffer: Ereignis `area+0xB0` mit **Typ 0x0B** markieren (`pending = 1`, Typ/Param =
+    0x0B; sofort `CEvent_Fire` nur bei Sofort-Flag `+0x0C`).
   - Treffer gleich Bereich des Objekts `+0x5B4` (+0x428) → `FUN_00441d40`, Ende.
   - Treffer, aber nicht der Bereich der Figur → Ende.
   - Kein (anderer) Treffer und Figur aktiv (`+0x1A4`) → `FUN_00434e80(figur, x, y-60)`
     (vermutlich „hinlaufen“, UNVERIFIED).
-  - sonst Szenen-Ereignis `CSzene+0x2C4` mit **Typ 0x16** auslösen.
+  - sonst Szenen-Ereignis `CSzene+0x2C4` mit **Typ 0x16** markieren.
 
 ## 3. Treffer-Prüfung `CSzene_HitTest` (`0x0044C3C0`, Szenenkoordinaten)
 - **y in [360, 420]** (unterer Streifen = Bildschirm-y 420…480): nur der Bereich von
@@ -52,9 +55,10 @@ Speichert `x, y` in `CSzene+0x500/+0x504`. Bildschirmaufteilung (Szene 640×360 
 | `+0x00` | aktiviert | 0 |
 | `+0x04` | ausstehend | 0 |
 | `+0x08` | ? | 1 |
-| `+0x0C` | ? (in `CSzene_OnClick` als „hat Handler“ geprüft) | 0 |
+| `+0x0C` | Sofort-Flag: beim Markieren direkt auslösen | 0 |
 | `+0x10` | Typ | 0 |
-| `+0x14…+0x18` | ? | 0 |
+| `+0x14` | ? | 0 |
+| `+0x18` | `CTimer*` (TIMING.md) | 0 |
 | `+0x1C` | Handler: **< 0xFFF = Ereignis-ID**, sonst Funktionszeiger | 0 |
 | `+0x20` | `Param` | 0 |
 
@@ -66,7 +70,12 @@ ausstehend; `+0x04` wird gelöscht.
 (vorheriger Wert → `g_PrevEventProc` `0x0047E610`) und ist das `OnGenericEvent` des
 aktuellen Schauplatzes (z. B. `Loc05_OnGenericEvent` `0x0040DB30`).
 
-Ereignistypen bisher: **0x0B** = Klick auf Bereich, **0x16** = Klick ins Leere / Szene.
+Normalfall: Auslöser setzen nur `pending`, Typ und `Param`; `CSzene_DispatchEvents`
+(`0x0044C690`) ruft einmal pro Frame `CEvent_Fire` für alle bekannten Ereignisse und die
+Timerliste auf.
+
+Ereignistypen bisher: **0x01** = Animation fertig, **0x0B** = Klick auf Bereich,
+**0x15** = Timer, **0x16** = Klick ins Leere / Szene.
 `DAT_0047e608` und `event+0x08` steuern eine Variante beim Aufruf (Bedeutung offen).
 
 ## 5. `CArea` (Klickbereich)

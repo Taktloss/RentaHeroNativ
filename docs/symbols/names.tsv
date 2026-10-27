@@ -150,3 +150,17 @@
 0044c3c0	CSzene_HitTest	f
 0047e60c	g_EventProc	d
 0047e610	g_PrevEventProc	d
+004030c0	Game_Idle	f
+0044b280	CSzene_Update	f
+0044c690	CSzene_DispatchEvents	f
+00440b80	CGame_Tick	f
+00442aa0	CAnimLayer_Update	f
+0044d790	CTimer_ctor	f
+0044d7d0	CTimer_Start	f
+0044d7a0	CTimer_Stop	f
+0044d820	CTimer_Callback	f
+0043f2a0	CEvent_SetTimer	f
+0043f390	CEvent_Timer	f
+0043f4a0	CEvent_FireTimers	f
+0047e614	g_TimerEvents	d
+0047d754	g_FrameCount	d

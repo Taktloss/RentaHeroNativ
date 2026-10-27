@@ -52,6 +52,8 @@
 - Ebenen-/Bildklassen zugeordnet (CLayer/CAnimLayer, CImageBmp/Tcc/A16/Avi; Typ aus
   Dateiendung, case-sensitiv) → STRUCTURES.md.
 - Ereignisfluss Mausklick → HitTest (Z-Priorität) → CEvent → OnGenericEvent → `docs/EVENTS.md`.
+- Timing-Modell (Hauptschleife, 200-ms-Taktstufen, Animations-Uhr, MM-Timer, 5-s-Tick)
+  → `docs/TIMING.md`; Ereignisse werden verzögert pro Frame ausgelöst.
 
 ### Phase 2 – nächste Schritte
 - `CSzene`-Felder (`+0x2C0 … +0x5E8`) und `CActor`-Felder vollständig typisieren;
@@ -62,4 +64,5 @@
 - Offene SZN-Punkte: Pfadauflösung `FUN_00448a70`, Stack-Verwechslung im Figurenblock am
   Disassembly prüfen, Perspektivparameter (`this+0x2C0`).
 - VC6-CRT besser erkennen (FID), damit Spielcode sauber getrennt ist.
-- Hauptschleife `0x004036E0` und Timer `0x0044D7D0` → Timing-Modell.
+- Timing im Testlauf gegenprüfen (Animationsraten messen), `CGame_Tick`-Zweck.
+- Entscheidung Nutzer: MM-Timer im Hauptthread statt Timer-Thread (Sofort-Flag-Race).
