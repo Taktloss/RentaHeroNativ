@@ -21,8 +21,8 @@ Little-Endian. Kopf 28 Bytes (7 × u32), direkt in `CImage+0x04…+0x1C` kopiert
 | 24 | `height` | |
 
 Danach folgen die vier RLE-Blöcke direkt hintereinander. Jede Ebene ist `width × height`
-Bytes, zeilenweise, oben links beginnend. Kanalreihenfolge R, G, B ist am Bild geprüft
-(Hauttöne, Sonne), noch nicht am Ausgabecode (UNVERIFIED bis Renderer analysiert).
+Bytes, zeilenweise, oben links beginnend. Kanalreihenfolge R, G, B: am Bild geprüft
+und am Ausgabecode belegt (RENDERER.md, `0x0043ADC0`).
 
 `size0 == 0` (TCC): das Original liest dann den Kopf ein zweites Mal aus dem Datenpuffer
 (`0x0043B740`). Kommt in den Daten nicht vor.
@@ -46,10 +46,16 @@ expandiert** (Schleife `> 0`) – Original-Bug, nachbilden. In den Daten derzeit
 
 ## Nachbearbeitung
 - Farbtabellen (`0x004385D0`, vtable-Slot 12): je Ebene eine 256-Byte-LUT
-  (`+0x34` R, `+0x134` G, `+0x234` B), nur wenn Schalter `+0x340`/`+0x348`/`+0x344` gesetzt
-  (aus SZN `RedAdd…`, siehe szn.md). Wird **in-place** auf die ganze Ebene angewandt –
-  bei A16-Deltabildern werden übersprungene Pixel dadurch erneut umgerechnet
-  (Kumulation, UNVERIFIED im Testlauf).
+  (`+0x34` R, `+0x134` G, `+0x234` B), nur wenn der jeweilige Wert ≠ 0 (`+0x340` R,
+  `+0x348` G, `+0x344` B). Aufbau `CImageTcc_SetColor(r, g, b, neu)` (`0x004384F0`):
+  `lut[i] = clamp(i + wert, 0, 255)`; mit `neu` wird das aktuelle Bild sofort neu
+  dekodiert. Quelle: SZN `RedAdd/GreenAdd/BlueAdd` über `CLayer_SetColor` `0x004473E0`
+  (Felder `+0x44`, `+0x4C`, `+0x48`); in den Daten über 70× je Kanal ≠ 0.
+- Die LUT wird **in-place** auf die Ebenen angewandt, die bei A16 zugleich der Zustand
+  für Deltabilder sind. Am Code belegt: übersprungene Pixel eines Deltabilds (und beim
+  Neu-Dekodieren) bekommen die LUT erneut → Tönung **kumuliert** über die Bilder bis zur
+  Sättigung. Ob/wie stark das im Spiel sichtbar ist, bleibt im Testlauf zu prüfen; der
+  Port bildet es exakt nach.
 - Alpha-Bounds (`0x004386E0`, Slot 9, nur bei `+0x37C`): kleinstes Rechteck mit Alpha ≠ 0
   → `+0x35C`; ohne Alpha ganzes Bild.
 - Transparenz für Treffer-Tests (`0x00438680`): mit Alpha `alpha < 0x80`; ohne Alpha

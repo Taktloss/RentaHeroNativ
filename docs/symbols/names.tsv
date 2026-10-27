@@ -230,3 +230,15 @@
 0043c9e0	CImageAvi_Seek	f
 0043cb10	CImageAvi_Draw	f
 0043ca80	CImageAvi_Next	f
+0043b900	CImageTcc_Draw	f
+0043adc0	Blit_Opaque	f
+0043ae90	Blit_Alpha	f
+004399e0	Blit565_Opaque	f
+00439a80	Blit565_Alpha	f
+00439c30	Blit565_AlphaZoom	f
+00439ec0	Blit565_AlphaDepth	f
+0043a0b0	Blit565_AlphaZoomDepth	f
+004384f0	CImageTcc_SetColor	f
+004473e0	CLayer_SetColor	f
+00437640	CAudioBuffer_GetPos	f
+00436230	CArea_DrawText	f

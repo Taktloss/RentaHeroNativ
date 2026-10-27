@@ -60,8 +60,11 @@ CD-Wechsel und wird im Port nicht gebraucht.
 - Der Nutzer gibt ein Datenverzeichnis an (zusammengeführte CD, siehe SETUP.md).
   Abbildung: `ScenePath` = `ScenePathCd` = `<daten>/GAME/`, `CommonPathCd` =
   `<daten>/GAME/COMMONCD/`, `CommonPath` = installierter Ordner `Common`. Die
-  Common-Dateien gibt es nur in `DATA1.CAB` (InstallShield 5): Port braucht entweder
-  eine Installation oder einen eigenen Entpacker (Format später prüfen).
+  Common-Dateien gibt es nur in `SETUP/DATA1.CAB`: InstallShield-Kabinett, Signatur
+  `ISc(`, Versionsfeld `0x01005100` → **InstallShield 5**, Kopf in der CAB selbst (keine
+  `.HDR`). Möglichkeiten (Entscheidung Nutzer): (a) Nutzer gibt zusätzlich den
+  installierten `Common`-Ordner an; (b) Entpacken beim ersten Start mit `libunshield`
+  (MIT-Lizenz, GPL-kompatibel, unterstützt IS5). Prüfung über `docs/manifests/install.sha256`.
   Spielstände in einen eigenen Benutzerordner.
 - Windows-Dateisystem ist case-insensitiv; die CD-Daten sind großgeschrieben, die
   Namen im Code gemischt (`Loc05`, `hlp`). Port: case-insensitive Suche

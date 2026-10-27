@@ -81,6 +81,17 @@
 - `docs/DATAPATHS.md`: rah.ini-Pfade, Suchreihenfolge der vier Ordner, Namensbildung.
 - `docs/formats/ger.md`: LocNN.GER (`[AREA_TEXT]`, `[SPEECH]`), Sprachausgabe, ACS-Lippensync.
 
-### Phase 3 – nächste Schritte
-- AVI-Zeiteinheit (`STREAM_TIME / 1e6`) im Testlauf prüfen; DATA1.CAB-Format (InstallShield 5) für eigenen Entpacker.
-- Renderer: Pixelformat (16/24 Bit, TrueColor), Kanalreihenfolge der TCC-Ebenen bestätigen.
+- Offene Phase-3-Punkte geschlossen: AVI-Zeit (Bildnummer bei 10 fps), Audio-`GetPos`
+  in ms, SZN-Figurenblock am Disassembly belegt (Skala aus der Wegkarte), LUT-Kumulation
+  am Code belegt, `docs/RENDERER.md` (16 Bit RGB565 als Referenz, Blit-Formeln,
+  Tiefentest `depth > Z`, Zoom 7-Bit-Festkomma, GDI-Schriften), DATA1.CAB = IS5.
+
+### Phase 3 – Rest / Laufzeitprüfungen
+- Im Testlauf prüfen: LUT-Kumulation bei getönten Figuren sichtbar? Klick Down/Up doppelt?
+  Animationsraten messen.
+- Blitter-Kombination Zoom + Tiefe (`0x0043A0B0`) im Detail; `PerCor` (unbenutzt).
+
+### Entscheidungen offen (Nutzer)
+1. MM-Timer im Hauptthread (TIMING.md).
+2. Schrift: System-Arial, sonst Liberation Sans, ohne Glättung (RENDERER.md).
+3. Common-Dateien: installierten Ordner verlangen oder mit libunshield aus DATA1.CAB.

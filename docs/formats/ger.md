@@ -51,11 +51,13 @@ Laden (`0x004460F0`): Puffer = Dateigröße + 100 Bytes, vorab mit `0xFF` gefül
 Abspielen (`CAnimLayer` Felder `+0x484` Daten, `+0x488` Rate, `+0x490` Bildoffset,
 `+0x494` Audioobjekt; Auswertung in `0x00442730`):
 ```
-idx   = (audio->GetPos() * rate) / 1000      // vtable +0x18, unsigned; Einheit ms (UNVERIFIED)
+idx   = (audio->GetPos() * rate) / 1000      // vtable +0x18, unsigned, ms
 v     = data[idx]
 if v == 0xFFFF: Animation beenden (FUN_004429d0)
 else: bild = bildoffset + v; image->Seek(bild); image->Next()
 ```
-Rate = Einträge pro Sekunde. Das Datenende wird durch die `0xFF`-Füllung erkannt;
+Rate = Einträge pro Sekunde. `GetPos` (`0x00437640`) = DirectSound-Abspielposition in
+Bytes / (`nAvgBytesPerSec` · 0.001), per `__ftol` abgeschnitten; ohne Puffer
+`timeGetTime() − Startzeit`. Das Datenende wird durch die `0xFF`-Füllung erkannt;
 liegt `idx` mehr als 50 Einträge hinter dem Ende, liest das Original über den Puffer
 hinaus – Port: außerhalb als `0xFFFF` behandeln.
