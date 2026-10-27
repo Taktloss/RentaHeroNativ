@@ -175,3 +175,17 @@
 0043bd20	CImageA16_Next	f
 0043bce0	CImageA16_Rewind	f
 0043bdc0	CImageA16_Seek	f
+00404930	Save_Write	f
+00404780	Save_Read	f
+004045c0	Save_Process	f
+00441bf0	Inventory_Has	f
+00441960	Inventory_Add	f
+004418d0	Inventory_Clear	f
+0044da90	CGameState_Reset	f
+0047c128	g_SavePath	d
+00470810	g_SaveName	d
+0047d73c	g_NextLocation	d
+0047d740	g_NextScene	d
+0047d744	g_PrevScene	d
+0047d748	g_PrevLocation	d
+0047d68c	g_SaveRequest	d
