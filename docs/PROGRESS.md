@@ -169,5 +169,12 @@
   dann freie Bereiche ohne Maske), Transparenzprüfung, OnClick (Typ 0x0B / 0x16),
   Bereichsereignisse in DispatchEvents. Eigenheit: letzte Spalte/Zeile von TCC-Ebenen nicht
   anklickbar. Betrachter: Mausklicks lösen Ereignisse aus (Ausgabe auf stderr). 47 Tests grün.
-- Nächste Schritte: Mauszeiger/Bereichstext beim Überfahren, CLayer_Update-Interpolation,
-  Timer (CEvent_FireTimers), AVI-Ebenen (FFmpeg), Inventarleiste, Figuren, Loc40.
+- 2026-10-28: Maus (`docs/MOUSE.md`): `Scene::onMouseMove` (CSzene_MouseMove), Umschalt-
+  Ereignis `0x0044C8D0` (250 ms bis Text, 2000 ms sichtbar), Compose-Schritte 5/12.
+  `render/font` (FreeType, einfarbig, CP1252; `rah_font`), `CArea_DrawText` (Ausrichtung,
+  schwarzer Rand). `formats/pe` (Ressourcen, RT_GROUP_CURSOR → Schwarzweiß-Zeiger; alle 11
+  Zeiger der EXE geprüft). Betrachter: Timer je Durchlauf (`pollTimers`), Bereichstext,
+  Originalzeiger (`--exe`, `--font`, `--mouse x y`). Neue Abhängigkeit `freetype-devel`.
+  54 Tests grün.
+- Nächste Schritte: CLayer_Update-Interpolation, AVI-Ebenen (FFmpeg), Inventarleiste
+  (`+0x5B4`, Typ 0x0D in MouseMove), Hilfe-Symbol, Figuren, Loc40.

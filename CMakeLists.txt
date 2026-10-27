@@ -35,6 +35,7 @@ add_library(rah_core STATIC
   src/engine/animlayer.cpp
   src/engine/scene.cpp
   src/formats/bmp.cpp
+  src/formats/pe.cpp
   src/render/tccsprite.cpp
   src/render/blit.cpp
 )
@@ -72,6 +73,7 @@ if(RAH_BUILD_TESTS)
     tests/test_szn.cpp
     tests/test_scene.cpp
     tests/test_anim.cpp
+    tests/test_pe.cpp
   )
   target_link_libraries(rah_tests PRIVATE rah_core)
   if(FREETYPE_FOUND)

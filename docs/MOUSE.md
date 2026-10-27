@@ -1,7 +1,8 @@
 # Maus: Bewegung, Zeiger und Bereichstext
 
 Belege per Adresse; ergänzt EVENTS.md, AREAS.md, TIMING.md (Timer), RENDERER.md (Schrift).
-Port: `Scene::onMouseMove`, `Scene::compose` (Schritte 5/12), `render/font`, `formats/pe`.
+Port: `Scene::onMouseMove`, `Scene::compose` (Schritte 5/12), `render/font`, `formats/pe`,
+Zeiger im Betrachter (`src/app/main.cpp`, Klasse `Cursors`).
 
 ## `WM_MOUSEMOVE` → `OnMouseMove` (`0x00402790`)
 Fenstermodus: Koordinaten umrechnen (`0x00447E50`); Editor im Vollbild: `y + 19`. Editor-Rest

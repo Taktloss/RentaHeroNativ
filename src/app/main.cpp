@@ -1,18 +1,23 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Einstieg (SDL3). Vorerst ein Szenen-Betrachter: lädt eine Szene, schaltet zur Ansicht alle
 // Ebenen und Bereiche ein und lässt Animationen in Schleife laufen (nicht Original – das tun
-// später die Schauplätze). Klicks lösen Bereichs-Ereignisse aus, die ausgegeben werden. Der Frame-Ablauf folgt Game_Idle (0x004030C0, docs/TIMING.md):
+// später die Schauplätze). Klicks lösen Bereichs-Ereignisse aus, die ausgegeben werden; Überfahren zeigt Bereichstext
+// und Zeiger wie im Original. Der Frame-Ablauf folgt Game_Idle (0x004030C0, docs/TIMING.md):
 // CSzene_Update → Compose → Ausgabe (Szene bei y + 60) → CSzene_DispatchEvents.
 #include <SDL3/SDL.h>
 
 #include <cstdio>
 #include <cstdlib>
+#include <array>
+#include <filesystem>
 #include <fstream>
+#include <optional>
 #include <string>
 #include <vector>
 
 #include "engine/animlayer.hpp"
 #include "engine/scene.hpp"
+#include "formats/pe.hpp"
 #include "render/font.hpp"
 #include "vfs/dirfs.hpp"
 #include "vfs/vfs.hpp"
@@ -33,6 +38,7 @@ struct Options {
     int frameMs = 1;  // Pause je Frame (Original: keine, TIMING.md)
     std::string dump; // PPM des Bildschirms am Ende
     bool hidden = false;
+    std::string exe;   // installierte Rent-A-Hero.exe (Zeiger); sonst <Common>/../Rent-A-Hero.exe
     std::string font;  // Schriftdatei für die Bereichstexte (sonst Systemsuche)
     int mouseX = -1, mouseY = -1;  // Mausbewegung nach dem ersten Frame (kopflose Prüfung)
 };
@@ -42,7 +48,7 @@ void usage() {
                  "rentahero --cd <Ordner|.iso|.cue> [--cd …] [--common <Ordner>]\n"
                  "          [--loc <n>] [--scene <Name>] [--mask <n>]\n"
                  "          [--frames <n>] [--frame-ms <n>] [--dump <datei.ppm>] [--hidden]\n"
-                 "          [--font <datei.ttf>] [--mouse <x> <y>]\n");
+                 "          [--exe <Rent-A-Hero.exe>] [--font <datei.ttf>] [--mouse <x> <y>]\n");
 }
 
 bool parse(int argc, char** argv, Options& o) {
@@ -64,6 +70,7 @@ bool parse(int argc, char** argv, Options& o) {
         else if (a == "--frame-ms") o.frameMs = std::atoi(v);
         else if (a == "--dump") o.dump = v;
         else if (a == "--font") o.font = v;
+        else if (a == "--exe") o.exe = v;
         else if (a == "--mouse" && i + 1 < argc) {
             o.mouseX = std::atoi(v);
             o.mouseY = std::atoi(argv[++i]);
@@ -95,6 +102,56 @@ void writePpm(const std::vector<std::uint16_t>& px, const std::string& path) {
         o.write(reinterpret_cast<const char*>(c), 3);
     }
 }
+
+// Mauszeiger aus den Ressourcen der installierten EXE (MOUSE.md)
+class Cursors {
+public:
+    ~Cursors() {
+        for (auto* c : cursors_)
+            if (c) SDL_DestroyCursor(c);
+    }
+    bool load(const std::string& exe) {
+        auto f = readFile(exe);
+        PeResources pe;
+        if (!f || !pe.parse(std::move(*f))) return false;
+        int n = 0;
+        for (std::size_t t = 0; t < kGroup.size(); ++t) {
+            if (!kGroup[t]) continue;
+            auto c = loadCursor(pe, kGroup[t]);
+            if (!c || c->width % 8) continue;
+            // SDL: Daten 1 + Maske 1 = schwarz, 0/1 = weiß, 0/0 = durchsichtig, 1/0 = invertiert
+            const std::size_t stride = static_cast<std::size_t>(c->width / 8);
+            std::vector<Uint8> data(stride * static_cast<std::size_t>(c->height)), mask(data.size());
+            for (int y = 0; y < c->height; ++y)
+                for (int x = 0; x < c->width; ++x) {
+                    const auto p = c->pixels[static_cast<std::size_t>(y * c->width + x)];
+                    const auto i = static_cast<std::size_t>(y) * stride + static_cast<std::size_t>(x / 8);
+                    const auto bit = static_cast<Uint8>(0x80 >> (x % 8));
+                    if (p == MonoCursor::Black || p == MonoCursor::Invert) data[i] |= bit;
+                    if (p == MonoCursor::Black || p == MonoCursor::White) mask[i] |= bit;
+                }
+            cursors_[t] = SDL_CreateCursor(data.data(), mask.data(), c->width, c->height, c->hotX, c->hotY);
+            n += cursors_[t] != nullptr;
+        }
+        return n > 0;
+    }
+    // orig: Rent-A-Hero.exe 0x0043EA60 Renderer_GetCursor – unbekannt → 99
+    int get() const { return current_; }
+    // orig: Rent-A-Hero.exe 0x0043E960 Renderer_SetCursor – Typ 5 und unbekannte: keine Änderung
+    void set(int type) {
+        if (type < 0 || static_cast<std::size_t>(type) >= cursors_.size() || !cursors_[static_cast<std::size_t>(type)])
+            return;
+        SDL_SetCursor(cursors_[static_cast<std::size_t>(type)]);
+        current_ = type;
+    }
+
+private:
+    // Typ → RT_GROUP_CURSOR (Tabelle in MOUSE.md)
+    static constexpr std::array<std::uint32_t, 12> kGroup = {0x95, 0x97, 0x98, 0x99, 0x9A, 0,
+                                                             0x9B, 0x9C, 0x9D, 0x9E, 0x9F, 0x96};
+    std::array<SDL_Cursor*, 12> cursors_{};
+    int current_ = 99;
+};
 
 }  // namespace
 
@@ -169,6 +226,18 @@ int main(int argc, char** argv) {
     std::fprintf(stderr, "LOC%02d/%s: %d animierte Ebenen, %d nicht unterstützt, %d Bereiche\n",
                  opt.location, opt.scene.c_str(), anims, scene.unsupportedLayers(), areas);
 
+    Cursors cursors;
+    {
+        std::string exe = opt.exe;
+        if (exe.empty() && !opt.common.empty()) exe = (std::filesystem::path(opt.common) / ".." / "Rent-A-Hero.exe").string();
+        if (exe.empty() || !cursors.load(exe)) std::fprintf(stderr, "Zeiger: %s nicht lesbar – Systemzeiger\n", exe.c_str());
+    }
+    auto mouseMove = [&](int x, int y) {
+        // CSzene_MouseMove Schritt 3: neu ≠ alt → Renderer_SetCursor
+        const int c = scene.onMouseMove(x, y);
+        if (c != cursors.get()) cursors.set(c);
+    };
+
     SDL_Window* win = nullptr;
     SDL_Renderer* ren = nullptr;
     const SDL_WindowFlags flags = SDL_WINDOW_RESIZABLE | (opt.hidden ? SDL_WINDOW_HIDDEN : 0);
@@ -202,10 +271,10 @@ int main(int argc, char** argv) {
             // WM_MOUSEMOVE → OnMouseMove 0x00402790 → CSzene_MouseMove (MOUSE.md); Zeiger folgen
             if (ev.type == SDL_EVENT_MOUSE_MOTION) {
                 SDL_ConvertEventToRenderCoordinates(ren, &ev);
-                scene.onMouseMove(static_cast<int>(ev.motion.x), static_cast<int>(ev.motion.y));
+                mouseMove(static_cast<int>(ev.motion.x), static_cast<int>(ev.motion.y));
             }
         }
-        if (frame == 1 && opt.mouseX >= 0) scene.onMouseMove(opt.mouseX, opt.mouseY);
+        if (frame == 1 && opt.mouseX >= 0) mouseMove(opt.mouseX, opt.mouseY);
         pollTimers(g);  // Port: Timer im Hauptthread je Schleifendurchlauf (TIMING.md)
         scene.update(true);
         if (scene.compose(false)) {
