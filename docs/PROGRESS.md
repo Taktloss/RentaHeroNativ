@@ -89,7 +89,8 @@
   Animationsraten messen.
 - Zoom+Tiefe-Blitter und `PerCor` geklärt (RENDERER.md, szn.md); Laufmodus 3 in Phase 4.
 
-### Entscheidungen offen (Nutzer)
-1. MM-Timer im Hauptthread (TIMING.md).
-2. Schrift: System-Arial, sonst Liberation Sans, ohne Glättung (RENDERER.md).
-3. Common-Dateien: installierten Ordner verlangen oder mit libunshield aus DATA1.CAB.
+### Entscheidungen (2026-10-27, Phase 3)
+1. Timer: Mix – Original-Zeitpunkte, Ausführung im Hauptthread, Schalter `timer_thread = original`.
+2. Schrift: System-Arial, sonst Liberation Sans, ohne Glättung.
+3. Common-Dateien: aus DATA1.CAB entpacken (libunshield) oder Common-Ordner angeben.
+   Siehe CLAUDE.md „Festgelegte Entscheidungen“.

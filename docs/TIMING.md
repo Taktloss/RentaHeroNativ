@@ -88,8 +88,12 @@ Nutzer: `CEvent_SetTimer` (`0x0043F2A0`) und die Audio-Streams (`0x00437160`, `0
 bei Sofort-Flag `+0x0C` direkt `CEvent_Fire` im Timer-Thread, sonst Auslösung im nächsten
 `CSzene_DispatchEvents` (über `FireTimers` `0x0043F4A0`).
 
-Port: Timer im Hauptthread nachbilden (Fälligkeit pro Frame prüfen). Das Sofort-Flag
-erzeugt im Original eine Thread-Race; bewusste Abweichung, mit dem Nutzer besprechen.
+Port (Entscheidung 2026-10-27): Fälligkeit millisekundengenau ab Startzeit wie
+`timeSetEvent`, geprüft in **jedem** Hauptschleifendurchlauf im Hauptthread. Normale
+Ereignisse werden wie im Original nur markiert und in `CSzene_DispatchEvents` ausgelöst;
+Sofort-Flag-Ereignisse beim nächsten Schleifendurchlauf statt im Timer-Thread (entfernt
+die Race). Schalter `timer_thread = original` (Standard aus): echte Threads wie 1999.
+Offen: wie oft das Sofort-Flag bei Timern überhaupt vorkommt (Phase 4).
 
 ## Spiel-Tick: `CGame_Tick` (`0x00440B80`)
 Läuft frühestens alle **5001 ms** (`dt < 0x1389` → nichts). Ruft `FUN_004448d0`,

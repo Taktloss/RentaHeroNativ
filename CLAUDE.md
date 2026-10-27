@@ -8,6 +8,13 @@ Ziel: exakt originalgetreues Verhalten (Logik, Timing, Grafik, Ton, Spielstände
 - Sprache: **C++20**. Plattform: **SDL3**, Videos über **FFmpeg** (LGPL-Build), Build: CMake.
 - Lizenz des eigenen Codes: **GPL-3.0-or-later** (`LICENSE`). Neue Quelldateien beginnen mit
   `// SPDX-License-Identifier: GPL-3.0-or-later`.
+- Timer (2026-10-27): Fälligkeit millisekundengenau wie das Original, aber Prüfung in jedem
+  Hauptschleifendurchlauf im Hauptthread; normale Timer-Ereignisse wie im Original in
+  `CSzene_DispatchEvents`; Sofort-Flag-Ereignisse beim nächsten Schleifendurchlauf.
+  Schalter `timer_thread = original` (Standard aus) für echte Threads wie 1999 (docs/TIMING.md).
+- Schrift (2026-10-27): System-Arial, sonst Liberation Sans; ohne Kantenglättung.
+- Common-Dateien (2026-10-27): beides – Standard selbst aus `SETUP/DATA1.CAB` entpacken
+  (libunshield, MIT), alternativ vorhandenen `Common`-Ordner angeben.
 
 ## Zu Beginn jeder Sitzung
 1. `docs/PROGRESS.md` und diese Datei lesen.
