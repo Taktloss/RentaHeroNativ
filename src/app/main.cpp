@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Einstieg (SDL3). Vorerst ein Szenen-Betrachter: lädt eine Szene, schaltet zur Ansicht alle
-// Ebenen ein und lässt Animationen in Schleife laufen (nicht Original – das tun später die
-// Schauplätze). Der Frame-Ablauf folgt Game_Idle (0x004030C0, docs/TIMING.md):
+// Ebenen und Bereiche ein und lässt Animationen in Schleife laufen (nicht Original – das tun
+// später die Schauplätze). Klicks lösen Bereichs-Ereignisse aus, die ausgegeben werden. Der Frame-Ablauf folgt Game_Idle (0x004030C0, docs/TIMING.md):
 // CSzene_Update → Compose → Ausgabe (Szene bei y + 60) → CSzene_DispatchEvents.
 #include <SDL3/SDL.h>
 
@@ -119,6 +119,7 @@ int main(int argc, char** argv) {
 
     Surface565 surf(640, 420);  // UNVERIFIED: Größe der Szenenoberfläche (COMPOSITOR.md)
     Scene scene(paths, g, surf);
+    scene.setLocationNumber(opt.location);
     if (!scene.load(opt.scene, opt.loadMask) || !scene.background()) {
         std::fprintf(stderr, "Szene %s nicht geladen\n", opt.scene.c_str());
         SDL_Quit();
@@ -134,8 +135,18 @@ int main(int argc, char** argv) {
             ++anims;
         }
     }
-    std::fprintf(stderr, "LOC%02d/%s: %d animierte Ebenen, %d nicht unterstützt\n", opt.location,
-                 opt.scene.c_str(), anims, scene.unsupportedLayers());
+    // Betrachter: jeder Bereich bekommt Ereignis-ID = Platz + 1; ausgelöste Ereignisse ausgeben
+    int areas = 0;
+    for (; areas < Scene::kMaxAreas && scene.area(areas); ++areas) scene.area(areas)->setEvent(areas + 1);
+    g.eventProc = [&scene](Event& e, int type) {
+        const Area* a = e.param >= 1 && e.param <= Scene::kMaxAreas ? scene.area(e.param - 1) : nullptr;
+        std::fprintf(stderr, "Ereignis %d Typ 0x%02X %s %s\n", e.param, type, a ? a->name.c_str() : "",
+                     a ? a->text.c_str() : "");
+    };
+    scene.sceneEvent().setHandler(1000);
+    scene.sceneEvent().enabled = true;
+    std::fprintf(stderr, "LOC%02d/%s: %d animierte Ebenen, %d nicht unterstützt, %d Bereiche\n",
+                 opt.location, opt.scene.c_str(), anims, scene.unsupportedLayers(), areas);
 
     SDL_Window* win = nullptr;
     SDL_Renderer* ren = nullptr;
@@ -157,6 +168,16 @@ int main(int argc, char** argv) {
         while (SDL_PollEvent(&ev)) {
             if (ev.type == SDL_EVENT_QUIT) quit = true;
             if (ev.type == SDL_EVENT_KEY_DOWN && ev.key.key == SDLK_ESCAPE) quit = true;
+            // WndProc 0x00402350: WM_LBUTTONDOWN/UP, WM_LBUTTONDBLCLK, WM_RBUTTONDOWN und
+            // WM_RBUTTONDBLCLK → OnMouseButton → CSzene_OnClick (Art wird nicht weitergegeben,
+            // EVENTS.md). Rechte Taste loslassen (0x205) gehört nicht dazu.
+            const bool down = ev.type == SDL_EVENT_MOUSE_BUTTON_DOWN;
+            const bool up = ev.type == SDL_EVENT_MOUSE_BUTTON_UP;
+            if ((down && (ev.button.button == SDL_BUTTON_LEFT || ev.button.button == SDL_BUTTON_RIGHT)) ||
+                (up && ev.button.button == SDL_BUTTON_LEFT)) {
+                SDL_ConvertEventToRenderCoordinates(ren, &ev);
+                scene.onClick(static_cast<int>(ev.button.x), static_cast<int>(ev.button.y));
+            }
         }
         scene.update(true);
         if (scene.compose(false)) {

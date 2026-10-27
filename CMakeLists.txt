@@ -31,6 +31,7 @@ add_library(rah_core STATIC
   src/engine/paths.cpp
   src/engine/layer.cpp
   src/engine/event.cpp
+  src/engine/area.cpp
   src/engine/animlayer.cpp
   src/engine/scene.cpp
   src/formats/bmp.cpp

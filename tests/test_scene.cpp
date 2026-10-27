@@ -149,12 +149,30 @@ TEST(scene_original_dump) {
     EngineGlobals g;
     Surface565 surf(640, 420);
     Scene scene(paths, g, surf);
+    scene.setLocationNumber(1);
     REQUIRE(scene.load("7A", 0xFFFF));
     REQUIRE(scene.background());
     scene.background()->enable();
     int n = 0;
     for (int i = 0; scene.layer(i); ++i, ++n) scene.layer(i)->enable();
     CHECK(scene.compose(false));
+    int areas = 0, texts = 0, hits = 0, free = 0;
+    for (; areas < Scene::kMaxAreas && scene.area(areas); ++areas) {
+        scene.area(areas)->setEvent(areas + 1);
+        if (!scene.area(areas)->text.empty()) ++texts;
+    }
+    for (int i = 0; i < areas; ++i) {
+        const Area* a = scene.area(i);
+        if (a->mask) continue;
+        ++free;
+        const int cx = (a->rect.left + a->rect.right) / 2, cy = (a->rect.top + a->rect.bottom) / 2;
+        const Area* h = scene.hitTest(cx, cy);
+        if (h) ++hits;
+        std::cout << "     Bereich " << a->name << " -> " << (h ? h->name : std::string("-")) << "\n";
+    }
+    CHECK(texts > 0);
+    std::cout << "     LOC01/7A: " << areas << " Bereiche, " << texts << " mit Text, " << hits << "/" << free
+              << " freie in der Mitte getroffen\n";
     std::cout << "     LOC01/7A: " << n << " Ebenen, " << scene.unsupportedLayers()
               << " nicht unterstützt (AVI)\n";
     if (const char* d = std::getenv("RAH_DUMP_DIR")) writePpm(surf, std::filesystem::path(d) / "loc01_7a.ppm");
@@ -255,4 +273,99 @@ TEST(scene_dispatch_hides_and_fires_end) {
     REQUIRE(fired.size() == 1);
     CHECK(fired[0] == std::make_pair(42, 1));
     CHECK(!a->active && a->dirty);  // ausgeblendet, Bereich wird im nächsten Frame restauriert
+}
+
+TEST(area_grid_mark_quirk) {
+    HitGrid grid;
+    Area a;
+    a.grid = &grid;
+    a.setRect(Rect{5, 0, 12, 4}, 0);
+    CHECK(grid.test(0, 0));    // Zelle 0
+    CHECK(!grid.test(8, 0));   // x = 13 erreicht right = 12 nicht → Zelle 1 bleibt leer
+    a.name = "RodrigoSmall";
+    a.markGrid(Rect{100, 100, 108, 108});
+    CHECK(!grid.test(100, 100));  // „Rodrigo“-Ausnahme
+    a.name.clear();
+    a.markGrid(Rect{630, 350, 700, 400});  // auf die Szene beschnitten
+    CHECK(grid.test(639, 359));
+    grid.clear();
+    CHECK(!grid.test(0, 0));
+}
+
+TEST(area_hit_priority_and_activation) {
+    Fixture f;
+    f.fs.put("GAME/MENU/T4.szn",
+             "[GENERAL]\r\nBackground1=Bg\r\nLayer1=Red\r\nLayer2=Green\r\nLayer3=Half\r\n"
+             "Area1=Door\r\n"
+             "[Bg]\r\nFilename=BG.bmp\r\n"
+             "[Red]\r\nFilename=RED.TCC\r\nX=10\r\nY=10\r\nZ=10\r\n"
+             "[Green]\r\nFilename=GREEN.TCC\r\nX=12\r\nY=12\r\nZ=5\r\n"
+             "[Half]\r\nFilename=HALF.TCC\r\nX=100\r\nY=100\r\nZ=255\r\n"
+             "[Door]\r\nX1=300\r\nX2=200\r\nY1=50\r\nY2=80\r\nCursorType=3\r\n");
+    REQUIRE(f.scene.load("T4", 0));
+    // Ebenenbereiche zuerst (Dateiname ohne Endung), dann die SZN-Bereiche
+    REQUIRE(f.scene.area(0) && f.scene.area(0)->name == "RED" && f.scene.area(0)->mask == f.scene.layer(0));
+    CHECK(f.scene.area(0)->cursor == 10);
+    Area* door = f.scene.getArea("door");
+    REQUIRE(door == f.scene.area(3));
+    CHECK(door->rect == (Rect{200, 50, 300, 80}) && door->cursor == 3);  // normalisiert
+    // TCC-Ebenen: DirtyAlpha, Alpha-Rechteck mit einschließendem Maximum → letzte Spalte/Zeile
+    // des Sprites gehört nicht zum Bereich (Original-Eigenheit)
+    CHECK(f.scene.layer(0)->area->rect == (Rect{10, 10, 13, 13}));
+
+    f.enableAll();
+    CHECK(f.scene.hitTest(13, 13) == nullptr);  // Enable aktiviert den Bereich nicht
+    for (int i = 0; i < 4; ++i) f.scene.area(i)->setEvent(100 + i);
+    CHECK(f.scene.hitTest(13, 13) == f.scene.area(1));  // grün (Z 5) vor rot (Z 10)
+    CHECK(f.scene.hitTest(10, 10) == f.scene.area(0));
+    CHECK(f.scene.hitTest(250, 60) == door);
+    CHECK(f.scene.hitTest(101, 101) == f.scene.area(2));  // Z = 255, Alpha 128 ≥ 0x80 → Treffer
+    f.scene.layer(1)->disable();
+    CHECK(f.scene.hitTest(12, 12) == f.scene.area(0));
+    CHECK(f.scene.hitTest(13, 13) == nullptr);  // rechts/unten außerhalb des Bereichs
+}
+
+TEST(area_hit_transparency_and_click_events) {
+    Fixture f;
+    f.fs.put("GAME/MENU/SEMI.TCC", tccSolid(4, 4, 0xF8, 0, 0, 0x7F));
+    f.fs.put("GAME/MENU/T5.szn",
+             "[GENERAL]\r\nBackground1=Bg\r\nLayer1=Semi\r\nArea1=Spot\r\n"
+             "[Bg]\r\nFilename=BG.bmp\r\n"
+             "[Semi]\r\nFilename=SEMI.TCC\r\nX=10\r\nY=10\r\n"
+             "[Spot]\r\nX1=0\r\nX2=40\r\nY1=0\r\nY2=40\r\n");
+    std::vector<std::pair<int, int>> fired;
+    f.g.eventProc = [&](Event& e, int t) { fired.emplace_back(e.param, t); };
+    REQUIRE(f.scene.load("T5", 0));
+    f.enableAll();
+    f.scene.area(0)->setEvent(7);
+    f.scene.area(1)->setEvent(8);
+    // Alpha 0x7F < 0x80 → transparent; der freie Bereich darunter wird getroffen
+    CHECK(f.scene.hitTest(11, 11) == f.scene.area(1));
+
+    f.scene.onClick(11, 71);  // Bildschirm-y = Szenen-y + 60
+    CHECK(fired.empty());     // nur markiert
+    f.scene.dispatchEvents();
+    REQUIRE(fired.size() == 1);
+    CHECK(fired[0] == std::make_pair(8, 0x0B));
+
+    f.scene.onClick(500, 300);  // ins Leere → Szenen-Ereignis 0x16
+    CHECK(f.scene.sceneEvent().pending && f.scene.sceneEvent().type == 0x16);
+
+    f.scene.clicksEnabled = false;
+    f.scene.onClick(11, 71);
+    f.scene.dispatchEvents();
+    CHECK(fired.size() == 1);
+}
+
+TEST(area_text_from_ger) {
+    Fixture f;
+    f.fs.put("GAME/MENU/LOC01.GER", "[AREA_TEXT]\r\nDoor=Tür zum Hof\r\nRED=Rote Kiste\r\n");
+    f.fs.put("GAME/MENU/T6.szn",
+             "[GENERAL]\r\nLayer1=Red\r\nArea1=Door\r\nArea2=Win\r\n"
+             "[Red]\r\nFilename=RED.TCC\r\n[Door]\r\nX2=5\r\nY2=5\r\n[Win]\r\nX2=5\r\nY2=5\r\n");
+    f.scene.setLocationNumber(1);
+    REQUIRE(f.scene.load("T6", 0));
+    CHECK(f.scene.area(0)->text == "Rote Kiste");  // Ebenenbereich: Name = Dateiname
+    CHECK(f.scene.area(1)->text == "Tür zum Hof" || f.scene.area(1)->text == "T\xFCr zum Hof");
+    CHECK(f.scene.area(2)->text.empty());
 }

@@ -2,6 +2,7 @@
 #include "engine/scene.hpp"
 
 #include <cmath>
+#include <cstdio>
 
 #include "core/strings.hpp"
 
@@ -18,9 +19,23 @@ inline int ftol(double v) {
 Scene::Scene(const DataPaths& paths, EngineGlobals& globals, Surface565& target, std::uint16_t colorKey, int yOffset)
     : paths_(paths), g_(globals), surface_(target), colorKey_(colorKey), yOffset_(yOffset) {
     windowStart_ = g_.now();  // orig: 0x004485FD in CSzene_ctor
+    g_.hitGrid.clear();       // orig: 0x00448603
 }
 
 namespace {
+
+// _splitpath(path, 0, 0, fname, 0) – orig: Rent-A-Hero.exe 0x00447F00
+std::string fileStem(const std::string& path) {
+    const auto slash = path.find_last_of("/\\:");
+    std::string f = slash == std::string::npos ? path : path.substr(slash + 1);
+    const auto dot = f.rfind('.');
+    if (dot != std::string::npos) f.resize(dot);
+    return f;
+}
+
+void markEvent(EngineGlobals& g, Event& e, int type) {
+    e.mark(g, type);
+}
 
 // Stufe = min((fps − 1) / 5, 3), Ganzzahldivision (fps ≤ 0 → Stufe 0 bzw. negativ → 0)
 int stageOf(int fps) {
@@ -57,7 +72,10 @@ void Scene::dispatchEvents() {
             if (e) fireEvent(g_, *e, e->type);
         }
     }
-    // Freie Bereiche +0xA4[60] (Ereignis +0xB0) folgen mit CArea.
+    for (auto& a : areas_) {
+        if (!a) break;
+        fireEvent(g_, *a->event, a->event->type);
+    }
     if (!editor_) {
         fireEvent(g_, g_.clickEvent, g_.clickEvent.type);
         // CEvent_FireTimers (0x0043F4A0) und Inventarleiste +0x5B4 (+0x428/+0x424) folgen.
@@ -169,7 +187,11 @@ bool Scene::loadSzn(const IniFile& szn, unsigned loadMask) {
         if (zi >= 0 && zi < 256) ++zCount_[static_cast<std::size_t>(zi)];  // UNVERIFIED: Z außerhalb 0…255
         if (l.zoomVal != 100) L->setZoom(l.zoomVal);
     }
-    // Bereiche (CSzene_AddArea) und Figuren folgen mit CArea/CActor.
+    for (const SznArea& a : d.areas) {
+        Rect r{a.x1, a.y1, a.x2, a.y2};
+        addArea(&a.section, &r, a.cursorType);
+    }
+    // Figuren folgen mit CActor.
     loaded_ = true;
     g_.sceneChanged = true;
     return true;
@@ -189,7 +211,7 @@ bool Scene::createBackground(const std::optional<FoundFile>& file) {
     Rect r = background_->getRect();
     clipToScene(r);
     listA_.add(r);
-    background_->name = file->path;  // 0x00447F00 (Name aus Pfad), danach vom Lader überschrieben
+    background_->name = fileStem(file->path);  // 0x00447F00, danach vom Lader überschrieben
     return true;
 }
 
@@ -210,9 +232,14 @@ Layer* Scene::createLayer(const std::optional<FoundFile>& file, bool animated) {
     lastLayer_ = slot;
     g_.sceneChanged = true;
     // Ebenen werden nicht aktiviert (Bedingung „Dateiname == NULL“, 0x0044AC48); das tun die
-    // Schauplätze. Automatischer Bereich mit dem Ebenennamen folgt mit CArea.
+    // Schauplätze.
     layers_[static_cast<std::size_t>(slot)] = std::move(L);
-    return layers_[static_cast<std::size_t>(slot)].get();
+    Layer* layer = layers_[static_cast<std::size_t>(slot)].get();
+    const std::string stem = fileStem(layer->path);
+    if (Area* a = addArea(&stem, nullptr, 0)) a->attach(*layer);
+    layer->name = stem;
+    if (!barShown_) layer->update(g_);  // vtable +0x18, wenn +0x5BC == 0
+    return layer;
 }
 
 void Scene::loadMap(const std::optional<FoundFile>& file, std::optional<ZMap>& out) {
@@ -310,6 +337,104 @@ bool Scene::compose(bool force) {
     // 12. Bereichsname/Editor-Rahmen folgen; Slot +0x10 der letzten Ebene ist ein Debug-Text.
     g_.sceneChanged = false;
     return true;
+}
+
+}  // namespace rah
+
+namespace rah {
+
+Area* Scene::addArea(const std::string* name, Rect* rect, int cursor) {
+    if (rect) {
+        if (rect->right < rect->left) std::swap(rect->left, rect->right);
+        if (rect->bottom < rect->top) std::swap(rect->top, rect->bottom);
+    }
+    for (auto& slot : areas_) {
+        if (slot) continue;
+        slot = std::make_unique<Area>();
+        Area& a = *slot;
+        a.grid = &g_.hitGrid;
+        // Rechteck vor dem Namen (0x0044AE91): beim Markieren ist der Name noch leer, die
+        // „Rodrigo“-Ausnahme greift hier also nie
+        if (rect) a.setRect(*rect, 0);
+        if (name) {
+            a.setName(*name);
+            a.setCursor(cursor);
+            if (location_ != 0) {
+                char loc[16];
+                std::snprintf(loc, sizeof loc, "Loc%02d", location_);
+                if (auto f = paths_.findFile(loc, "GER")) {
+                    if (auto data = f->read()) {
+                        const IniFile ger(*data);
+                        const std::string t = ger.getString("AREA_TEXT", *name, "NULL", 100);
+                        if (t != "NULL") a.setText(t);
+                    }
+                }
+            }
+        }
+        a.active = false;
+        return &a;
+    }
+    return nullptr;
+}
+
+Area* Scene::getArea(std::string_view name) {
+    for (auto& a : areas_) {
+        if (!a) break;
+        if (equalsNoCase(name, a->name)) return a.get();
+    }
+    return nullptr;  // Original: MessageBox(name)
+}
+
+Area* Scene::hitTest(int x, int y) {
+    auto hits = [x, y](Area* a) {
+        return a && a->active && ptInRect(a->rect, x, y) && (!a->mask || !a->mask->isTransparentAt(x, y));
+    };
+    if (y >= 360 && y <= 420) {
+        return nullptr;  // Inventarleiste +0x5B4 (Bereich +0x428) folgt
+    }
+    if (!(editor_ || g_.hitGrid.test(x, y))) return nullptr;
+    for (unsigned z = static_cast<unsigned>(zMin_); z <= static_cast<unsigned>(zMax_); ++z) {
+        if (zCount(static_cast<int>(z)) == 0 || z == 0xFF) continue;
+        for (auto& slot : layers_) {
+            Layer* L = slot.get();
+            if (!L) break;
+            if (L->active && static_cast<unsigned>(ftol(L->z)) == z && hits(L->area)) return L->area;
+        }
+    }
+    for (auto& slot : layers_) {
+        Layer* L = slot.get();
+        if (!L) break;
+        if (L->active && L->z == 255.0 && hits(L->area)) return L->area;
+    }
+    for (auto& a : areas_) {
+        if (!a) return nullptr;
+        if (!a->mask && hits(a.get())) return a.get();
+    }
+    return nullptr;
+}
+
+void Scene::onClick(int x, int y) {
+    clickX_ = x;
+    clickY_ = y;
+    // +0x5BC == 0: Figur läuft zum Klick (0x0044CB60) – folgt mit CActor.
+    // Hilfe +0x9F8 (HINTS.md) folgt.
+    if (!clicksEnabled) return;
+    // +0x518 == 0 und Vollbildobjekt +0x5DC aktiv/läuft → Ende: folgt mit dessen Port.
+    if (globalClick && !editor_ && g_.clickEvent.enabled) {
+        markEvent(g_, g_.clickEvent, 0x16);
+        return;
+    }
+    if (y < 60 || y >= 480) {
+        // Hinweis-Symbol (x ≥ 581) folgt mit der Hilfe. Sonst: 0x00481F24 == 0 →
+        // Umschalt-Ereignis *0x00481F2C abschalten – folgt mit den Timern.
+        return;
+    }
+    lastHit_ = hitTest(x, y - 60);
+    if (lastHit_) markEvent(g_, *lastHit_->event, 0x0B);
+    // Inventarbereich → 0x00441D40 folgt.
+    if (lastHit_) return;  // nicht der Bereich der Figur (Figuren folgen)
+    // Figur aktiv → CActor_WalkToClick folgt.
+    markEvent(g_, sceneEvent_, 0x16);
 }
 
 }  // namespace rah

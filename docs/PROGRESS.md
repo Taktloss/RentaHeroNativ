@@ -163,5 +163,11 @@
   `rentahero --cd RentAHero --common <Common> --loc 1 --scene 7A` (Kopflos:
   `SDL_VIDEO_DRIVER=offscreen … --frames N --dump x.ppm --hidden`). LOC01/7A läuft mit allen
   A16-Animationen. 43 Tests grün.
-- Nächste Schritte: Bereiche (CArea, AddArea, HitTest) + Maus, CLayer_Update-Interpolation,
+- 2026-10-28: Klickbereiche (`docs/AREAS.md`, `engine/area`): CArea, globales 8×8-Treffer-
+  Raster (Markier-Eigenheit am rechten/unteren Rand), AddArea mit Texten aus `LocNN.GER`,
+  Ebenenbereiche in derselben Liste (Name = Dateiname), HitTest (Z aufsteigend, dann Z=255,
+  dann freie Bereiche ohne Maske), Transparenzprüfung, OnClick (Typ 0x0B / 0x16),
+  Bereichsereignisse in DispatchEvents. Eigenheit: letzte Spalte/Zeile von TCC-Ebenen nicht
+  anklickbar. Betrachter: Mausklicks lösen Ereignisse aus (Ausgabe auf stderr). 47 Tests grün.
+- Nächste Schritte: Mauszeiger/Bereichstext beim Überfahren, CLayer_Update-Interpolation,
   Timer (CEvent_FireTimers), AVI-Ebenen (FFmpeg), Inventarleiste, Figuren, Loc40.

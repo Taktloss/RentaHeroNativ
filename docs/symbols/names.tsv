@@ -400,3 +400,15 @@
 00481ee8	g_ClickEvent	d
 00481f2c	g_ToggleEvent	d
 0044c8d0	Scene_ToggleTimerEvent	f
+004360a0	CArea_MarkGrid	f
+00436150	HitGrid_Clear	f
+004364c0	HitGrid_Test	f
+00436060	CArea_AttachLayer	f
+00436170	CArea_DetachLayer	f
+00436190	CArea_SetName	f
+004361c0	CArea_SetCursor	f
+004363c0	CArea_SetRect	f
+00447b00	CLayer_IsTransparentAt	f
+0047d77c	g_HitGrid	d
+00447f00	SplitFileName	f
+0044cb60	CSzene_ClickWalk	f

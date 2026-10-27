@@ -11,6 +11,7 @@
 #include <string_view>
 
 #include "engine/animlayer.hpp"
+#include "engine/area.hpp"
 #include "engine/globals.hpp"
 #include "engine/layer.hpp"
 #include "engine/paths.hpp"
@@ -44,6 +45,24 @@ public:
     // orig: Rent-A-Hero.exe 0x0044B280 CSzene_Update – Animations-Takt (TIMING.md)
     void update(bool realtime);
     std::uint32_t tickWindowStart() const { return windowStart_; }
+
+    static constexpr int kMaxAreas = 60;
+
+    // orig: Rent-A-Hero.exe 0x0044ADD0 CSzene_AddArea – name/rect dürfen fehlen (NULL)
+    Area* addArea(const std::string* name, Rect* rect, int cursor);
+    // orig: Rent-A-Hero.exe 0x0044AFB0 CSzene_GetArea (Original: MessageBox bei Fehlschlag)
+    Area* getArea(std::string_view name);
+    Area* area(int i) { return areas_[static_cast<std::size_t>(i)].get(); }
+    // orig: Rent-A-Hero.exe 0x0044C3C0 CSzene_HitTest (Szenenkoordinaten)
+    Area* hitTest(int x, int y);
+    // orig: Rent-A-Hero.exe 0x0044C950 CSzene_OnClick (Bildschirmkoordinaten)
+    void onClick(int x, int y);
+    Area* lastHit() const { return lastHit_; }
+    // Schauplatznummer +0x5D0 (0 = Menü), für die Bereichstexte aus LocNN.GER
+    void setLocationNumber(int n) { location_ = n; }
+    bool clicksEnabled = true;   // +0x514 (Ctor 1)
+    bool clicksDuringFull = false;  // +0x518 (Ctor 0)
+    bool globalClick = true;     // +0x510 (Ctor 1)
 
     // orig: Rent-A-Hero.exe 0x0044C690 CSzene_DispatchEvents – einmal pro Frame
     void dispatchEvents();
@@ -84,6 +103,11 @@ private:
     DirtyRegion listB_;                                         // +0xAC4
     int zMax_ = 0, zMin_ = 0xFF;                                // +0x2F8, +0x2FC
     std::array<short, 256> zCount_{};                           // +0x300
+    std::array<std::unique_ptr<Area>, kMaxAreas> areas_{};     // +0xA4
+    Area* lastHit_ = nullptr;                                   // +0x2C8
+    int clickX_ = 0, clickY_ = 0;                               // +0x500, +0x504
+    int location_ = 0;                                          // +0x5D0
+    bool barShown_ = false;                                     // +0x5BC
     Event sceneEvent_;                                          // +0x2C4 (Klick ins Leere, Typ 0x16)
     bool editor_ = false;                                       // +0xAC8
     std::uint32_t windowStart_ = 0;                             // +0x2DC

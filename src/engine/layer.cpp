@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "engine/layer.hpp"
 
+#include "engine/area.hpp"
+
 #include <cmath>
 
 namespace rah {
@@ -71,7 +73,38 @@ void Layer::setPos(int nx, int ny) {
     x = nx;
     y = ny;
     if (active) dirty = true;
-    // UNVERIFIED/offen: Nachführen des verknüpften Bereichs (+0x1C0, 0x004360A0) folgt mit CArea
+    refreshArea();
+}
+
+void Layer::refreshArea() {
+    if (area && area->mask) {
+        area->rect = area->mask->getRect();  // CLayer_GetRect der Masken-Ebene
+        area->markGrid(area->rect);
+    }
+}
+
+void Layer::deactivateArea() {
+    if (area) area->active = false;
+}
+
+bool Layer::isTransparentAt(int px, int py) const {
+    if (!hasImage) return false;
+    int dx = px - ftol(x);
+    int dy = py - ftol(y);
+    if (zoom != 100.0) {
+        const int zi = ftol(zoom);
+        dx = dx * 100 / zi;
+        dy = dy * 100 / zi;
+    }
+    // orig: Rent-A-Hero.exe 0x00438680 CImage_IsTransparent – Index ohne Bereichsprüfung
+    const TccPlanes& p = planes();
+    const long long i = static_cast<long long>(p.width) * dy + dx;
+    auto at = [i](const std::vector<std::uint8_t>& v) -> std::uint8_t {
+        // UNVERIFIED: außerhalb des Puffers liest das Original fremden Speicher; hier 0
+        return i >= 0 && static_cast<std::size_t>(i) < v.size() ? v[static_cast<std::size_t>(i)] : 0;
+    };
+    if (p.hasAlpha()) return ((~at(p.alpha) & 0xFF) >> 7) != 0;
+    return at(p.rgb[0]) == 0 && at(p.rgb[1]) == 0 && at(p.rgb[2]) == 0;
 }
 
 void Layer::enable() {
@@ -89,6 +122,7 @@ void Layer::setZoom(int zoomVal) {
         zoomed.right = full.right * zi / 100;
         zoomed.bottom = full.bottom * zi / 100;
     }
+    refreshArea();  // 0x00447060 aktualisiert den Bereich auch bei Zoom 100
 }
 
 Rect Layer::getRect() const {
