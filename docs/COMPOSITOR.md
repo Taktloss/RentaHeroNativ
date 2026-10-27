@@ -152,3 +152,11 @@ Szene) in A ein (`0x0044B3E6`).
 - Farbschlüssel Schwarz: BMP-Pixel, die in RGB565 0 ergeben (R < 8, G < 4, B < 8),
   sind in Ebenen mit flag 1 durchsichtig. UNVERIFIED: Umwandlung 24 → 16 Bit beim
   Laden über GDI (Abschneiden wie `pack565` angenommen).
+
+## Aktivierung
+Neue Ebenen werden **nicht** aktiviert: `CSzene_CreateLayer` ruft `CLayer_Enable` nur, wenn
+der Dateiname NULL ist (`0x0044AC48`, `ebx` = Dateiname), was nie vorkommt. Auch der
+Hintergrund (`0x00449E70`) bleibt inaktiv. Die Schauplätze aktivieren Ebenen über
+`CSzene_GetObject` und den Hintergrund über `CGame+0x60` (von `CGame_GetViewObjects`
+`0x0043F6C0` aus `CSzene+0x5C0` gesetzt; 22 Schauplätze). `CSzene_EnableAll` (`0x0044B020`)
+wird nur aus der Editor-Tastatur (`0x0044CF00`) aufgerufen.

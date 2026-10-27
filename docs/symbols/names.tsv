@@ -108,6 +108,7 @@
 004374f0	CAudioBuffer_SetPos3D	f
 00437640	CAudioBuffer_GetPos	f
 00437fc0	CMusic_FadeIn	f
+00438040	CImage_SetClip	f
 004380b0	Rle_Decode	f
 004381e0	CImageBmp_ctor	f
 004382c0	CImageBmp_Load	f
@@ -243,10 +244,12 @@
 004460f0	CSpeech_Load	f
 004463b0	CSpeech_Play	f
 004466a0	CLayer_ctor	f
+004468c0	CLayer_DebugText	f
 00446940	CLayer_Load	f
 00446ac0	CLayer_CreateImage	f
 00446e70	CLayer_SetPos	f
 00447030	CLayer_SetZoom	f
+00447060	CLayer_UpdateZoomRect	f
 00447150	CLayer_DrawFull	f
 00447170	CLayer_DrawDepth	f
 004471a0	CLayer_DrawRect	f
@@ -254,6 +257,7 @@
 004473e0	CLayer_SetColor	f
 00447470	CLayer_Enable	f
 00447490	CLayer_Disable	f
+00447890	CLayer_Update	f
 00447b80	CLayer_GetRect	f
 00447f60	JoinPath	f
 00447f90	MakeFileName	f
@@ -265,6 +269,8 @@
 004492c0	CSzene_LoadAll	f
 004492e0	CSzene_Load	f
 00449380	CSzene_LoadSzn	f
+00449d10	CSzene_SetBackground	f
+00449e70	CSzene_CreateBackground	f
 0044a1b0	CSzene_LoadDepth	f
 0044a260	CSzene_LoadPath	f
 0044a330	CSzene_SetModal	f
@@ -273,10 +279,12 @@
 0044add0	CSzene_AddArea	f
 0044af60	CSzene_GetObject	f
 0044afb0	CSzene_GetArea	f
+0044b020	CSzene_EnableAll	f
 0044b0c0	CSzene_DisableAll	f
 0044b160	CSzene_EnableInput	f
 0044b170	CSzene_DisableInput	f
 0044b190	CSzene_ClearFlag510	f
+0044b1a0	CSzene_StartAnims	f
 0044b280	CSzene_Update	f
 0044b7d0	CSzene_Compose	f
 0044c1e0	CSzene_InvalidateAll	f

@@ -25,8 +25,8 @@ Belegstufen: **V** = Vorlage + Code stimmen überein, **C** = aus Code abgeleite
 | `CImageAvi` | 0x478 | `0x0043C5C0` | `0x0046B890` (14) | C | Typ 3 |
 | (unbenutzt, AVIFile/DrawDib) | ? | `0x0043BEE0` | `0x0046B858` (14) | C | erbt `CImage`; nie erzeugt → toter Code, siehe formats/media.md |
 | `IRenderer` (abstrakt) | – | – | `0x0046B8CC` (3× `_purecall`) | C | Schnittstelle |
-| Renderer Vollbild | global | `0x00401CF0` | `0x0046B3FC` (3) | C | Objekt `0x0047C870`, gewählt bei `FullScreen` |
-| Renderer Fenster | global | `0x00401D60` | `0x0046B408` (3) | C | Objekt `0x0047C230` |
+| Renderer Vollbild | global | `0x00401D60` | `0x0046B408` (3) | C | Objekt `0x0047C870`, gewählt bei `FullScreen`; Slot 0 = Ausgabe `0x0043E210` (COMPOSITOR.md) |
+| Renderer Fenster | global | `0x00401CF0` | `0x0046B3FC` (3) | C | Objekt `0x0047C230`; Slot 0 = Ausgabe `0x0043E330` |
 | Audio-Manager | global | `0x00436530` | `0x0046B718` (1) | ? | Objekt `0x0047BF10`; Lautstärken `+0x6C…`, 100 Puffer-Slots ab `+0x84` |
 | Audiopuffer | 0x188 | `0x00436C30` | `0x0046B71C` (8) | ? | Kandidat `CAudioBuffer` |
 | Musik/Stream | 0x1A4 | `0x004376C0` | `0x0046B750` (8) | ? | Kandidat Musikobjekt (`FadeIn` `0x00437FC0`) |

@@ -137,5 +137,18 @@
   Tiefe/Zoom mit Original-Rundung). RENDERER.md: Tiefen-Adressierung korrigiert.
 - Offen: Koordinatensystem des Zielrechtecks beim Tiefentest (Bildschirm oder eigene
   Szenenoberfläche) – geklärt: Szenenkoordinaten, sceneTop = 0 (COMPOSITOR.md).
-- Nächste Schritte: SZN-Lader (Szene, Ebenen, Bereiche, Figuren), Szenen-Zeichnen,
-  SDL-Fenster + Hauptschleife, Ereignisse/Timer/Wartestellen, Loc40.
+- `src/engine/paths` (Suchreihenfolge des Originals), `src/formats/szn` (Leseregeln von
+  CSzene_LoadSzn; alle 890 Dateiverweise lösen sich auf).
+- Compositor analysiert und dokumentiert (`docs/COMPOSITOR.md`): Rechtecklisten immer im
+  Vereinigungsmodus, Dirty-Ausbreitung, Z-Stufen von hinten nach vorn, Z=255-Sonderfall,
+  Farbschlüssel Schwarz, deckender TCC-Blitter ohne Clipping, DirtyAlpha-Ausschnitt mit
+  schrumpfendem unterem Rand, Szenenoberfläche in Szenenkoordinaten (Ausgabe y+60).
+  STRUCTURES.md: vtables der beiden Renderer waren vertauscht (korrigiert).
+- Port: `core/rect` (Win32-Semantik), `engine/rectlist`, `formats/bmp`, `render/tccsprite`
+  (CImageTcc_Draw), `engine/layer` (CLayer), `engine/scene` (Laden, GetObject, Compose).
+  Test: LOC01/7A wird korrekt zusammengesetzt (Hintergrund + statische TCC-Ebenen).
+- Ebenen und Hintergrund starten inaktiv; die Schauplätze aktivieren sie (Hintergrund über
+  `CGame+0x60` aus `CGame_GetViewObjects`, 22 Schauplätze).
+- Nächste Schritte: CAnimLayer (A16, Takt aus CSzene_Update), Bereiche (CArea, HitTest),
+  SDL-Fenster + Hauptschleife (wartet auf SDL3-devel), Ereignisse/Timer/Wartestellen,
+  Figuren (CActor_Draw), Loc40.

@@ -37,6 +37,7 @@ public:
 
     const Dir& sceneDir() const { return scene_; }
     const Dir& commonDir() const { return common_; }
+    const Dir& sceneCdDir() const { return sceneCd_; }
 
 private:
     std::optional<FoundFile> search(const std::string& name) const;

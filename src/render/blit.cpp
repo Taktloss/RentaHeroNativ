@@ -8,18 +8,14 @@ namespace rah {
 void Surface565::fill(int x0, int y0, int x1, int y1, std::uint16_t c) {
     if (x0 < 0) x0 = 0;
     if (y0 < 0) y0 = 0;
-    if (x1 > kWidth) x1 = kWidth;
-    if (y1 > kHeight) y1 = kHeight;
+    if (x1 > width) x1 = width;
+    if (y1 > height) y1 = height;
     for (int y = y0; y < y1; ++y) {
         for (int x = x0; x < x1; ++x) row(y)[x] = c;
     }
 }
 
 namespace {
-
-inline bool inside(int x, int y) {
-    return x >= 0 && y >= 0 && x < Surface565::kWidth && y < Surface565::kHeight;
-}
 
 // orig: Rent-A-Hero.exe 0x00439A80 – Mischung je Kanal, Division durch 256
 inline std::uint16_t blend565(std::uint16_t d, unsigned r, unsigned g, unsigned b, unsigned a) {
@@ -34,64 +30,67 @@ inline std::uint16_t blend565(std::uint16_t d, unsigned r, unsigned g, unsigned 
     return pack565(cR, cG, cB);
 }
 
-inline bool depthPass(const DepthTest* t, int screenX, int screenY) {
+inline bool depthPass(const DepthTest* t, long long index) {
     if (!t || !t->map) return true;
-    const int sy = screenY - t->sceneTop;
-    if (sy < 0 || sy >= 360 || screenX < 0 || screenX >= 640) return true;  // UNVERIFIED: außerhalb der Karte
-    return t->map[static_cast<std::size_t>(sy) * 640 + static_cast<std::size_t>(screenX)] > t->z;
+    if (index < 0 || index >= 640LL * 360) return false;  // UNVERIFIED: Lesen außerhalb der Karte
+    return t->map[static_cast<std::size_t>(index)] > t->z;
+}
+
+inline long long lin(const Surface565& s, int x, int y) {
+    return static_cast<long long>(y) * s.width + x;
 }
 
 }  // namespace
 
-void blitOpaque565(Surface565& s, const TccPlanes& p, int srcX, int srcY, const Rect& dst) {
-    for (int j = 0; j < dst.height(); ++j) {
-        const std::size_t srow = static_cast<std::size_t>(srcY + j) * p.width;
-        for (int i = 0; i < dst.width(); ++i) {
-            const int x = dst.left + i, y = dst.top + j;
-            if (!inside(x, y)) continue;
-            const std::size_t k = srow + static_cast<std::size_t>(srcX + i);
-            s.row(y)[x] = pack565(p.rgb[0][k], p.rgb[1][k], p.rgb[2][k]);
+void blitOpaque565(Surface565& s, const TccPlanes& p, int dstX, int dstY) {
+    const int w = static_cast<int>(p.width), h = static_cast<int>(p.height);
+    std::size_t k = 0;
+    for (int j = 0; j < h; ++j) {
+        const long long base = lin(s, dstX, dstY + j);
+        for (int i = 0; i < w; ++i, ++k) {
+            if (std::uint16_t* d = s.at(base + i)) *d = pack565(p.rgb[0][k], p.rgb[1][k], p.rgb[2][k]);
         }
     }
 }
 
-void blitAlpha565(Surface565& s, const TccPlanes& p, int srcX, int srcY, const Rect& dst,
-                  const DepthTest* depth) {
-    for (int j = 0; j < dst.height(); ++j) {
-        const std::size_t srow = static_cast<std::size_t>(srcY + j) * p.width;
-        for (int i = 0; i < dst.width(); ++i) {
-            const int x = dst.left + i, y = dst.top + j;
-            if (!inside(x, y)) continue;
-            const std::size_t k = srow + static_cast<std::size_t>(srcX + i);
+void blitAlpha565(Surface565& s, const TccPlanes& p, std::size_t srcOff, int width, int height, int srcSkip,
+                  int dstX, int dstY, const DepthTest* depth) {
+    const std::size_t total = std::size_t{p.width} * p.height;
+    std::size_t k = srcOff;
+    for (int j = 0; j < height; ++j) {
+        const long long base = lin(s, dstX, dstY + j);
+        const long long dbase = static_cast<long long>(dstY + j) * 640 + dstX;
+        for (int i = 0; i < width; ++i, ++k) {
+            if (k >= total) return;  // Original liest hier über das Bild hinaus (UNVERIFIED, kommt nicht vor)
             const unsigned a = p.alpha[k];
-            if (a == 0 || !depthPass(depth, x, y)) continue;
-            std::uint16_t& d = s.row(y)[x];
-            d = blend565(d, p.rgb[0][k], p.rgb[1][k], p.rgb[2][k], a);
+            if (a == 0 || !depthPass(depth, dbase + i)) continue;
+            if (std::uint16_t* d = s.at(base + i)) *d = blend565(*d, p.rgb[0][k], p.rgb[1][k], p.rgb[2][k], a);
         }
+        k += static_cast<std::size_t>(srcSkip);
     }
 }
 
-void blitAlphaZoom565(Surface565& s, const TccPlanes& p, const Rect& full, const Rect& dst,
-                      int clipL, int clipT, const DepthTest* depth) {
+void blitAlphaZoom565(Surface565& s, const TccPlanes& p, const Rect& full, const Rect& dst, int clipL, int clipT,
+                      const DepthTest* depth) {
     if (full.width() <= 0 || full.height() <= 0) return;
     const unsigned stepX = (p.width << 7) / static_cast<unsigned>(full.width());
     const unsigned stepY = (p.height << 7) / static_cast<unsigned>(full.height());
     // Ursprung und Zeile getrennt abgerundet (Original-Eigenheit, docs/RENDERER.md)
     const std::size_t origin = ((static_cast<unsigned>(clipL) * stepX) >> 7) +
                                ((static_cast<unsigned>(clipT) * stepY) >> 7) * std::size_t{p.width};
-    std::vector<unsigned> col(static_cast<std::size_t>(dst.width()));
-    for (int i = 0; i < dst.width(); ++i) col[static_cast<std::size_t>(i)] = (static_cast<unsigned>(i) * stepX) >> 7;
+    std::vector<unsigned> col(static_cast<std::size_t>(dst.width() > 0 ? dst.width() : 0));
+    for (std::size_t i = 0; i < col.size(); ++i) col[i] = (static_cast<unsigned>(i) * stepX) >> 7;
     const std::size_t total = std::size_t{p.width} * p.height;
     for (int j = 0; j < dst.height(); ++j) {
         const std::size_t srow = origin + ((static_cast<unsigned>(j) * stepY) >> 7) * std::size_t{p.width};
+        const long long base = lin(s, dst.left, dst.top + j);
+        const long long dbase = static_cast<long long>(dst.top + j) * 640 + dst.left;
         for (int i = 0; i < dst.width(); ++i) {
-            const int x = dst.left + i, y = dst.top + j;
             const std::size_t k = srow + col[static_cast<std::size_t>(i)];
-            if (!inside(x, y) || k >= total) continue;
+            if (k >= total) continue;
             const unsigned a = p.alpha[k];
-            if (a == 0 || !depthPass(depth, x, y)) continue;
-            std::uint16_t& d = s.row(y)[x];
-            d = blend565(d, p.rgb[0][k], p.rgb[1][k], p.rgb[2][k], a);
+            if (a == 0 || !depthPass(depth, dbase + i)) continue;
+            if (std::uint16_t* d = s.at(base + i)) *d = blend565(*d, p.rgb[0][k], p.rgb[1][k], p.rgb[2][k], a);
         }
     }
 }
