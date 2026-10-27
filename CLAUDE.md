@@ -15,6 +15,9 @@ Ziel: exakt originalgetreues Verhalten (Logik, Timing, Grafik, Ton, Spielstände
 - Schrift (2026-10-27): System-Arial, sonst Liberation Sans; ohne Kantenglättung.
 - Common-Dateien (2026-10-27): beides – Standard selbst aus `SETUP/DATA1.CAB` entpacken
   (libunshield, MIT), alternativ vorhandenen `Common`-Ordner angeben.
+- Datenquellen (2026-10-27): Port akzeptiert (a) zusammengeführten CD-Ordner, (b) die
+  originalen CD-Images direkt (BIN/CUE `MODE2/2352` und `.iso`; eigener ISO-9660-Leser),
+  plus optional einen vorhandenen `Common`-Ordner.
 
 ## Zu Beginn jeder Sitzung
 1. `docs/PROGRESS.md` und diese Datei lesen.

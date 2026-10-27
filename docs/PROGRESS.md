@@ -93,4 +93,5 @@
 1. Timer: Mix – Original-Zeitpunkte, Ausführung im Hauptthread, Schalter `timer_thread = original`.
 2. Schrift: System-Arial, sonst Liberation Sans, ohne Glättung.
 3. Common-Dateien: aus DATA1.CAB entpacken (libunshield) oder Common-Ordner angeben.
+4. Datenquellen: CD-Ordner oder direkt die CD-Images (BIN/CUE, ISO).
    Siehe CLAUDE.md „Festgelegte Entscheidungen“.

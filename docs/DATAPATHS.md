@@ -57,6 +57,9 @@ Schlüssel `loc01…`, Wert = CD-Nummer (1 oder 2; 4 × CD1, 29 × CD2). Dient n
 CD-Wechsel und wird im Port nicht gebraucht.
 
 ## Port
+- Datenquellen (Entscheidung Nutzer): zusammengeführter CD-Ordner **oder** die Images
+  direkt: BIN/CUE `MODE2/2352` (Nutzdaten 2048 Bytes ab Offset 24 je Sektor, Form 1)
+  bzw. `.iso`; beide CDs angeben, Dateisystem ISO 9660. DATA1.CAB liegt auf CD1.
 - Der Nutzer gibt ein Datenverzeichnis an (zusammengeführte CD, siehe SETUP.md).
   Abbildung: `ScenePath` = `ScenePathCd` = `<daten>/GAME/`, `CommonPathCd` =
   `<daten>/GAME/COMMONCD/`, `CommonPath` = installierter Ordner `Common`. Die
