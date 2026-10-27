@@ -28,8 +28,8 @@ Konsequenzen für den Port:
 | Schlüssel | Typ | Default | Verwendung |
 |---|---|---|---|
 | `Filename` | String | – | Hintergrundbild, geladen über `FUN_00449e70` |
-| `zBuf` | String | NULL | Tiefenpuffer (`*_Depth.zbf`), `FUN_0044a1b0` |
-| `wBuf` | String | NULL | Wegmaske (`*_Path.zbf`), `FUN_0044a260` |
+| `zBuf` | String | NULL | Tiefenkarte (`*_Depth.zbf`) → `CSzene+0x2BC`, siehe zbf.md |
+| `wBuf` | String | NULL | Wegkarte (`*_Path.zbf`) → `CSzene+0x2C0`, siehe zbf.md |
 | `fps` | Int | 0 | gespeichert bei Hintergrundobjekt `+0x54` |
 Sektionsname wird bei `+0x15C` des Hintergrundobjekts abgelegt.
 

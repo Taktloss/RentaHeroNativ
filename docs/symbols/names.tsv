@@ -189,3 +189,9 @@
 0047d744	g_PrevScene	d
 0047d748	g_PrevLocation	d
 0047d68c	g_SaveRequest	d
+0043d620	CZMap_ctor	f
+0043d710	CZMap_Load	f
+0043d6c0	CZMap_CalcScale	f
+0044a1b0	CSzene_LoadDepth	f
+0044a260	CSzene_LoadPath	f
+0046b8c8	vtbl_CZMap	d

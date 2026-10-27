@@ -31,7 +31,7 @@ Belegstufen: **V** = Vorlage + Code stimmen überein, **C** = aus Code abgeleite
 | Audiopuffer | 0x188 | `0x00436C30` | `0x0046B71C` (8) | ? | Kandidat `CAudioBuffer` |
 | Musik/Stream | 0x1A4 | `0x004376C0` | `0x0046B750` (8) | ? | Kandidat Musikobjekt (`FadeIn` `0x00437FC0`) |
 | … | 0x22C | `0x004436B0` | `0x0046B908` (2) | ? | |
-| … | 0x140 | `0x0043D620` | `0x0046B8C8` (1) | ? | |
+| `CZMap` (ZBF-Karte) | 0x140 | `0x0043D620` | `0x0046B8C8` (1) | C | Tiefen- und Wegkarte, siehe formats/zbf.md |
 | `CEvent` | 0x24 | `0x0043F130` | – | C | 48× erzeugt; Felder und Auslösen siehe `docs/EVENTS.md` |
 | `CTimer` | 0x18 | `0x0044D790` | – | C | `timeSetEvent`-Hülle, siehe TIMING.md |
 | WAV-Datei | 0x5C | `0x0044DE80` | – | ? | neben `mmio*`-Funktionen |

@@ -1,6 +1,6 @@
 # Arbeitsprotokoll
 
-## Stand: 2026-10-27 – Phase 0 und Phase 1 abgeschlossen, warte auf OK
+## Stand: 2026-10-27 – Phase 2 weitgehend, Phase 3 begonnen
 
 ### Erledigt
 - Projektstruktur (`src/ tools/ tests/ docs/ re/scripts/ re/private/`), Git-Repo, `.gitignore`.
@@ -62,7 +62,19 @@
 - Offene Punkte aus EVENTS.md: Mehrfachauslösung bei Down/Up, `FUN_00434e80` (Laufen),
   Objekte `CSzene+0x5B4` (unterer Streifen) und `+0x9F8` (oberer Balken), `CArea`-Ctor.
 - Offene SZN-Punkte: Pfadauflösung `FUN_00448a70`, Stack-Verwechslung im Figurenblock am
-  Disassembly prüfen, Perspektivparameter (`this+0x2C0`).
+  Disassembly prüfen. (`this+0x2C0` ist die Wegkarte, siehe zbf.md.)
 - VC6-CRT besser erkennen (FID), damit Spielcode sauber getrennt ist.
 - Timing im Testlauf gegenprüfen (Animationsraten messen), `CGame_Tick`-Zweck.
 - Entscheidung Nutzer: MM-Timer im Hauptthread statt Timer-Thread (Sofort-Flag-Race).
+
+### Phase 3 – erledigt
+- `docs/formats/tcc.md`: TCC/A16 (RLE, Alpha, Delta-Bilder, Seek); Decoder
+  `tools/rahimg.py` an allen Dateien geprüft (`S26_RING.TCC` ist ein ungültiger Rest).
+- `docs/formats/savegame.md`: am Binary belegt, Aufträge Laden/Speichern/Neues Spiel
+  (Start Loc 40/Szene 114)/Autosave; Namenspuffer-Reste für byte-identische Dateien.
+- `docs/formats/zbf.md`: Tiefen-/Wegkarte 640×360 mit Skalenkopf.
+
+### Phase 3 – nächste Schritte
+- ACS (704 Dateien), GER/ENG (Texte/Untertitel), HLP (XOR 0x80), WAV-Lader, BMP-Lader
+  (Sonderfälle?), AVI-Nutzung (DirectShow-Parameter), INI-Dateien.
+- Renderer: Pixelformat (16/24 Bit, TrueColor), Kanalreihenfolge der TCC-Ebenen bestätigen.
