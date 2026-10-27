@@ -155,8 +155,8 @@ TEST(scene_original_dump) {
     int n = 0;
     for (int i = 0; scene.layer(i); ++i, ++n) scene.layer(i)->enable();
     CHECK(scene.compose(false));
-    std::cout << "     LOC01/7A: " << n << " statische Ebenen, " << scene.unsupportedLayers()
-              << " animierte noch nicht portiert\n";
+    std::cout << "     LOC01/7A: " << n << " Ebenen, " << scene.unsupportedLayers()
+              << " nicht unterstützt (AVI)\n";
     if (const char* d = std::getenv("RAH_DUMP_DIR")) writePpm(surf, std::filesystem::path(d) / "loc01_7a.ppm");
 }
 

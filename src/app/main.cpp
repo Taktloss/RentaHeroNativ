@@ -1,7 +1,180 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// Platzhalter: Einstieg des Spiels (SDL3). Folgt mit Renderer und Hauptschleife.
+// Einstieg (SDL3). Vorerst ein Szenen-Betrachter: lädt eine Szene, schaltet zur Ansicht alle
+// Ebenen ein und lässt Animationen in Schleife laufen (nicht Original – das tun später die
+// Schauplätze). Der Frame-Ablauf folgt Game_Idle (0x004030C0, docs/TIMING.md):
+// CSzene_Update → Compose → Ausgabe (Szene bei y + 60) → CSzene_DispatchEvents.
 #include <SDL3/SDL.h>
 
-int main(int, char**) {
+#include <cstdio>
+#include <cstdlib>
+#include <fstream>
+#include <string>
+#include <vector>
+
+#include "engine/animlayer.hpp"
+#include "engine/scene.hpp"
+#include "vfs/dirfs.hpp"
+#include "vfs/vfs.hpp"
+
+using namespace rah;
+
+namespace {
+
+constexpr int kScreenW = 640, kScreenH = 480, kSceneTop = 60;
+
+struct Options {
+    std::vector<std::string> cd;  // Ordner, .iso oder .cue (mehrfach)
+    std::string common;
+    int location = 1;
+    std::string scene = "7A";
+    unsigned loadMask = 0xFFFF;
+    int frames = -1;  // > 0: nach so vielen Frames beenden
+    int frameMs = 1;  // Pause je Frame (Original: keine, TIMING.md)
+    std::string dump; // PPM des Bildschirms am Ende
+    bool hidden = false;
+};
+
+void usage() {
+    std::fprintf(stderr,
+                 "rentahero --cd <Ordner|.iso|.cue> [--cd …] [--common <Ordner>]\n"
+                 "          [--loc <n>] [--scene <Name>] [--mask <n>]\n"
+                 "          [--frames <n>] [--frame-ms <n>] [--dump <datei.ppm>] [--hidden]\n");
+}
+
+bool parse(int argc, char** argv, Options& o) {
+    for (int i = 1; i < argc; ++i) {
+        const std::string a = argv[i];
+        auto val = [&]() -> const char* { return i + 1 < argc ? argv[++i] : nullptr; };
+        const char* v = nullptr;
+        if (a == "--hidden") {
+            o.hidden = true;
+            continue;
+        }
+        if (!(v = val())) return false;
+        if (a == "--cd") o.cd.emplace_back(v);
+        else if (a == "--common") o.common = v;
+        else if (a == "--loc") o.location = std::atoi(v);
+        else if (a == "--scene") o.scene = v;
+        else if (a == "--mask") o.loadMask = static_cast<unsigned>(std::strtoul(v, nullptr, 0));
+        else if (a == "--frames") o.frames = std::atoi(v);
+        else if (a == "--frame-ms") o.frameMs = std::atoi(v);
+        else if (a == "--dump") o.dump = v;
+        else return false;
+    }
+    return !o.cd.empty();
+}
+
+// Szenenausschnitt `r` (Szenenkoordinaten) in den Bildschirmpuffer, Ziel y + 60
+// (orig: Ausgabe des Vollbild-Renderers 0x0043E210, COMPOSITOR.md)
+void present(const Surface565& s, const Rect& r, std::vector<std::uint16_t>& screen) {
+    for (int y = r.top; y < r.bottom; ++y) {
+        const int sy = y + kSceneTop;
+        if (y < 0 || y >= s.height || sy >= kScreenH) continue;
+        for (int x = r.left; x < r.right; ++x) {
+            if (x < 0 || x >= s.width || x >= kScreenW) continue;
+            screen[static_cast<std::size_t>(sy * kScreenW + x)] = s.row(y)[x];
+        }
+    }
+}
+
+void writePpm(const std::vector<std::uint16_t>& px, const std::string& path) {
+    std::ofstream o(path, std::ios::binary);
+    o << "P6\n" << kScreenW << " " << kScreenH << "\n255\n";
+    for (auto p : px) {
+        std::uint8_t c[3];
+        unpack565To888(p, c[0], c[1], c[2]);
+        o.write(reinterpret_cast<const char*>(c), 3);
+    }
+}
+
+}  // namespace
+
+int main(int argc, char** argv) {
+    Options opt;
+    if (!parse(argc, argv, opt)) {
+        usage();
+        return 2;
+    }
+
+    Vfs cd;
+    for (const auto& p : opt.cd) {
+        std::string err;
+        if (!cd.mountPath(p, &err)) {
+            std::fprintf(stderr, "Datenquelle %s: %s\n", p.c_str(), err.c_str());
+            return 1;
+        }
+    }
+    std::unique_ptr<DirFileSystem> common;
+    if (!opt.common.empty()) common = std::make_unique<DirFileSystem>(opt.common);
+    DataPaths paths(&cd, common.get());
+    paths.setLocation(opt.location);
+
+    if (!SDL_Init(SDL_INIT_VIDEO)) {
+        std::fprintf(stderr, "SDL_Init: %s\n", SDL_GetError());
+        return 1;
+    }
+    EngineGlobals g;
+    // timeGetTime(): Millisekunden als 32-Bit-Zahl (läuft wie das Original nach ~49 Tagen über)
+    g.now = [] { return static_cast<std::uint32_t>(SDL_GetTicks()); };
+
+    Surface565 surf(640, 420);  // UNVERIFIED: Größe der Szenenoberfläche (COMPOSITOR.md)
+    Scene scene(paths, g, surf);
+    if (!scene.load(opt.scene, opt.loadMask) || !scene.background()) {
+        std::fprintf(stderr, "Szene %s nicht geladen\n", opt.scene.c_str());
+        SDL_Quit();
+        return 1;
+    }
+    // Betrachter: alles sichtbar, Animationen in Schleife (Modus 13)
+    scene.background()->enable();
+    int anims = 0;
+    for (int i = 0; scene.layer(i); ++i) {
+        scene.layer(i)->enable();
+        if (auto* a = dynamic_cast<AnimLayer*>(scene.layer(i))) {
+            a->start(13);
+            ++anims;
+        }
+    }
+    std::fprintf(stderr, "LOC%02d/%s: %d animierte Ebenen, %d nicht unterstützt\n", opt.location,
+                 opt.scene.c_str(), anims, scene.unsupportedLayers());
+
+    SDL_Window* win = nullptr;
+    SDL_Renderer* ren = nullptr;
+    const SDL_WindowFlags flags = SDL_WINDOW_RESIZABLE | (opt.hidden ? SDL_WINDOW_HIDDEN : 0);
+    if (!SDL_CreateWindowAndRenderer("Rent-A-Hero", kScreenW * 2, kScreenH * 2, flags, &win, &ren)) {
+        std::fprintf(stderr, "Fenster: %s\n", SDL_GetError());
+        SDL_Quit();
+        return 1;
+    }
+    SDL_SetRenderLogicalPresentation(ren, kScreenW, kScreenH, SDL_LOGICAL_PRESENTATION_INTEGER_SCALE);
+    SDL_Texture* tex =
+        SDL_CreateTexture(ren, SDL_PIXELFORMAT_RGB565, SDL_TEXTUREACCESS_STREAMING, kScreenW, kScreenH);
+    SDL_SetTextureScaleMode(tex, SDL_SCALEMODE_NEAREST);
+
+    std::vector<std::uint16_t> screen(static_cast<std::size_t>(kScreenW * kScreenH), 0);
+    bool quit = false;
+    for (int frame = 0; !quit && (opt.frames < 0 || frame < opt.frames); ++frame) {
+        SDL_Event ev;
+        while (SDL_PollEvent(&ev)) {
+            if (ev.type == SDL_EVENT_QUIT) quit = true;
+            if (ev.type == SDL_EVENT_KEY_DOWN && ev.key.key == SDLK_ESCAPE) quit = true;
+        }
+        scene.update(true);
+        if (scene.compose(false)) {
+            if (auto r = scene.output().first()) present(surf, *r, screen);
+            scene.clearOutput();
+            SDL_UpdateTexture(tex, nullptr, screen.data(), kScreenW * 2);
+        }
+        SDL_RenderClear(ren);
+        SDL_RenderTexture(ren, tex, nullptr, nullptr);
+        SDL_RenderPresent(ren);
+        scene.dispatchEvents();
+        if (opt.frameMs > 0) SDL_Delay(static_cast<Uint32>(opt.frameMs));
+    }
+    if (!opt.dump.empty()) writePpm(screen, opt.dump);
+
+    SDL_DestroyTexture(tex);
+    SDL_DestroyRenderer(ren);
+    SDL_DestroyWindow(win);
+    SDL_Quit();
     return 0;
 }

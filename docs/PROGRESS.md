@@ -156,6 +156,12 @@
   CImageA16 neu (Halte-Flag, Zähler, Seek-Eigenheiten, tcc.md). `engine/event` (CEvent,
   CEvent_Fire), `engine/globals`. Szene legt A16-Ebenen jetzt an; AVI bleibt offen.
   40 Tests grün.
-- Nächste Schritte: CSzene_Update-Tick (Fälligkeit, 200-ms-Fenster, TIMING.md) und
-  CSzene_DispatchEvents, CLayer_Update-Interpolation, Bereiche (CArea, HitTest),
-  SDL-Fenster + Hauptschleife (wartet auf SDL3-devel), Figuren (CActor_Draw), Loc40.
+- 2026-10-28: `Scene::update` (CSzene_Update: Takt-Stufen, Z-Zählerpflege, Abbruch beim
+  ersten leeren Platz; Eigenheit: erstes Fenster nach dem Ctor tickt doppelt) und
+  `Scene::dispatchEvents` (Ebenen ausblenden vor dem Ende-Ereignis). SDL3/FFmpeg/unshield
+  installiert. `rentahero` ist ein Szenen-Betrachter mit dem Frame-Ablauf von Game_Idle:
+  `rentahero --cd RentAHero --common <Common> --loc 1 --scene 7A` (Kopflos:
+  `SDL_VIDEO_DRIVER=offscreen … --frames N --dump x.ppm --hidden`). LOC01/7A läuft mit allen
+  A16-Animationen. 44 Tests grün.
+- Nächste Schritte: Bereiche (CArea, AddArea, HitTest) + Maus, CLayer_Update-Interpolation,
+  Timer (CEvent_FireTimers), AVI-Ebenen (FFmpeg), Inventarleiste, Figuren, Loc40.
