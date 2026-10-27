@@ -164,3 +164,14 @@
 0043f4a0	CEvent_FireTimers	f
 0047e614	g_TimerEvents	d
 0047d754	g_FrameCount	d
+0043b630	CImageTcc_Load	f
+0043b740	CImageTcc_Decode	f
+004380b0	Rle_Decode	f
+00438800	CImageTcc_DecodePlane4	f
+004385d0	CImage_ApplyColorLut	f
+004386e0	CImage_CalcAlphaBounds	f
+00438680	CImage_IsTransparent	f
+0043bb60	CImageA16_Load	f
+0043bd20	CImageA16_Next	f
+0043bce0	CImageA16_Rewind	f
+0043bdc0	CImageA16_Seek	f
