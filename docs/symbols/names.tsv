@@ -212,3 +212,12 @@
 004382c0	CImageBmp_Load	f
 0043c7c0	CImageAvi_Load	f
 0043c9a0	CImageAvi_Rewind	f
+00448b30	CSzene_FindFile	f
+00448a70	CSzene_FindPath	f
+00447f90	MakeFileName	f
+00447f60	JoinPath	f
+0044e810	_access	f
+0047d278	g_CommonPath	d
+0047d37c	g_CommonPathCd	d
+0047d480	g_ScenePath	d
+0047d584	g_ScenePathCd	d

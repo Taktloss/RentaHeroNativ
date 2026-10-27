@@ -61,7 +61,7 @@
 - Audio-Klassen (Manager, Puffer, Musik) belegen.
 - Offene Punkte aus EVENTS.md: Mehrfachauslösung bei Down/Up, `FUN_00434e80` (Laufen),
   Objekte `CSzene+0x5B4` (unterer Streifen) und `+0x9F8` (oberer Balken), `CArea`-Ctor.
-- Offene SZN-Punkte: Pfadauflösung `FUN_00448a70`, Stack-Verwechslung im Figurenblock am
+- Offene SZN-Punkte: Stack-Verwechslung im Figurenblock am
   Disassembly prüfen. (`this+0x2C0` ist die Wegkarte, siehe zbf.md.)
 - VC6-CRT besser erkennen (FID), damit Spielcode sauber getrennt ist.
 - Timing im Testlauf gegenprüfen (Animationsraten messen), `CGame_Tick`-Zweck.
@@ -76,8 +76,9 @@
 - `docs/formats/hlp.md` (XOR 0x80 nur wenn erstes Byte ≥ 0x80, Layout links/rechts),
   `docs/formats/media.md` (BMP 24 Bit, WAV, AVI über DirectShow-Streaming; 124 AVIs, 10 fps,
   cvid/IV50/IV32).
+- `docs/DATAPATHS.md`: rah.ini-Pfade, Suchreihenfolge der vier Ordner, Namensbildung.
 - `docs/formats/ger.md`: LocNN.GER (`[AREA_TEXT]`, `[SPEECH]`), Sprachausgabe, ACS-Lippensync.
 
 ### Phase 3 – nächste Schritte
-- Vollbild-Videos (`0x004050B0`, Filtergraph), INI-Dateien, Pfadauflösung `FUN_00448b30`.
+- Vollbild-Videos (`0x004050B0`, Filtergraph), Inhalt von `common` (DATA1.CAB) prüfen.
 - Renderer: Pixelformat (16/24 Bit, TrueColor), Kanalreihenfolge der TCC-Ebenen bestätigen.
