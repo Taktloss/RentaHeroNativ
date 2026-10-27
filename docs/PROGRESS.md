@@ -123,3 +123,14 @@
 - Nächste Schritte: Flag-Bedeutungen und Abläufe je Schauplatz von Hand ergänzen, oder
   mit dem Port-Gerüst (Phase 5) beginnen;  offene Punkte: `CAnimLayer_Play`-Parameter, Laufmodus 3,
   Sofort-Flag bei Timern, Rolle von `0x0047D130`/`0x0047D74C`.
+
+### Phase 5 – begonnen (Entscheidung Nutzer: Gerüst jetzt, Schauplätze beim Portieren)
+- CMake-Gerüst (`rah_core`, `rah_tests`, `rentahero` nur mit SDL3+FFmpeg), eigenes
+  Testgerüst. `docs/ARCHITECTURE.md`.
+- `src/vfs/`: Ordner (ohne Groß-/Kleinschreibung), ISO 9660/Joliet aus `.iso` und BIN/CUE,
+  Vereinigung – alle 2792 Dateien byte-gleich geprüft.
+- `src/formats/tcc.*`: TCC/A16 inkl. Original-Eigenheiten (4-Bit-Paar, kumulierende LUT,
+  Next/Seek) – alle Originalbilder dekodiert.
+- Wartet auf Nutzer: `sudo dnf install SDL3-devel ffmpeg-free-devel unshield-devel`.
+- Nächste Schritte: SZN/INI-Leser (GetPrivateProfileString-Semantik), ZBF, Renderer
+  (RGB565-Blitter), SDL-Fenster + Hauptschleife, Szene/Ebenen/Ereignisse, Loc40.
