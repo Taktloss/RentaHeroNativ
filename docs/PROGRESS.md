@@ -105,6 +105,8 @@
 - `docs/HINTS.md`: Hinweissystem komplett (Tabelle Szene → Bedingung → HLP, Zeiten).
 - `docs/LOCATIONS.md`: Übersicht aller 33 Schauplätze (40 Ereignis-Handler, registrierte
   IDs, Szenenwechsel, Flags, Musik) per `tools/loc_summary.py`; Aufbau eines Schauplatzes.
+- `docs/PATHFINDING.md`: Wegsuche komplett (globales 160×90-Raster, A* vom Ziel zum Start
+  mit Gleichstand-Regel, Wegpunkt-Glättung, mehrere Original-Fehler).
 - Nächste Schritte: Einzeldokumentation je Schauplatz (Start: Loc40 = Neues Spiel,
-  Loc01), Wegsuche in `CActor_WalkCore` (Laufmodus 3); offene Punkte: `CAnimLayer_Play`-Parameter, Laufmodus 3,
+  Loc01), `0x00434AE0`/`0x00434850` (Schrittsteuerung), Laufmodus 3; offene Punkte: `CAnimLayer_Play`-Parameter, Laufmodus 3,
   Sofort-Flag bei Timern, Rolle von `0x0047D130`/`0x0047D74C`.
