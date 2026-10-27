@@ -100,7 +100,9 @@
 - `docs/SCRIPTING.md`: blockierende Wartestellen mit verschachtelter Nachrichtenschleife
   (neue Aktion bricht äußere ab, WM_COMMAND wird verworfen), Spiel-API (25 Funktionen
   benannt), Zufallsgenerator, Doppelklick = Rennen.
-- Nächste Schritte: Zustandsblock `CGameState` (Flag-Offsets aus allen `+0x78`-Zugriffen),
-  dann Schauplatz für Schauplatz (Ereignis-IDs, Zustandsänderungen, Szenenwechsel) per
+- `docs/formats/gamestate.md`: Aufteilung (Hinweis-Countdowns pro Szene + 164 Flags),
+  Flag-Tabelle mit Startwerten und Zugriffen (`tools/state_usage.py`).
+- `docs/HINTS.md`: Hinweissystem komplett (Tabelle Szene → Bedingung → HLP, Zeiten).
+- Nächste Schritte: Schauplatz für Schauplatz (Ereignis-IDs, Zustandsänderungen, Szenenwechsel) per
   Skript zusammenfassen; offene Punkte: `CAnimLayer_Play`-Parameter, Laufmodus 3,
   Sofort-Flag bei Timern, Rolle von `0x0047D130`/`0x0047D74C`.

@@ -27,8 +27,8 @@ Summe 17 122 Bytes.
 - Nur wenn ein Schauplatz läuft und die Figur (`CGame+0x1C`) existiert und aktiv ist
   (`+0x1A4`); sonst wird nichts geschrieben.
 - Datei `0x0047C128` wird neu angelegt (`CREATE_ALWAYS`).
-- Vor dem Zustandsblock: `state[CSzene+0x5D4] = CGame+0x10` (Countdown aus `CGame_Tick`,
-  TIMING.md) – der Zähler wird also im Zustandsblock mitgespeichert.
+- Vor dem Zustandsblock: `state[CSzene+0x5D4] = CGame+0x10` (Hinweis-Countdown der aktuellen Szene,
+  HINTS.md, gamestate.md) – der Zähler wird also im Zustandsblock mitgespeichert.
 - Der Name wird mit festen 30 Bytes geschrieben. Da Namen per `strcpy` in den Puffer
   kopiert werden, stehen hinter dem NUL **Reste früherer Namen**
   (z. B. „AutoSaveGame“ über „SaveGame01.rah“ → `AutoSaveGame\0ah\0…`). Für

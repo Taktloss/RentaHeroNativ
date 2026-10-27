@@ -20,11 +20,11 @@ im Binary (`%s->SetEvent(MakeEventValue(CLICKED_%s))`, `switch (thisEvent->Param
 
 ## 2. `CSzene_OnClick` (`0x0044C950`)
 Speichert `x, y` in `CSzene+0x500/+0x504`. Bildschirmaufteilung (Szene 640×360 ab y = 60):
-- `CSzene+0x9F8` (Objekt, aktiv bei `[1] != 0`) hat Vorrang → `FUN_004416c0`, Ende.
+- `CSzene+0x9F8` (Hilfe, HINTS.md) offen (`[1] != 0`) → schließen (`FUN_004416c0`), Ende.
 - `CSzene+0x514 == 0` → Klicks gesperrt, Ende.
 - weitere Sperren/Sonderfälle: `+0x518`, `+0x5DC`, `+0x510` mit globalem Ereignis `0x00481EE8`
   (Typ 0x16) – Bedeutung offen.
-- **y < 60** (oberer Balken): bei `x ≥ 0x245` (581) und Objekt `+0x9F8` → `FUN_004416e0`;
+- **y < 60** (oberer Balken): bei `x ≥ 0x245` (581) Hilfe-Symbol → `CGame_ShowHint` (HINTS.md);
   sonst nichts.
 - **60 ≤ y < 480**: `area = CSzene_HitTest(x, y - 60)` → `CSzene+0x2C8`.
   - Treffer: Ereignis `area+0xB0` mit **Typ 0x0B** markieren (`pending = 1`, Typ/Param =

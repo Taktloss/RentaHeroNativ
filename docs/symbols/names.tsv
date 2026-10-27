@@ -268,3 +268,8 @@
 0043f360	CEvent_SetTimerHandler	f
 00435320	CActor_SetRun	f
 00435330	CActor_ClearRun	f
+004448d0	Hints_Select	f
+00440be0	CGame_SetHint	f
+00440c40	CGame_ShowHint	f
+004414a0	CHelp_IconOn	f
+004414b0	CHelp_IconOff	f

@@ -96,6 +96,5 @@ die Race). Schalter `timer_thread = original` (Standard aus): echte Threads wie 
 Offen: wie oft das Sofort-Flag bei Timern überhaupt vorkommt (Phase 4).
 
 ## Spiel-Tick: `CGame_Tick` (`0x00440B80`)
-Läuft frühestens alle **5001 ms** (`dt < 0x1389` → nichts). Ruft `FUN_004448d0`,
-zieht `dt` vom Countdown `CGame+0x10` ab (wenn `+0x18` gesetzt); unter 0 → `-1` und
-`FUN_004414a0(CGame+0x0C)`. Zweck noch offen (Kandidat: Leerlauf-Aktion) – UNVERIFIED.
+Läuft frühestens alle **5001 ms** (`dt < 0x1389` → nichts) und steuert das
+Hinweissystem (Hilfe-Symbol nach Countdown) – siehe HINTS.md.
