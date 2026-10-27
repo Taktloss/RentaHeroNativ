@@ -110,5 +110,5 @@
 - `docs/ACTOR.md`: Fußpunkt, `SetPosition` (Zoom aus Wegkarte, ortsabhängige Tönung als
   Quadrat-Zonen), Richtungswahl (Laufmodus 1/2/3), Figurentypen-Tabelle.
 - Nächste Schritte: Einzeldokumentation je Schauplatz (Start: Loc40 = Neues Spiel,
-  Loc01), Bedeutung der Figurentyp-Felder (`CActor_Update`); offene Punkte: `CAnimLayer_Play`-Parameter, Laufmodus 3,
+  Loc01),  offene Punkte: `CAnimLayer_Play`-Parameter, Laufmodus 3,
   Sofort-Flag bei Timern, Rolle von `0x0047D130`/`0x0047D74C`.

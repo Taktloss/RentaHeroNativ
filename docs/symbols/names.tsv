@@ -311,3 +311,5 @@
 00434ae0	CActor_SetPosition	f
 00433e30	CActor_SetType	f
 00446e70	CLayer_SetPos	f
+00435ae0	CActor_Draw	f
+004387b0	CImage_ClearRows	f
