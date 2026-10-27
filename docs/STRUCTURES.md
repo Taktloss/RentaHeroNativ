@@ -14,22 +14,22 @@ Belegstufen: **V** = Vorlage + Code stimmen überein, **C** = aus Code abgeleite
 | `CGame` (Basis aller Schauplätze) | – | `0x0043F4D0` | `0x0046B8D8` (2) | V | von jedem `LocNN`-Ctor zuerst aufgerufen; Slots = Destruktor, `Start()` (leer) |
 | `LocNN : CGame` (33 Klassen) | 0xA0–0x178 | siehe unten | `0x0046B414`–`0x0046B530` (je 2) | V | setzt `CurLocation`, `CurSzene`, `FromSzene`, `View` wie die Vorlage |
 | `CSzene` (View) | 0xACC | `0x004483A0` | keine | C | in WinMain angelegt (`g_CurScene`); Felder passen zum SZN-Lader |
-| `CActor` (Figur) | 0x1B00 | `0x004338A0` | `0x0046B538` (10) | C | Felder `+0x15CC` Direction, `+0x160C…` Farb-Arrays, `+0x16D8` Zpos, `+0x1AEC` Type wie im SZN-Lader |
+| `CActor : CAnimLayer` (Figur) | 0x1B00 | `0x004338A0` | `0x0046B538` (10) | C | teilt Slots 2, 3 mit `CAnimLayer`; Felder `+0x15CC` Direction, `+0x160C…` Farb-Arrays, `+0x16D8` Zpos, `+0x1AEC` Type wie im SZN-Lader |
 | `CGameState` | 0x4110 | `0x0044DA60` | keine | C | Größe = Zustandsblock im Spielstand |
-| `CLayerBase` (abstrakt) | – | – | `0x0046B7A8` (14, mehrere `_purecall`) | C | 10 Ctor/Dtor schreiben sie |
-| Ebenentyp A | 0x394 | `0x004381E0` | `0x0046B770` (14) | ? | erbt `CLayerBase` |
-| Ebenentyp B | 0x3A4 | `0x00438390` | `0x0046B7E0` (14) | ? | erbt `CLayerBase` |
-| Ebenentyp C | 0xABC | `0x0043BAA0` | `0x0046B820` (14) | ? | erbt Typ B (teilt Slots 1–3, 8–12) |
-| Ebenentyp D | ? | `0x0043BEE0` | `0x0046B858` (14) | ? | erbt `CLayerBase` |
-| Ebenentyp E | 0x478 | `0x0043C5C0` | `0x0046B890` (14) | ? | erbt `CLayerBase` |
+| `CLayer` (statische Ebene) | 0x2B0 | `0x004466A0` | `0x0046B918` (9) | C | `CSzene_CreateLayer` bei `fps == 0` |
+| `CAnimLayer` (animierte Ebene) | 0x15C8 | `0x004422E0` | `0x0046B8E0` (10) | C | `CSzene_CreateLayer` bei `fps != 0`; teilt Slots 5, 7, 8 mit `CLayer` |
+| `CImage` (abstrakt) | – | – | `0x0046B7A8` (14, mehrere `_purecall`) | C | Basis der Bildformat-Klassen |
+| `CImageBmp` | 0x394 | `0x004381E0` | `0x0046B770` (14) | C | Typ 0 in `CLayer_CreateImage` |
+| `CImageTcc` | 0x3A4 | `0x00438390` | `0x0046B7E0` (14) | C | Typ 1 |
+| `CImageA16 : CImageTcc` | 0xABC | `0x0043BAA0` | `0x0046B820` (14) | C | Typ 2; Ctor ruft `CImageTcc`-Ctor |
+| `CImageAvi` | 0x478 | `0x0043C5C0` | `0x0046B890` (14) | C | Typ 3 |
+| (unbenutzt) | ? | `0x0043BEE0` | `0x0046B858` (14) | ? | erbt `CImage`; keine Aufrufer → vermutlich toter Code |
 | `IRenderer` (abstrakt) | – | – | `0x0046B8CC` (3× `_purecall`) | C | Schnittstelle |
 | Renderer Vollbild | global | `0x00401CF0` | `0x0046B3FC` (3) | C | Objekt `0x0047C870`, gewählt bei `FullScreen` |
 | Renderer Fenster | global | `0x00401D60` | `0x0046B408` (3) | C | Objekt `0x0047C230` |
 | Audio-Manager | global | `0x00436530` | `0x0046B718` (1) | ? | Objekt `0x0047BF10`; Lautstärken `+0x6C…`, 100 Puffer-Slots ab `+0x84` |
 | Audiopuffer | 0x188 | `0x00436C30` | `0x0046B71C` (8) | ? | Kandidat `CAudioBuffer` |
 | Musik/Stream | 0x1A4 | `0x004376C0` | `0x0046B750` (8) | ? | Kandidat Musikobjekt (`FadeIn` `0x00437FC0`) |
-| Szenen-Variante | 0x15C8 | `0x004422E0` | `0x0046B8E0` (10) | ? | 6× erzeugt; teilt 3 Slots mit `0x0046B918` |
-| … | 0x2B0 | `0x004466A0` | `0x0046B918` (9) | ? | |
 | … | 0x22C | `0x004436B0` | `0x0046B908` (2) | ? | |
 | … | 0x140 | `0x0043D620` | `0x0046B8C8` (1) | ? | |
 | kleines Objekt | 0x24 | `0x0043F130` | – | ? | 48× erzeugt (Kandidat: `CEvent` oder `CArea`) |
@@ -89,3 +89,26 @@ Konstruktor `CurLocation = 1` (`0x00430A64`, `eax = 1`) und `CurSzene` fest – 
 Originals, im Port so übernehmen. Die Zuordnung „35“ beruht auf den geladenen Dateien.
 
 Kein eigener Code für LOC11, 13, 32–34, 36, 38, 39 (diese Ordner existieren auch nicht).
+
+## Ebenen und Bilder
+
+`CSzene_CreateLayer` (`0x0044AB10`, aufgerufen vom SZN-Lader):
+- freier Platz im Ebenen-Array `CSzene+0x04 + i*4` (max. 40, sonst Rückgabe 0)
+- `fps == 0` → `new CLayer` (0x2B0), sonst `new CAnimLayer` (0x15C8)
+- vtable `+0x08` `Load(hwnd, ?, filename, ?)` – bei Fehler: Ebene löschen, 0 zurück
+- vtable `+0x0C` danach (bei `CLayer`: `CLayer_CreateImage`), dann `+0x14 SetPos(0, CSzene+0x2F0)`
+- `CSzene+0x2B8` = Index, `CSzene+0x5D8` = zuletzt erzeugte Ebene
+- legt automatisch einen Klickbereich mit dem Ebenennamen an (`CSzene_AddArea` ohne Rechteck)
+  und verknüpft ihn mit der Ebene (`FUN_00436060`)
+
+`CLayer_Load` (`0x00446940`, Slot 2): kopiert den Pfad nach `+0x5C`, prüft die Datei
+(`FUN_0044e810`), bestimmt den Typ `+0x220` aus den **letzten drei Zeichen** per
+`lstrcmpA` (case-sensitiv!): `BMP`/`bmp`→0, `TCC`/`tcc`→1, `A16`/`a16`→2, `AVI`/`avi`→3,
+sonst 4. Gemischte Schreibweisen (`Bmp`) ergeben 4 und scheitern später – kommt in den
+Daten nicht vor (nur `a16 A16 avi bmp BMP TCC`), im Port aber genauso behandeln.
+
+`CLayer_CreateImage` (`0x00446AC0`, Slot 3): erzeugt `CImage*` nach Typ in `+0x0C`;
+Typ 1 (TCC) setzt `+0x19C` (= `DirtyAlpha`-Flag) zwingend; ist es gesetzt, auch
+`image+0x37C = 1`. Danach `image->Load(layer+0x5C)` (Slot 0); übernimmt
+Breite `image+0x338` → `+0x1E8`, Höhe `image+0x33C` → `+0x1EC`, Rechtecke `+0x1F0`/`+0x200`
+= (0, 0, w, h); `image+0x334 != 0` → `+0x198 = 1` (Bedeutung offen, evtl. Transparenz).

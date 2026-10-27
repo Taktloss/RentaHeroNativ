@@ -51,7 +51,7 @@
 00470808	g_GameMenuMode	d
 0046b8d8	vtbl_CGame	d
 0046b538	vtbl_CActor	d
-0046b7a8	vtbl_CLayerBase	d
+0046b7a8	vtbl_CImage	d
 0046b8cc	vtbl_IRenderer	d
 00405530	Loc01_ctor	f
 0046b414	vtbl_Loc01	d
@@ -128,3 +128,18 @@
 00437fc0	CMusic_FadeIn	f
 0044b0c0	CSzene_DisableAll	f
 00447470	CLayer_Enable	f
+0044ab10	CSzene_CreateLayer	f
+004466a0	CLayer_ctor	f
+00446940	CLayer_Load	f
+00446ac0	CLayer_CreateImage	f
+004422e0	CAnimLayer_ctor	f
+004381e0	CImageBmp_ctor	f
+00438390	CImageTcc_ctor	f
+0043baa0	CImageA16_ctor	f
+0043c5c0	CImageAvi_ctor	f
+0046b918	vtbl_CLayer	d
+0046b8e0	vtbl_CAnimLayer	d
+0046b770	vtbl_CImageBmp	d
+0046b7e0	vtbl_CImageTcc	d
+0046b820	vtbl_CImageA16	d
+0046b890	vtbl_CImageAvi	d
