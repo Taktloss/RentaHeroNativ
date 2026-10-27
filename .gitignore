@@ -1,0 +1,23 @@
+# Originaldaten des Spiels – niemals einchecken
+/*.bin
+/*.cue
+/*.iso
+/RentAHero/
+/wineprefix/
+*.BIN
+*.CUE
+
+# Lokale Reverse-Engineering-Artefakte (Ghidra-Projekte, Dumps, Logs)
+/re/private/
+
+# Build-Ausgaben
+/build/
+/out/
+*.o
+*.obj
+
+# Editor/Python
+__pycache__/
+*.pyc
+.vscode/
+.idea/
