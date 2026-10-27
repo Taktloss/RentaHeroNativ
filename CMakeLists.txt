@@ -27,6 +27,8 @@ add_library(rah_core STATIC
   src/formats/tcc.cpp
   src/formats/ini.cpp
   src/formats/zbf.cpp
+  src/formats/szn.cpp
+  src/engine/paths.cpp
   src/render/blit.cpp
 )
 target_include_directories(rah_core PUBLIC src)
@@ -53,6 +55,7 @@ if(RAH_BUILD_TESTS)
     tests/test_tcc.cpp
     tests/test_ini.cpp
     tests/test_blit.cpp
+    tests/test_szn.cpp
   )
   target_link_libraries(rah_tests PRIVATE rah_core)
   add_test(NAME rah_tests COMMAND rah_tests)
