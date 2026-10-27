@@ -41,6 +41,10 @@ public:
     Layer* background() { return background_.get(); }
     Layer* layer(int i) { return layers_[static_cast<std::size_t>(i)].get(); }
 
+    // orig: Rent-A-Hero.exe 0x0044B280 CSzene_Update – Animations-Takt (TIMING.md)
+    void update(bool realtime);
+    std::uint32_t tickWindowStart() const { return windowStart_; }
+
     // orig: Rent-A-Hero.exe 0x0044C1E0 CSzene_InvalidateAll
     void invalidateAll();
     // orig: Rent-A-Hero.exe 0x0044B7D0 CSzene_Compose – true: Ausgaberechteck `output()` zeigen
@@ -76,7 +80,11 @@ private:
     DirtyRegion listB_;                                         // +0xAC4
     int zMax_ = 0, zMin_ = 0xFF;                                // +0x2F8, +0x2FC
     std::array<short, 256> zCount_{};                           // +0x300
+    std::uint32_t windowStart_ = 0;                             // +0x2DC
+    std::array<int, 4> stageCount_{};                           // +0x2E0…+0x2EC
     int unsupported_ = 0;
+
+    void moveZ(unsigned oldZ, unsigned newZ);
 };
 
 }  // namespace rah

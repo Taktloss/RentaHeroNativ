@@ -16,7 +16,96 @@ inline int ftol(double v) {
 }  // namespace
 
 Scene::Scene(const DataPaths& paths, EngineGlobals& globals, Surface565& target, std::uint16_t colorKey, int yOffset)
-    : paths_(paths), g_(globals), surface_(target), colorKey_(colorKey), yOffset_(yOffset) {}
+    : paths_(paths), g_(globals), surface_(target), colorKey_(colorKey), yOffset_(yOffset) {
+    windowStart_ = g_.now();  // orig: 0x004485FD in CSzene_ctor
+}
+
+namespace {
+
+// Stufe = min((fps − 1) / 5, 3), Ganzzahldivision (fps ≤ 0 → Stufe 0 bzw. negativ → 0)
+int stageOf(int fps) {
+    const int st = (fps - 1) / 5;
+    return st > 3 ? 3 : st < 0 ? 0 : st;  // UNVERIFIED: fps < 0 kommt nicht vor (Index wäre negativ)
+}
+
+}  // namespace
+
+void Scene::moveZ(unsigned oldZ, unsigned newZ) {
+    // Zähler je Z (+0x300) und Grenzen +0x2F8/+0x2FC, Vergleiche vorzeichenlos (jbe/jae)
+    auto cnt = [this](unsigned z) -> short& { return zCount_[z & 0xFFu]; };  // UNVERIFIED: Z > 255
+    --cnt(oldZ);
+    ++cnt(newZ);
+    if (newZ > static_cast<unsigned>(zMax_)) zMax_ = static_cast<int>(newZ);
+    if (newZ < static_cast<unsigned>(zMin_)) zMin_ = static_cast<int>(newZ);
+    if (oldZ == static_cast<unsigned>(zMax_)) {
+        while (cnt(static_cast<unsigned>(zMax_)) == 0 && static_cast<unsigned>(zMax_) > 1) --zMax_;
+    }
+    if (oldZ == static_cast<unsigned>(zMin_)) {
+        while (cnt(static_cast<unsigned>(zMin_)) == 0 && static_cast<unsigned>(zMin_) < 0xFE) ++zMin_;
+    }
+}
+
+void Scene::update(bool realtime) {
+    if (!loaded_) return;
+    std::array<bool, 4> tick{};
+    if (!realtime) {
+        tick.fill(true);  // Original zusätzlich Sleep(0)
+    } else {
+        const std::uint32_t now = g_.now();
+        const std::uint32_t dt = now - windowStart_;  // vorzeichenlos (jb)
+        if (dt >= 200) {
+            windowStart_ += 200;
+            if (windowStart_ < now) windowStart_ = now;  // kein Nachholen
+            stageCount_.fill(0);
+            tick.fill(true);
+        } else if (dt >= 150) {
+            tick[3] = stageCount_[3] < 4;
+        } else if (dt >= 134) {
+            tick[2] = stageCount_[2] < 3;
+        } else if (dt >= 100) {
+            if (stageCount_[1] < 2) tick[1] = tick[3] = true;  // Stufe 3 hängt an Zähler 1
+        } else if (dt >= 67) {
+            tick[2] = stageCount_[2] < 2;
+        } else if (dt >= 50) {
+            tick[3] = stageCount_[3] < 2;
+        }
+        for (int i = 0; i < 4; ++i) {
+            if (tick[static_cast<std::size_t>(i)]) ++stageCount_[static_cast<std::size_t>(i)];
+        }
+    }
+
+    // Vollbildobjekt +0x5DC (verdrängt alle übrigen Updates) folgt mit dessen Port.
+    if (background_ && background_->isAnim) {
+        if (background_->dirty || tick[static_cast<std::size_t>(stageOf(background_->fps))]) {
+            background_->update(g_);
+            Rect all{0, 0, 640, 360};  // CRectList_Add(NULL)
+            listA_.add(all);
+            if (background_->dirty) g_.sceneChanged = true;
+        }
+    }
+    // Figuren +0x5E0/+0x5E4 folgen mit CActor.
+
+    // Schleife bricht beim ersten leeren Platz ab (0x0044B544)
+    for (auto& slot : layers_) {
+        Layer* L = slot.get();
+        if (!L) break;
+        if (L->prevZ != -1.0) {
+            moveZ(static_cast<unsigned>(ftol(L->prevZ)), static_cast<unsigned>(ftol(L->z)));
+            L->prevZ = -1.0;
+        }
+        bool run;
+        if (L->fps == 0) run = L->tweenSteps != 0 && tick[1];
+        else run = L->dirty || tick[static_cast<std::size_t>(stageOf(L->fps))];
+        if (run) {
+            const auto before = static_cast<unsigned>(ftol(L->z));
+            L->update(g_);
+            const auto after = static_cast<unsigned>(ftol(L->z));
+            if (before != after) moveZ(before, after);
+        }
+        if (L->dirty) g_.sceneChanged = true;
+    }
+    // Inventarleiste +0x5B4 (FUN_00441CE0 bei +0x408 oder Stufe 1) folgt.
+}
 
 bool Scene::load(std::string_view name, unsigned loadMask) {
     const auto tryDir = [&](const DataPaths::Dir& d) -> std::optional<Bytes> {

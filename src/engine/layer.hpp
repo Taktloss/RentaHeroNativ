@@ -28,7 +28,7 @@ public:
     double x = 0, y = 0;         // +0x10, +0x18
     double z = 1.0;              // +0x20
     double zoom = 100.0;         // +0x28
-    double pendingZ = -1.0;      // +0x38 (−1.0 = keine Z-Änderung)
+    double prevZ = -1.0;         // +0x38 altes Z nach einer Z-Änderung (−1.0 = keine), CSzene_Update
     bool zBuffered = true;       // +0x40
     int tweenSteps = 0;          // +0x50 verbleibende Interpolationsschritte (0x00447890)
     int fps = 10;                // +0x54

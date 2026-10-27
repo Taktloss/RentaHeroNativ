@@ -159,3 +159,75 @@ TEST(scene_original_dump) {
               << " animierte noch nicht portiert\n";
     if (const char* d = std::getenv("RAH_DUMP_DIR")) writePpm(surf, std::filesystem::path(d) / "loc01_7a.ppm");
 }
+
+namespace {
+
+// A16 aus n Schlüsselbildern 2×2 mit Alpha
+Bytes a16Solid(int n) {
+    Bytes f;
+    for (int i = 0; i < n; ++i) {
+        put32(f, 0);
+        for (int c = 0; c < 4; ++c) put32(f, 3);
+        put32(f, 2);
+        put32(f, 2);
+        for (std::uint8_t v : {std::uint8_t{0xF8}, std::uint8_t{0}, std::uint8_t{0}, std::uint8_t{255}}) {
+            f.push_back(1);
+            f.push_back(4);
+            f.push_back(v);
+        }
+    }
+    return f;
+}
+
+}  // namespace
+
+TEST(scene_update_stage_ticks) {
+    Fixture f;
+    f.fs.put("GAME/MENU/A.A16", a16Solid(8));
+    f.fs.put("GAME/MENU/T2.szn",
+             "[GENERAL]\r\nBackground1=Bg\r\nLayer1=S0\r\nLayer2=S1\r\nLayer3=S2\r\nLayer4=S3\r\n"
+             "[Bg]\r\nFilename=BG.bmp\r\n"
+             "[S0]\r\nFilename=A.A16\r\nfps=5\r\nX=0\r\n"
+             "[S1]\r\nFilename=A.A16\r\nfps=010\r\nX=20\r\n"
+             "[S2]\r\nFilename=A.A16\r\nfps=15\r\nX=40\r\n"
+             "[S3]\r\nFilename=A.A16\r\nfps=20\r\nX=60\r\n");
+    std::uint32_t clock = 0;
+    f.g.now = [&] { return clock; };
+    REQUIRE(f.scene.load("T2", 0));
+    std::array<AnimLayer*, 4> a{};
+    for (int i = 0; i < 4; ++i) {
+        a[static_cast<std::size_t>(i)] = dynamic_cast<AnimLayer*>(f.scene.layer(i));
+        REQUIRE(a[static_cast<std::size_t>(i)]);
+        a[static_cast<std::size_t>(i)]->start(13);
+    }
+    f.scene.background()->enable();
+    f.scene.compose(false);  // Start setzt dirty; ein Frame zeichnet es ab
+    for (clock = 0; clock < 400; ++clock) {
+        f.scene.update(true);
+        f.scene.compose(false);
+        f.scene.clearOutput();
+    }
+    // Erstes Fenster (Zähler aus dem Ctor = 0): jede Zwischenstufe tickt in zwei Frames
+    // hintereinander (z. B. Stufe 3 bei 50 und 51 ms), Stufe 0 gar nicht → 0/2/3/4.
+    // Zweites Fenster ab 200 ms regulär: 1/2/3/4.
+    CHECK(a[0]->stepCount == 1);
+    CHECK(a[1]->stepCount == 4);
+    CHECK(a[2]->stepCount == 6);
+    CHECK(a[3]->stepCount == 8);
+}
+
+TEST(scene_update_skips_after_gap) {
+    Fixture f;
+    std::uint32_t clock = 0;
+    f.g.now = [&] { return clock; };
+    REQUIRE(f.scene.load("T1", 0));
+    clock = 1000;
+    f.scene.update(true);  // weit hinter dem Fenster: kein Nachholen, Start = jetzt
+    CHECK(f.scene.tickWindowStart() == 1000);
+    clock = 1199;
+    f.scene.update(true);
+    CHECK(f.scene.tickWindowStart() == 1000);
+    clock = 1250;
+    f.scene.update(true);
+    CHECK(f.scene.tickWindowStart() == 1250);  // start + 200 < now → start = now
+}

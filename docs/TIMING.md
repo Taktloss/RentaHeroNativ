@@ -59,15 +59,34 @@ Eigenheiten, die der Port übernehmen muss:
 - Pro Aufruf feuert höchstens **eine** Zwischenstufe; verpasste Fenster (langsamer
   Frame) werden nicht nachgeholt → effektive Bildrate sinkt.
 - Der 100-ms-Tick von Stufe 3 wird über den Zähler von Stufe 1 gesteuert.
+- `dt` ist vorzeichenlos. Beim Fensterwechsel gilt praktisch immer `start = now`
+  (nur bei genau `dt == 200` bleibt `start + 200`).
+- Die Zwischenstufen-Bedingungen (`c < 2` usw.) setzen voraus, dass der Fensterstart den
+  Zähler schon auf 1 gebracht hat. Im **ersten Fenster nach `CSzene_ctor`** (`0x004483A0`,
+  Start = `timeGetTime()`, Zähler 0) tickt daher jede Zwischenstufe in zwei Frames
+  hintereinander (Stufe 3: 50 und 51 ms, 100 und 101 ms), Stufe 0 gar nicht.
+  Belegt per Test `scene_update_stage_ticks`.
 - `realtime == 0`: alle Stufen ticken in jedem Frame, dazu `Sleep(0)`.
 
 Danach werden aktualisiert (vtable-Slot 6 `Update`, `+0x18`), jeweils nur bei Tick
 ihrer Stufe oder wenn `layer+0x1A0` (dirty) gesetzt ist:
 1. Objekt `CSzene+0x5DC`, sonst `CSzene+0x5C0` (wenn `+0x1BC`);
 2. die beiden Figuren `CSzene+0x5E0`, `+0x5E4` (`+0x58 != 0` → immer);
-3. alle Ebenen `CSzene+0x04[0..39]`: vorher Z-Änderungen (`+0x38` double, Sentinel
-   −1.0) in die Z-Zählertabelle `+0x300` einpflegen; Ebenen mit `fps == 0` nutzen
-   Stufe 1, wenn `+0x50` gesetzt ist, sonst gar nicht.
+3. alle Ebenen `CSzene+0x04[0..39]`, **Abbruch beim ersten leeren Platz** (`0x0044B544`):
+   - `+0x38` (double) ≠ −1.0 ist das **alte Z** nach einer Z-Änderung: `count[alt]−−`,
+     `count[Z]++`, Max/Min mit neuem Z erweitern, war alt = Max bzw. Min → Grenze
+     schrumpfen, solange der Zähler 0 ist (Max nicht unter 1, Min nicht über 0xFE;
+     Vergleiche vorzeichenlos). Danach `+0x38 = −1.0`.
+   - `fps == 0`: Update nur bei Interpolation (`+0x50`) **und** Stufe-1-Tick.
+   - `fps ≠ 0`: Update bei dirty (`+0x1A0`) **oder** Tick der Stufe. Weil `CAnimLayer_Update`
+     nach jedem Bild dirty setzt und erst das Zeichnen es löscht, schaltet eine Ebene, deren
+     Zeichnen scheitert, in jedem Frame weiter.
+   - Ändert das Update Z (ftol vorher/nachher), dieselbe Zählerpflege.
+   - dirty → `g_SceneChanged = 1`.
+   Hintergrund (nur mit `+0x1BC`, also AVI): nach dem Update `CRectList_Add(A, NULL)` (ganze
+   Szene). Vollbildobjekt `+0x5DC` vorhanden → nur dieses wird aktualisiert (Update liefert 0
+   → löschen) und alles Übrige übersprungen. Am Ende Inventarleiste `+0x5B4`
+   (`FUN_00441CE0` bei `+0x408` oder Stufe-1-Tick).
 
 ## Animierte Ebene: `CAnimLayer_Update` (`0x00442AA0`, vtable-Slot 6)
 - Ende erreicht (`+0x2E4`): Ereignis `+0x1C4` mit **Typ 1** (Animation fertig), `+0x1B8 = 1`.
