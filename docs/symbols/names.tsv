@@ -325,3 +325,13 @@
 00442c70	CAnimLayer_AddCueEx	f
 00442d10	CAnimLayer_ClearCues	f
 00442d30	CAnimLayer_RunCues	f
+00431920	Loc40_ctor	f
+00432a40	Loc40_dtor	f
+00432ca0	Loc40_Start	f
+00432ef0	Loc40_OnEvent114	f
+004330d0	Loc40_OnEvent115	f
+00433100	Loc40_OnEvent116	f
+00443400	CAnimLayer_SetFrameEvent	f
+00443030	CAnimLayer_PlayEndEvent	f
+0044c880	CSzene_SetClickEvent	f
+0044b190	CSzene_ClearFlag510	f
