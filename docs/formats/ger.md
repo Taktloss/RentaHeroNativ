@@ -4,7 +4,7 @@
 Gelesen mit `GetPrivateProfileStringA` (Windows-INI-Semantik: Schlüssel ohne
 Groß-/Kleinschreibung, erster Treffer, Kommentar `;`, Wert ohne Anführungszeichen-Logik).
 Endung fest `GER` (`0x00476734`); `LocNN.ENG`-Dateien gibt es auf den CDs nicht.
-Dateipfad über `FUN_00448b30(szene, "LocNN", "GER")` (Pfadauflösung wie SZN, offen).
+Dateipfad über `CSzene_FindFile("LocNN", "GER")` (Suchreihenfolge: DATAPATHS.md).
 33 Dateien, je zwei Sektionen:
 
 | Sektion | Schlüssel | Wert | Leser |

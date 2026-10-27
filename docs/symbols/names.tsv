@@ -225,3 +225,8 @@
 00404360	Config_ReadCdMap	f
 004050b0	CheckDirectXMedia	f
 004050f0	CheckIndeo5	f
+00441f50	CInvBar_Invalidate	f
+00447030	CLayer_SetZoom	f
+0043c9e0	CImageAvi_Seek	f
+0043cb10	CImageAvi_Draw	f
+0043ca80	CImageAvi_Next	f

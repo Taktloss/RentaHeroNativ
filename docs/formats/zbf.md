@@ -37,8 +37,9 @@ ds    = sMax - sMin                    (+0x124, float)
 k     = (double)(ds / (float)dv)       (+0x128)  Skala pro Kartenwert
 k_inv = (double)((float)dv / ds)       (+0x130)
 ```
-Also lineare Abbildung Kartenwert → Skala. Verwendung (vermutlich Figurengröße nach
-Tiefe, „ZoomVal“/Perspektive) – UNVERIFIED, wird mit der Figurenlogik belegt.
+Also lineare Abbildung Kartenwert → Skala. Belegte Verwendung: Der SZN-Lader berechnet
+für Figuren `CActor+0x16E0 = (Zpos − vMin) · k + sMin` **mit den Werten der Wegkarte**
+(`CSzene+0x2C0`, szn.md). Weitere Nutzung (Skala beim Laufen) mit der Figurenlogik.
 Float-Genauigkeit: Division in `float`, Ergebnis als `double` gespeichert – im Port
 genauso rechnen.
 

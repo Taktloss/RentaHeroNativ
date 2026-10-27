@@ -43,11 +43,12 @@ Sektionsname wird bei `+0x15C` des Hintergrundobjekts abgelegt.
 | `fps` | Int | 0 | Animationsrate; `fps != 0` ⇒ animiert. Häufig: 10, 0, 20, 5 |
 | `Z` | Int | **1** | Zeichenreihenfolge, als `double` bei Ebene `+0x20` |
 | `ZBuffered` | Int | **1** | Ebene wird gegen Tiefenpuffer geprüft (`+0x40`); 29× auf 0 gesetzt |
-| `DirtyAlpha` | Int | 0 | setzt Flag `+0x19C` und am Unterobjekt `+0x37C`, ruft vtable `+0x24` (Bedeutung offen) |
-| `ZoomVal` | Int | 100 | Skalierung in Prozent; nur ≠100 wird angewendet (`FUN_00447030`) |
-Zusätzlich führt der Lader Min/Max-Werte bei `this+0x2F8`/`+0x2FC` und einen Zähler pro
-Wert in einem `short`-Array ab `this+0x300` (über `__ftol` aus double-Werten; welche
-genau, ist UNVERIFIED – vermutlich Z).
+| `DirtyAlpha` | Int | 0 | setzt Flag `+0x19C` und am Bild `+0x37C`; Bild berechnet dann das Rechteck mit Alpha ≠ 0 (`CImage_CalcAlphaBounds`, tcc.md) |
+| `ZoomVal` | Int | 100 | Skalierung in Prozent; nur ≠100 wird angewendet: `layer+0x28 = (double)ZoomVal`, `FUN_00447060` |
+Zusätzlich führt der Lader Max/Min-Z bei `this+0x2F8`/`+0x2FC` und einen Zähler pro
+Z-Wert im `short`-Array ab `this+0x300`: `fld [layer+0x20]` (Z als double) → `__ftol`
+→ `++count[z]` (Disassembly `0x00449749`–`0x00449751`). Grundlage der Z-Reihenfolge in
+`CSzene_HitTest` und `CSzene_Update`.
 
 ## Klickbereich-Sektion (`AreaN`)
 
@@ -55,8 +56,8 @@ genau, ist UNVERIFIED – vermutlich Z).
 |---|---|---|
 | `X1`, `X2`, `Y1`, `Y2` | Int | 0 → `RECT{left=X1, top=Y1, right=X2, bottom=Y2}` |
 | `CursorType` | Int | 0 → Mauszeiger über dem Bereich; in den Daten 1–9 |
-Registriert über `FUN_0044add0(name, rect, cursorType)`; diese Funktion liest
-zusätzlich `AREA_TEXT` aus einer Sprachdatei `Loc%02d` (siehe Texte, noch offen).
+Registriert über `CSzene_AddArea(name, rect, cursorType)`; diese Funktion liest
+zusätzlich den Anzeigetext aus `[AREA_TEXT]` der `LocNN.GER` (ger.md).
 
 ## Figuren-Sektion (`Character1/2`)
 
@@ -69,15 +70,27 @@ zusätzlich `AREA_TEXT` aus einer Sprachdatei `Loc%02d` (siehe Texte, noch offen
 | `RedAdd`, `GreenAdd`, `BlueAdd` | Int | 0 | Farbaddition (Tönung), `FUN_004473e0`; Werte auch negativ |
 | `RedAddN`, `GreenAddN`, `BlueAddN`, `ColorAddXN`, `ColorAddYN`, `ColorAddRangeN` | Int | 0 | N = 1…10: ortsabhängige Tönung; `ColorAddRangeN ≠ 0` setzt Flag `+0x16D4` |
 | `X`, `Y` | Int | 0 | Startposition, vtable `+0x14` |
-| `Zpos` | Int | 0 | Tiefe (`+0x16D8`); daraus `+0x16E0` (double) über Perspektivparameter |
+| `Zpos` | Int | 0 | Tiefe (`+0x16D8`); daraus Skala `+0x16E0` (siehe unten) |
 | `ZBuffered` | Int | 1 | `+0x40` |
 | `ZoomVal` | Int | **0** | `+0x16E8` (hier Default 0, nicht 100!) |
 | `Direction` | Int | 0 | Blickrichtung 0–7 (`+0x15CC`), `FUN_00435b80` |
 
-Hinweis: Ghidra verwechselt in diesem Block Stack-Variablen (`local_5c4`,
-`unaff_EBX`); dass alle Schlüssel aus der Figuren-Sektion gelesen werden, ist durch
-die Dateien gedeckt, die exakten Sektionsargumente sind am Disassembly noch zu prüfen
-(UNVERIFIED). Ebenso die Herkunft der Perspektivparameter für `+0x16E0`.
+Belegt an der Disassembly (`0x0044986E`–`0x00449CCC`): Der Wert von
+`[GENERAL] Character1`/`Character2` ist der **Name der Sektion**, aus der alle obigen
+Schlüssel gelesen werden (ein Puffer für alle Aufrufe). Ablauf je Figur:
+1. `Filename`, `Type`; vorhandene Figur mit anderem `Type` (`+0x1AEC`) löschen.
+2. Datei per `CSzene_FindPath` suchen, `FUN_0044a770` (Figur anlegen/laden).
+3. `SFXLeft` gesetzt → `SFXRight`, `SFXAlt` lesen, alle drei suchen, `FUN_0044a8f0`.
+4. `FUN_00433e30(Type)`, `PerCor` → `+0x16EC`, `RedAdd/GreenAdd/BlueAdd` → `FUN_004473e0(r, g, b)`.
+5. N = 1…10 (`%1d`, also auch `RedAdd10`): `RedAddN` `+0x15E4+4(N−1)`, `GreenAddN` `+0x160C…`,
+   `BlueAddN` `+0x1634…`, `ColorAddXN` `+0x165C…`, `ColorAddYN` `+0x1684…`,
+   `ColorAddRangeN` `+0x16AC…` (≠ 0 → `+0x16D4 = 1`).
+6. `X`, `Y`, `Zpos` → `+0x16D8`, `ZBuffered` → `+0x40`.
+7. **Nur wenn eine Wegkarte geladen ist** (`CSzene+0x2C0`, zbf.md):
+   `+0x16E0 = (double)(Zpos − vMin) * k + sMin` (Werte der Wegkarte, x87-Rechnung).
+   Ohne Wegkarte bleibt `+0x16E0` unverändert.
+8. `ZoomVal` (Vorgabe 0) → `+0x16E8`; Sektionsname nach `+0x15C` kopiert;
+   `SetPos(X, Y)` (Slot `+0x14`), Slot `+0x24(0)`; `Direction` → `+0x15CC`, `FUN_00435b80`.
 
 ## `[COMPILER]`
 `Loc`, `Szn`, `VideoN`, `SoundN` – wird vom Lader **nicht** gelesen, nur vom Editor-
@@ -85,4 +98,5 @@ Codegenerator (`FUN_00401a00`). Für das Spiel ohne Bedeutung.
 
 ## Abschluss
 Nach dem Laden: Objekt `+0x00` = 1 (geladen), globales `DAT_00481f28` = 1;
-falls `this+0x5B4` gesetzt, `FUN_00441f50` (noch offen).
+falls `this+0x5B4` (Inventarleiste) gesetzt, `FUN_00441f50`: setzt dort `+0x408 = 1`
+(Neuzeichnen anfordern).

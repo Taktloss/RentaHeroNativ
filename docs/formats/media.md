@@ -18,8 +18,20 @@ danach `data` (`FUN_0044e0f0`). Abgeleitet:
 DirectShow-Multimedia-Streaming, nicht AVIFile:
 `CoCreateInstance(CLSID_AMMultiMediaStream)` → `IAMMultiMediaStream::OpenFile` →
 `GetMediaStream(MSPID_PrimaryVideo)` → `IDirectDrawMediaStream` → Format, Sample
-(DirectDraw-Oberfläche). Dauer/Zeit in `+0x3C4…+0x3D0`
-(`STREAM_TIME / 1 000 000`, also Zehntelsekunden – UNVERIFIED, mit Laufzeit prüfen).
+(DirectDraw-Oberfläche).
+
+Zeit in **Bildnummern bei fest 10 fps** (`STREAM_TIME` = 100 ns, Faktor 1 000 000 = 100 ms):
+- Laden: `+0x3C4 = +0x3CC = GetTime / 1e6` (Start), `+0x3C8 = GetDuration / 1e6` (Länge).
+- `Draw` (`0x0043CB10`, Slot 2): `+0x3CC++` bei **jedem** Aufruf (also pro Animationstick
+  der Ebene, TIMING.md), dann Bild per `IDirectDrawStreamSample::Update` holen.
+- `Next` (`0x0043CA80`): weiter, solange `+0x3CC < +0x3C8`, sonst Ende.
+- `Seek(n)` (`0x0043C9E0`): `n ≤ Länge` → `+0x3CC = n`; dann `IMultiMediaStream::Seek(+0x3CC × 1e6)`
+  (Produkt in 32 Bit, überläuft ab n > 2147 – bei 10 fps erst nach 214 s, kein Video so lang).
+
+Folge: Das Abspieltempo bestimmt die Ebenen-`fps` aus der SZN, nicht das AVI; die
+Zuordnung Zähler → Zeit setzt 10 fps voraus (alle Daten erfüllen das). Port: Videos
+bildweise dekodieren, Bild `+0x3CC` anzeigen.
+
 - **Sonderfall 640×180**: Höhe wird als 360 gemeldet, `+0x3D8 = 1` (Zeilenverdopplung).
   Kein solches Video in den Daten.
 - Start: `SetState(RUN)` (`+0x1C`, 1); Rücksprung an den Anfang `0x0043C9A0`
