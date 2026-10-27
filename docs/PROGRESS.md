@@ -27,10 +27,12 @@
 1. Demo von archive.org herunterladen und auf einen anderen Build prüfen?
 2. go-rent-a-hero: Autor um Lizenz anfragen? (Bis dahin kein Code-Reuse.)
 
-### Referenzumgebung: bekanntes Problem
-- Original stürzt unter Wine 11.17 ab, wenn das Intro übersprungen wird: Video läuft
-  über DirectShow (quartz → winegstreamer), beim Abbrechen verklemmt `pin.flushing_cs`,
-  danach Ausnahme. Intro-Videos sind Cinepak (nicht Indeo). Lösungsversuche: siehe SETUP.md.
+### Referenzumgebung
+- Absturz beim Überspringen des Intros (Wines quartz/winegstreamer) gelöst durch native
+  DirectShow- und Indeo-DLLs, Start über `tools/run-original.sh` (virtueller Desktop gegen
+  Alt+Tab, gamescope). Details und Restpunkte: SETUP.md.
+- Spielstand-Format (17 122 Bytes) mit echtem Original-Spielstand gegengeprüft;
+  Struktur siehe SETUP.md. Für docs/formats/savegame.md noch am Binary belegen.
 
 ### Nächste Schritte (Phase 2, nach OK)
 - Ghidra: VC6-CRT besser erkennen (FID-Datenbank für VS6 bauen oder Signaturen aus

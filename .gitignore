@@ -4,6 +4,7 @@
 /*.iso
 /RentAHero/
 /wineprefix/
+/wineprefix-test/
 *.BIN
 *.CUE
 
