@@ -3,7 +3,7 @@
 ## LocNN.GER – INI-Datei pro Schauplatz
 Gelesen mit `GetPrivateProfileStringA` (Windows-INI-Semantik: Schlüssel ohne
 Groß-/Kleinschreibung, erster Treffer, Kommentar `;`, Wert ohne Anführungszeichen-Logik).
-Endung fest `GER` (`0x00476734`); eine ENG-Variante gibt es in dieser Version nicht.
+Endung fest `GER` (`0x00476734`); `LocNN.ENG`-Dateien gibt es auf den CDs nicht.
 Dateipfad über `FUN_00448b30(szene, "LocNN", "GER")` (Pfadauflösung wie SZN, offen).
 33 Dateien, je zwei Sektionen:
 
