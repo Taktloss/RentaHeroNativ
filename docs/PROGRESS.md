@@ -41,12 +41,20 @@
 - SZN-Format vollständig aus `FUN_00449380` + Daten → `docs/formats/szn.md`.
 - Startkonfiguration `FUN_00404db0`: Schlüssel und fest überschriebene Schalter.
 
+- Editor ist im Release größtenteils funktionslos (nur 13 Befehle haben Code); dafür
+  versteckte Tastenkürzel Ctrl+F1…F12 und WndProc dokumentiert → `docs/CONTROLS.md`.
+- Klassen über vtables/Ctor-Muster und `new`-Größen rekonstruiert → `docs/STRUCTURES.md`:
+  `CGame` + 33 `LocNN`-Klassen (alle Schauplatznummern belegt), `CSzene` (0xACC),
+  `CActor` (0x1B00), `CGameState` (0x4110 = Spielstand-Block), Ebenen-Hierarchie
+  (`CLayerBase` + 5 Typen), Renderer-Schnittstelle. Namensliste `docs/symbols/names.tsv`
+  (128 Namen, in Ghidra übertragen mit `ApplyNames.java`).
+
 ### Phase 2 – nächste Schritte
-- Editor im Test-Prefix gezielt nutzen (Areas anzeigen, Szene per „Start Skript“ wählen),
-  um Analysehypothesen zu prüfen.
-- Engine-Klassen rekonstruieren: Szenen-/View-Objekt (Felder `+0x2C0 … +0x5E8`), Ebene
-  (vtable `+0x14` SetPos, `+0x24`), Figur (`+0x15CC` Direction, `+0x16D8` Zpos …);
-  Konstruktoren über `operator_new`-Aufrufe und vtables finden, in Ghidra typisieren.
+- Ebenentypen A–E den Dateitypen zuordnen (BMP/A16/TCC/AVI…) über `FUN_0044ab10`.
+- `CSzene`-Felder (`+0x2C0 … +0x5E8`) und `CActor`-Felder vollständig typisieren;
+  Ghidra-Strukturen anlegen, damit Dekompilate lesbar werden.
+- Audio-Klassen (Manager, Puffer, Musik) und `CEvent`/`CArea` (0x24-Objekt?) belegen.
+- `OnGenericEvent`-Mechanik: `CGame_SetEventProc`, Ereignisfluss Maus → Area → Callback.
 - Offene SZN-Punkte: Pfadauflösung `FUN_00448a70`, Stack-Verwechslung im Figurenblock am
   Disassembly prüfen, Perspektivparameter (`this+0x2C0`).
 - VC6-CRT besser erkennen (FID), damit Spielcode sauber getrennt ist.
