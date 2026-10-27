@@ -17,11 +17,20 @@
   Vorlage im Binary belegt die Klassenstruktur). Szenenaufbau datengetrieben über `.SZN`.
 - Spielcode ~214 KB in 714 Funktionen (227 Szenenlogik, 450 Engine, 37 Kern).
 
+### Entscheidungen (2026-10-27)
+- Sprache C++20 (SDL3, FFmpeg, CMake), Lizenz GPL-3.0-or-later.
+- go-rent-a-hero getestet (lokal in `re/private/go-rent-a-hero`): spielbar, aber kein
+  Menü, ein Speicherplatz (Taste `1`), Esc beendet sofort, vieles nur angenähert.
+  Nutzer möchte die eigene Neuimplementierung. go-rent-a-hero dient nur als Hinweisquelle.
+
 ### Offene Fragen an den Nutzer
-1. Sprache des Ports (Empfehlung: C++20, siehe Zusammenfassung im Chat).
-2. Lizenz für eigenen Code (Vorschlag: GPL-3.0-or-later; alternativ MIT).
-3. Demo von archive.org herunterladen und auf einen anderen Build prüfen?
-4. go-rent-a-hero: Autor um Lizenz anfragen? (Bis dahin kein Code-Reuse.)
+1. Demo von archive.org herunterladen und auf einen anderen Build prüfen?
+2. go-rent-a-hero: Autor um Lizenz anfragen? (Bis dahin kein Code-Reuse.)
+
+### Referenzumgebung: bekanntes Problem
+- Original stürzt unter Wine 11.17 ab, wenn das Intro übersprungen wird: Video läuft
+  über DirectShow (quartz → winegstreamer), beim Abbrechen verklemmt `pin.flushing_cs`,
+  danach Ausnahme. Intro-Videos sind Cinepak (nicht Indeo). Lösungsversuche: siehe SETUP.md.
 
 ### Nächste Schritte (Phase 2, nach OK)
 - Ghidra: VC6-CRT besser erkennen (FID-Datenbank für VS6 bauen oder Signaturen aus

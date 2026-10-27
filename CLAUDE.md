@@ -4,6 +4,11 @@ Native, quelloffene Neuimplementierung (Source Port) von „Rent-A-Hero“ (neo 
 deutsche Version V4.0, EXE-Build vom 19.03.1999) für Linux und Windows (x86_64).
 Ziel: exakt originalgetreues Verhalten (Logik, Timing, Grafik, Ton, Spielstände).
 
+## Festgelegte Entscheidungen
+- Sprache: **C++20**. Plattform: **SDL3**, Videos über **FFmpeg** (LGPL-Build), Build: CMake.
+- Lizenz des eigenen Codes: **GPL-3.0-or-later** (`LICENSE`). Neue Quelldateien beginnen mit
+  `// SPDX-License-Identifier: GPL-3.0-or-later`.
+
 ## Zu Beginn jeder Sitzung
 1. `docs/PROGRESS.md` und diese Datei lesen.
 2. Kurz zusammenfassen, wo wir stehen, und einen Plan für die Sitzung vorschlagen.
