@@ -86,7 +86,7 @@ schneller. Jeder andere Klick → `0x0047D130 = 0`, `CActor+0x58 = 0` (`0x004353
 | `0x00434D90` | `CActor_WalkTo2(x, y, cb, dir)` | mit `cb`: `+0x1AE8 = 0` (Ziel-erreicht-Merker); dann `0x00434DC0` (149×) |
 | `0x00434DC0` | `CActor_SetWalk` | `cb` → Ereignis `+0x1C8` (bei Bedarf neu, aktiv); `dir != -1` → End-Richtung `+0x1AD4`; dann Kern |
 | `0x00434E80` | `CActor_WalkToClick(x, y)` | End-Richtung −1, Kern ohne Rückruf (Klick ins Leere, EVENTS.md) |
-| `0x00434EA0` | `CActor_WalkCore(x, y, hatCb)` | siehe unten |
+| `0x00434EA0` | `CActor_WalkCore(x, y, hatCb)` | siehe unten, Wegsuche PATHFINDING.md, Position/Richtung ACTOR.md |
 | `0x00435BF0` | `CActor_Turn(dir, cb)` | schon in Richtung `dir` → Standbild `+0x1A60[dir]`, sofort **0x29**; sonst Drehung starten (`+0x1A8C` = alte, `+0x15CC` = neue Richtung, `+0x1AD8 = 1`) |
 
 `CActor_WalkCore` (Anfang belegt, Wegsuche folgt):

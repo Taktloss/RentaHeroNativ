@@ -34,9 +34,9 @@ In `CActor_WalkCore` (SCRIPTING.md), wenn Wegkarte und Wegsucher vorhanden:
 3. `CPathFinder_Find(start, ziel)` (`0x00444E20`); läuft die Figur schon
    (`+0x1AE0/+0x1AE4` ≠ 0) und schlägt die Suche fehl, zweiter Versuch vom bisherigen
    Zwischenziel aus. Kein Weg → `0x00434AE0(x, y, 1)` und Ereignis 0x29
-   (UNVERIFIED: `0x00434AE0` noch nicht analysiert, vermutlich direkt setzen).
+   (`CActor_SetPosition` mit `force = 1`, ACTOR.md: **die Figur springt direkt ans Ziel**).
 4. Wegpunkte mit `CPathFinder_Next` (`0x00444FE0`) abholen (der erste ist der Start
-   und wird verworfen); Richtung zum nächsten Wegpunkt mit `0x00434850`.
+   und wird verworfen); Richtung zum nächsten Wegpunkt mit `CActor_FaceTowards`.
 
 ## `CPathFinder_Find(sx, sy, tx, ty)` (`0x00444E20`)
 - Wegpunkte löschen, Pixel speichern (`+0x10…+0x1C`), Zellen = Pixel/4, Besucht-Bits löschen.

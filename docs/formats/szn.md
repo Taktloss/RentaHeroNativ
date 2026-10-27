@@ -103,8 +103,9 @@ x += __ftol(sx + 0.5);   y += __ftol(sy + 0.5)                 // ftol schneidet
 ```
 Rundung: `+0.5` und Abschneiden Richtung 0 – für negative Schritte also **nicht**
 symmetrisch (−2.7 → −2, +2.7 → 3). Nachbilden. Modus `+0x1AD0 == 3` gleicht die
-Schritte für Diagonalen aus (größere Achse bestimmt den Schritt) und wechselt auf 2 –
-Details mit der Laufanalyse in Phase 4.
+Schritte für Diagonalen aus (größere Achse bestimmt den Schritt) und wechselt auf 2.
+Modus `+0x1AD0`: 1 waagerecht, 2 senkrecht, 3 diagonal, gesetzt von
+`CActor_FaceTowards` (ACTOR.md).
 
 ## `[COMPILER]`
 `Loc`, `Szn`, `VideoN`, `SoundN` – wird vom Lader **nicht** gelesen, nur vom Editor-

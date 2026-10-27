@@ -87,7 +87,7 @@
 ### Phase 3 – Rest / Laufzeitprüfungen
 - Im Testlauf prüfen: LUT-Kumulation bei getönten Figuren sichtbar? Klick Down/Up doppelt?
   Animationsraten messen.
-- Zoom+Tiefe-Blitter und `PerCor` geklärt (RENDERER.md, szn.md); Laufmodus 3 in Phase 4.
+- Zoom+Tiefe-Blitter und `PerCor` geklärt (RENDERER.md, szn.md); Laufmodus 3 geklärt (ACTOR.md).
 
 ### Entscheidungen (2026-10-27, Phase 3)
 1. Timer: Mix – Original-Zeitpunkte, Ausführung im Hauptthread, Schalter `timer_thread = original`.
@@ -107,6 +107,8 @@
   IDs, Szenenwechsel, Flags, Musik) per `tools/loc_summary.py`; Aufbau eines Schauplatzes.
 - `docs/PATHFINDING.md`: Wegsuche komplett (globales 160×90-Raster, A* vom Ziel zum Start
   mit Gleichstand-Regel, Wegpunkt-Glättung, mehrere Original-Fehler).
+- `docs/ACTOR.md`: Fußpunkt, `SetPosition` (Zoom aus Wegkarte, ortsabhängige Tönung als
+  Quadrat-Zonen), Richtungswahl (Laufmodus 1/2/3), Figurentypen-Tabelle.
 - Nächste Schritte: Einzeldokumentation je Schauplatz (Start: Loc40 = Neues Spiel,
-  Loc01), `0x00434AE0`/`0x00434850` (Schrittsteuerung), Laufmodus 3; offene Punkte: `CAnimLayer_Play`-Parameter, Laufmodus 3,
+  Loc01), Bedeutung der Figurentyp-Felder (`CActor_Update`); offene Punkte: `CAnimLayer_Play`-Parameter, Laufmodus 3,
   Sofort-Flag bei Timern, Rolle von `0x0047D130`/`0x0047D74C`.

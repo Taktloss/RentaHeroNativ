@@ -305,3 +305,9 @@
 00434680	CActor_SetPathMap	f
 00435d90	CActor_BlockRect	f
 00435dc0	CActor_UnblockRect	f
+00434720	CActor_UpdateFoot	f
+004347d0	CActor_FootToLayer	f
+00434850	CActor_FaceTowards	f
+00434ae0	CActor_SetPosition	f
+00433e30	CActor_SetType	f
+00446e70	CLayer_SetPos	f
