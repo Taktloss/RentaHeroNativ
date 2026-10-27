@@ -136,6 +136,6 @@
   `src/formats/zbf.*` (119 Karten), `src/render/` (RGB565-Puffer, Blitter deckend/Alpha/
   Tiefe/Zoom mit Original-Rundung). RENDERER.md: Tiefen-Adressierung korrigiert.
 - Offen: Koordinatensystem des Zielrechtecks beim Tiefentest (Bildschirm oder eigene
-  Szenenoberfläche) – beim Szenen-Zeichnen (`CSzene_Draw`) klären.
+  Szenenoberfläche) – geklärt: Szenenkoordinaten, sceneTop = 0 (COMPOSITOR.md).
 - Nächste Schritte: SZN-Lader (Szene, Ebenen, Bereiche, Figuren), Szenen-Zeichnen,
   SDL-Fenster + Hauptschleife, Ereignisse/Timer/Wartestellen, Loc40.
