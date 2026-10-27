@@ -59,7 +59,10 @@ Genauer (`0x00439C30`, `0x0043A0B0`):
   (`(clipT·s>>7) + (j·s>>7)` ≠ `((clipT+j)·s>>7)`) – bei geclippten, skalierten
   Ebenen kann das Bild um eine Quellzeile/-spalte versetzt sein. Nachbilden.
 - Zoom + Tiefe (`0x0043A0B0`): wie Zoom, zusätzlich pro **Zielpixel** Test
-  `depth[clipT + j][clipL + i] > Z` (Tiefenkarte in Szenenkoordinaten, Zeilenlänge 640).
+  `depth[top + j][left + i] > Z` – Tiefenzeiger `CZMap+0x108 + rect.top·640 + rect.left`
+  über das **sichtbare Zielrechteck** `*(RECT*)(this+0x20)`, genau wie bei Alpha + Tiefe
+  (`0x00439EC0`). UNVERIFIED: ob dieses Rechteck in Bildschirm- (y ab 60) oder
+  Szenenkoordinaten liegt (Ziel = eigene Szenenoberfläche?); Port: Parameter `sceneTop`.
 - Spaltentabelle wird pro Aufruf angelegt und freigegeben (nur Speicher, kein Effekt).
 
 Ausschnitt (ohne Zoom): Bild-Offsets `+0x34C…+0x358` (Clipping links/oben/rechts/unten)

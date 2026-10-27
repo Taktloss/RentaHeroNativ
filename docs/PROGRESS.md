@@ -132,5 +132,10 @@
 - `src/formats/tcc.*`: TCC/A16 inkl. Original-Eigenheiten (4-Bit-Paar, kumulierende LUT,
   Next/Seek) – alle Originalbilder dekodiert.
 - Wartet auf Nutzer: `sudo dnf install SDL3-devel ffmpeg-free-devel unshield-devel`.
-- Nächste Schritte: SZN/INI-Leser (GetPrivateProfileString-Semantik), ZBF, Renderer
-  (RGB565-Blitter), SDL-Fenster + Hauptschleife, Szene/Ebenen/Ereignisse, Loc40.
+- `src/formats/ini.*` (GetPrivateProfile-Semantik; Doppelte in den Daten sind identisch),
+  `src/formats/zbf.*` (119 Karten), `src/render/` (RGB565-Puffer, Blitter deckend/Alpha/
+  Tiefe/Zoom mit Original-Rundung). RENDERER.md: Tiefen-Adressierung korrigiert.
+- Offen: Koordinatensystem des Zielrechtecks beim Tiefentest (Bildschirm oder eigene
+  Szenenoberfläche) – beim Szenen-Zeichnen (`CSzene_Draw`) klären.
+- Nächste Schritte: SZN-Lader (Szene, Ebenen, Bereiche, Figuren), Szenen-Zeichnen,
+  SDL-Fenster + Hauptschleife, Ereignisse/Timer/Wartestellen, Loc40.

@@ -69,3 +69,22 @@ TEST(decode_all_original_images) {
     CHECK(a16 == 219);
     CHECK(bad == 0);
 }
+
+#include "formats/zbf.hpp"
+
+// docs/formats/zbf.md: 119 Dateien, Köpfe mit 20 oder 48 Bytes.
+TEST(zbf_all_original_maps) {
+    const auto dir = rahtest::dataDir();
+    SKIP_IF(dir.empty());
+    int ok = 0, bad = 0;
+    for (const auto& e : std::filesystem::recursive_directory_iterator(dir / "RentAHero")) {
+        if (toUpperAscii(e.path().extension().string()) != ".ZBF") continue;
+        ZMap m;
+        std::string err;
+        if (loadZMap(*readFile(e.path()), m, &err) && m.dv != 0) ++ok;
+        else { ++bad; std::cerr << e.path() << ": " << err << "\n"; }
+    }
+    std::cout << "     " << ok << " ZBF, " << bad << " Fehler\n";
+    CHECK(ok == 119);
+    CHECK(bad == 0);
+}
