@@ -27,6 +27,13 @@ public class Decompile extends GhidraScript {
             Address addr = toAddr(Long.parseLong(args[i], 16));
             Function f = getFunctionContaining(addr);
             if (f == null) {
+                // z. B. Fensterprozeduren, die nur als Zeiger referenziert werden
+                f = createFunction(addr, null);
+                if (f != null) {
+                    println("Funktion angelegt: " + f.getEntryPoint());
+                }
+            }
+            if (f == null) {
                 println("keine Funktion bei " + args[i]);
                 continue;
             }

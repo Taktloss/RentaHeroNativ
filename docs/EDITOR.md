@@ -28,6 +28,11 @@ Unter Wine geprüft: Fenster 640×480 mit Menüleiste erscheint.
 
 ## Menü `AppMenu` (Befehls-IDs aus der Ressource)
 
+**Achtung:** Der Befehlsverteiler `FUN_00402870` behandelt nur 13 IDs (siehe
+`docs/CONTROLS.md`). Alle hier aufgeführten Editor-Funktionen außer *Start/Quit Game
+Menu* und *Subtitles ON/OFF* haben im Release **keinen Code** – das Menü ist ein
+Ressourcen-Überbleibsel. Vom Nutzer bestätigt: die meisten Einträge tun nichts.
+
 | Menü | ID | Eintrag |
 |---|---:|---|
 | Datei | 40044 | Neue Szene… |
