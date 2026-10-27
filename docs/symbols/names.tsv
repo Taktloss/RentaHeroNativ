@@ -354,3 +354,14 @@
 004409b0	CGame_HeroSay	f
 00440960	CGame_HeroSayWait	f
 0047d764	g_RestorePos	d
+004403e0	CGame_SayNoActor	f
+00440400	CGame_SayActor	f
+004409c0	CGame_FaceAndSay	f
+004406e0	CGame_PlayAnimWait	f
+00443230	CAnimLayer_Loop	f
+00405530	Loc01_ctor	f
+00405dc0	Loc01_Start	f
+004065c0	Loc01_OnEvent	f
+00407860	Loc01_PutItem7	f
+004079e0	Loc01_UseItem13	f
+00407b80	Loc01_TalkCanal	f

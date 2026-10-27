@@ -115,5 +115,9 @@
 - `docs/locations/loc35-37.md`: spielbare Intro-Abschnitte; SCRIPTING.md: Animations-Modi
   (0/10 ausblenden, 1/11 stehen, 12 zurück, 13 Schleife), Inventar-Funktionen.
 - Flag-Statistik korrigiert: jetzt inkl. Ereignis-Handler (159 Flags mit Zugriff).
-- Nächste Schritte: Loc01 (Spielbeginn S7), `CGame+0x04` klären, `0x00440890`;  offene Punkte: `CAnimLayer_Play`-Parameter, Laufmodus 3,
+- `docs/locations/loc01.md`: Szenen, Flags, Bereich→ID-Tabelle und Fall-Zusammenfassung,
+  erzeugt mit `tools/loc_areas.py` und `tools/case_summary.py` (Dekompilate mit Namen in
+  `re/private/decomp-loc/`). `CGame+0x04` = Position aus Spielstand (SCRIPTING.md).
+- Nächste Schritte: dieselbe Übersicht für alle übrigen Schauplätze erzeugen, dann je
+  Schauplatz Flag-Bedeutungen;  offene Punkte: `CAnimLayer_Play`-Parameter, Laufmodus 3,
   Sofort-Flag bei Timern, Rolle von `0x0047D130`/`0x0047D74C`.
