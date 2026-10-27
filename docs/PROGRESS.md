@@ -109,6 +109,8 @@
   mit Gleichstand-Regel, Wegpunkt-Glättung, mehrere Original-Fehler).
 - `docs/ACTOR.md`: Fußpunkt, `SetPosition` (Zoom aus Wegkarte, ortsabhängige Tönung als
   Quadrat-Zonen), Richtungswahl (Laufmodus 1/2/3), Figurentypen-Tabelle.
+- `docs/AUDIO.md`: Lautstärke/Frequenz/3D, Blenden im 100-ms-Timer, Animations-Cues
+  (Intro Loc40). `tools/compact_c.py`: Dekompilate verdichtet lesen.
 - Nächste Schritte: Einzeldokumentation je Schauplatz (Start: Loc40 = Neues Spiel,
   Loc01),  offene Punkte: `CAnimLayer_Play`-Parameter, Laufmodus 3,
   Sofort-Flag bei Timern, Rolle von `0x0047D130`/`0x0047D74C`.

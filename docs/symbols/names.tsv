@@ -313,3 +313,15 @@
 00446e70	CLayer_SetPos	f
 00435ae0	CActor_Draw	f
 004387b0	CImage_ClearRows	f
+004372e0	CAudioBuffer_SetVolume	f
+00437310	CAudioBuffer_FadeVolume	f
+00437430	CAudioBuffer_SetFreq	f
+00437480	CAudioBuffer_FadeFreq	f
+004374f0	CAudioBuffer_SetPos3D	f
+00436b20	CAudio_FadeTick	f
+00436ac0	CAudio_AddBuffer	f
+00436af0	CAudio_RemoveBuffer	f
+00442c10	CAnimLayer_AddCueAction	f
+00442c70	CAnimLayer_AddCueEx	f
+00442d10	CAnimLayer_ClearCues	f
+00442d30	CAnimLayer_RunCues	f
