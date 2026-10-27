@@ -11,6 +11,11 @@ Konsequenzen für den Port:
 - Fehlender String-Wert ⇔ Standardwert `"NULL"` (`0x004707D4`); der Code vergleicht mit
   `lstrcmpA(.., "NULL")`. Fehlender Integer ⇔ angegebener Standardwert (siehe Tabellen).
 - Werte mit führenden Nullen (`fps=010`) sind dezimal (GetPrivateProfileInt).
+- Doppelte Sektionen/Schlüssel (`S31.SZN` `[S31_Back]` zweimal, einige `AREA_TEXT` in
+  `LOC19/21/41.GER`) haben jeweils identische Werte – die Windows-Regel für Doppelte ist
+  daher bedeutungslos (Port: erster Eintrag gilt; `tests/test_ini.cpp`).
+- Beispiel für den Abbruch der Bereichsschleife: `S31.SZN` hat nur `Area3` → kein
+  Bereich wird geladen.
 - Dateinamen werden über `FUN_00448a70` (Pfadauflösung, noch zu analysieren) zu vollen
   Pfaden ergänzt.
 

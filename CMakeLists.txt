@@ -25,6 +25,7 @@ add_library(rah_core STATIC
   src/vfs/dirfs.cpp
   src/vfs/vfs.cpp
   src/formats/tcc.cpp
+  src/formats/ini.cpp
 )
 target_include_directories(rah_core PUBLIC src)
 
@@ -48,6 +49,7 @@ if(RAH_BUILD_TESTS)
     tests/test_main.cpp
     tests/test_vfs.cpp
     tests/test_tcc.cpp
+    tests/test_ini.cpp
   )
   target_link_libraries(rah_tests PRIVATE rah_core)
   add_test(NAME rah_tests COMMAND rah_tests)
