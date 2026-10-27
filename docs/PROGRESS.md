@@ -73,8 +73,9 @@
 - `docs/formats/savegame.md`: am Binary belegt, Aufträge Laden/Speichern/Neues Spiel
   (Start Loc 40/Szene 114)/Autosave; Namenspuffer-Reste für byte-identische Dateien.
 - `docs/formats/zbf.md`: Tiefen-/Wegkarte 640×360 mit Skalenkopf.
+- `docs/formats/ger.md`: LocNN.GER (`[AREA_TEXT]`, `[SPEECH]`), Sprachausgabe, ACS-Lippensync.
 
 ### Phase 3 – nächste Schritte
-- ACS (704 Dateien), GER/ENG (Texte/Untertitel), HLP (XOR 0x80), WAV-Lader, BMP-Lader
+- HLP (XOR 0x80), WAV-Lader, BMP-Lader
   (Sonderfälle?), AVI-Nutzung (DirectShow-Parameter), INI-Dateien.
 - Renderer: Pixelformat (16/24 Bit, TrueColor), Kanalreihenfolge der TCC-Ebenen bestätigen.

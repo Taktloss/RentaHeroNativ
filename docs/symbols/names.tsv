@@ -195,3 +195,13 @@
 0044a1b0	CSzene_LoadDepth	f
 0044a260	CSzene_LoadPath	f
 0046b8c8	vtbl_CZMap	d
+00435f80	CArea_ctor	f
+004361f0	CArea_SetText	f
+00445fb0	CSpeech_ctor	f
+004460f0	CSpeech_Load	f
+004463b0	CSpeech_Play	f
+004404c0	CGame_Say	f
+00442ef0	CAnimLayer_SetLipSync	f
+00442730	CAnimLayer_NextFrame	f
+00481ea8	g_LipSyncData	d
+00481edc	g_LipSyncRate	d

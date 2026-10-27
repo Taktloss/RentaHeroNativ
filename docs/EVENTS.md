@@ -82,7 +82,8 @@ Ereignistypen bisher: **0x01** = Animation fertig, **0x0B** = Klick auf Bereich,
 Aus `CSzene_HitTest`/`CSzene_OnClick`: `RECT` bei `+0x00`, Maske/Bildreferenz `+0xAC`,
 `CEvent*` bei `+0xB0`, aktiv-Flag `+0xB8`. Ebenen verweisen über `layer+0x1C0` auf
 ihren Bereich (automatisch in `CSzene_CreateLayer` angelegt), freie Bereiche liegen in
-`CSzene+0xA4[60]` (aus `AreaN` der SZN). Größe und Ctor noch offen.
+`CSzene+0xA4[60]` (aus `AreaN` der SZN). Größe 0xBC, Ctor `0x00435F80`; angelegt mit
+`aktiv = 0`; Anzeigetext aus `[AREA_TEXT]` der `LocNN.GER` (formats/ger.md).
 
 ## Folgen für den Port
 - Klick-Priorität exakt so umsetzen: unterer Streifen → Ebenen nach Z aufsteigend

@@ -35,7 +35,9 @@ Belegstufen: **V** = Vorlage + Code stimmen überein, **C** = aus Code abgeleite
 | `CEvent` | 0x24 | `0x0043F130` | – | C | 48× erzeugt; Felder und Auslösen siehe `docs/EVENTS.md` |
 | `CTimer` | 0x18 | `0x0044D790` | – | C | `timeSetEvent`-Hülle, siehe TIMING.md |
 | WAV-Datei | 0x5C | `0x0044DE80` | – | ? | neben `mmio*`-Funktionen |
-| weitere | 0xBC, 0x42C, 0xE8, 0x16C, 0x400 | `0x00435F80`, `0x00441750`, `0x00444C60`, `0x00445C50`, `0x00445FB0` | – | ? | |
+| `CArea` (Klickbereich) | 0xBC | `0x00435F80` | – | C | 60 Plätze in `CSzene+0xA4`; Name, Text (`AREA_TEXT`), Rechteck, `CEvent*` `+0xB0`, aktiv `+0xB8` |
+| `CSpeech` | 0x400 | `0x00445FB0` | – | C | Textpuffer + Sprachausgabe, siehe formats/ger.md |
+| weitere | 0x42C, 0xE8, 0x16C | `0x00441750`, `0x00444C60`, `0x00445C50` | – | ? | |
 
 `_purecall` = `0x0044F3E0` (`_amsg_exit(0x19)`, Laufzeitfehler R6025).
 
