@@ -34,11 +34,20 @@
 - Spielstand-Format (17 122 Bytes) mit echtem Original-Spielstand gegengeprüft;
   Struktur siehe SETUP.md. Für docs/formats/savegame.md noch am Binary belegen.
 
-### Nächste Schritte (Phase 2, nach OK)
-- Ghidra: VC6-CRT besser erkennen (FID-Datenbank für VS6 bauen oder Signaturen aus
-  LIBCD.LIB, falls verfügbar), damit Spielcode sauber getrennt ist.
-- Engine-Klassen rekonstruieren: Konstruktoren über `operator_new`-Aufrufe und vtables
-  finden, `CGame`/`CSzene`/`CLayer`/`CArea`/`CEvent`/`CAudioBuffer` typisieren.
-- SZN-Lader `0x00449380` dekompilieren → alle SZN-Schlüssel (`LoadCond`, `DirtyAlpha`, …).
-- Editor-Modus über `ShowMenu=1` unter Wine ausprobieren.
+### Phase 2 – erledigt
+- Ghidra-Hilfsskripte: `re/scripts/ghidra.sh` (Wrapper), `Decompile.java`, `XRefs.java`.
+- Editor-Modus: nicht per INI, sondern fest abgeschaltet; per 2-Byte-Patch in der lokalen
+  Kopie im Test-Prefix aktiviert, Menü dokumentiert → `docs/EDITOR.md`.
+- SZN-Format vollständig aus `FUN_00449380` + Daten → `docs/formats/szn.md`.
+- Startkonfiguration `FUN_00404db0`: Schlüssel und fest überschriebene Schalter.
+
+### Phase 2 – nächste Schritte
+- Editor im Test-Prefix gezielt nutzen (Areas anzeigen, Szene per „Start Skript“ wählen),
+  um Analysehypothesen zu prüfen.
+- Engine-Klassen rekonstruieren: Szenen-/View-Objekt (Felder `+0x2C0 … +0x5E8`), Ebene
+  (vtable `+0x14` SetPos, `+0x24`), Figur (`+0x15CC` Direction, `+0x16D8` Zpos …);
+  Konstruktoren über `operator_new`-Aufrufe und vtables finden, in Ghidra typisieren.
+- Offene SZN-Punkte: Pfadauflösung `FUN_00448a70`, Stack-Verwechslung im Figurenblock am
+  Disassembly prüfen, Perspektivparameter (`this+0x2C0`).
+- VC6-CRT besser erkennen (FID), damit Spielcode sauber getrennt ist.
 - Hauptschleife `0x004036E0` und Timer `0x0044D7D0` → Timing-Modell.
