@@ -143,3 +143,10 @@
 0046b7e0	vtbl_CImageTcc	d
 0046b820	vtbl_CImageA16	d
 0046b890	vtbl_CImageAvi	d
+0043f130	CEvent_ctor	f
+0043f3c0	CEvent_Fire	f
+0043f1c0	SetGlobalEventProc	f
+0044c950	CSzene_OnClick	f
+0044c3c0	CSzene_HitTest	f
+0047e60c	g_EventProc	d
+0047e610	g_PrevEventProc	d

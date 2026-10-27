@@ -32,7 +32,7 @@ Belegstufen: **V** = Vorlage + Code stimmen überein, **C** = aus Code abgeleite
 | Musik/Stream | 0x1A4 | `0x004376C0` | `0x0046B750` (8) | ? | Kandidat Musikobjekt (`FadeIn` `0x00437FC0`) |
 | … | 0x22C | `0x004436B0` | `0x0046B908` (2) | ? | |
 | … | 0x140 | `0x0043D620` | `0x0046B8C8` (1) | ? | |
-| kleines Objekt | 0x24 | `0x0043F130` | – | ? | 48× erzeugt (Kandidat: `CEvent` oder `CArea`) |
+| `CEvent` | 0x24 | `0x0043F130` | – | C | 48× erzeugt; Felder und Auslösen siehe `docs/EVENTS.md` |
 | Timer | 0x18 | `0x0044D790` | – | ? | neben `timeSetEvent`-Aufruf `0x0044D7D0` |
 | WAV-Datei | 0x5C | `0x0044DE80` | – | ? | neben `mmio*`-Funktionen |
 | weitere | 0xBC, 0x42C, 0xE8, 0x16C, 0x400 | `0x00435F80`, `0x00441750`, `0x00444C60`, `0x00445C50`, `0x00445FB0` | – | ? | |

@@ -49,12 +49,16 @@
   (`CLayerBase` + 5 Typen), Renderer-Schnittstelle. Namensliste `docs/symbols/names.tsv`
   (128 Namen, in Ghidra übertragen mit `ApplyNames.java`).
 
+- Ebenen-/Bildklassen zugeordnet (CLayer/CAnimLayer, CImageBmp/Tcc/A16/Avi; Typ aus
+  Dateiendung, case-sensitiv) → STRUCTURES.md.
+- Ereignisfluss Mausklick → HitTest (Z-Priorität) → CEvent → OnGenericEvent → `docs/EVENTS.md`.
+
 ### Phase 2 – nächste Schritte
-- Ebenentypen A–E den Dateitypen zuordnen (BMP/A16/TCC/AVI…) über `FUN_0044ab10`.
 - `CSzene`-Felder (`+0x2C0 … +0x5E8`) und `CActor`-Felder vollständig typisieren;
   Ghidra-Strukturen anlegen, damit Dekompilate lesbar werden.
 - Audio-Klassen (Manager, Puffer, Musik) und `CEvent`/`CArea` (0x24-Objekt?) belegen.
-- `OnGenericEvent`-Mechanik: `CGame_SetEventProc`, Ereignisfluss Maus → Area → Callback.
+- Offene Punkte aus EVENTS.md: Mehrfachauslösung bei Down/Up, `FUN_00434e80` (Laufen),
+  Objekte `CSzene+0x5B4` (unterer Streifen) und `+0x9F8` (oberer Balken), `CArea`-Ctor.
 - Offene SZN-Punkte: Pfadauflösung `FUN_00448a70`, Stack-Verwechslung im Figurenblock am
   Disassembly prüfen, Perspektivparameter (`this+0x2C0`).
 - VC6-CRT besser erkennen (FID), damit Spielcode sauber getrennt ist.
