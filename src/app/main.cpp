@@ -13,6 +13,7 @@
 
 #include "engine/animlayer.hpp"
 #include "engine/scene.hpp"
+#include "render/font.hpp"
 #include "vfs/dirfs.hpp"
 #include "vfs/vfs.hpp"
 
@@ -32,13 +33,16 @@ struct Options {
     int frameMs = 1;  // Pause je Frame (Original: keine, TIMING.md)
     std::string dump; // PPM des Bildschirms am Ende
     bool hidden = false;
+    std::string font;  // Schriftdatei für die Bereichstexte (sonst Systemsuche)
+    int mouseX = -1, mouseY = -1;  // Mausbewegung nach dem ersten Frame (kopflose Prüfung)
 };
 
 void usage() {
     std::fprintf(stderr,
                  "rentahero --cd <Ordner|.iso|.cue> [--cd …] [--common <Ordner>]\n"
                  "          [--loc <n>] [--scene <Name>] [--mask <n>]\n"
-                 "          [--frames <n>] [--frame-ms <n>] [--dump <datei.ppm>] [--hidden]\n");
+                 "          [--frames <n>] [--frame-ms <n>] [--dump <datei.ppm>] [--hidden]\n"
+                 "          [--font <datei.ttf>] [--mouse <x> <y>]\n");
 }
 
 bool parse(int argc, char** argv, Options& o) {
@@ -59,6 +63,11 @@ bool parse(int argc, char** argv, Options& o) {
         else if (a == "--frames") o.frames = std::atoi(v);
         else if (a == "--frame-ms") o.frameMs = std::atoi(v);
         else if (a == "--dump") o.dump = v;
+        else if (a == "--font") o.font = v;
+        else if (a == "--mouse" && i + 1 < argc) {
+            o.mouseX = std::atoi(v);
+            o.mouseY = std::atoi(argv[++i]);
+        }
         else return false;
     }
     return !o.cd.empty();
@@ -116,6 +125,18 @@ int main(int argc, char** argv) {
     EngineGlobals g;
     // timeGetTime(): Millisekunden als 32-Bit-Zahl (läuft wie das Original nach ~49 Tagen über)
     g.now = [] { return static_cast<std::uint32_t>(SDL_GetTicks()); };
+
+    // CArea_DrawText: Arial 15, fett, kursiv (MOUSE.md)
+    Font areaFont;
+    {
+        const std::string file = opt.font.empty() ? Font::findSystemFont(true, true) : opt.font;
+        std::string err;
+        if (file.empty() || !areaFont.open(file, 15, &err))
+            std::fprintf(stderr, "Schrift %s: %s – Bereichstexte aus\n", file.c_str(),
+                         file.empty() ? "nicht gefunden" : err.c_str());
+        else
+            g.drawAreaText = [&areaFont](Surface565& s, const Area& a, int x, int y) { drawAreaText(areaFont, s, a, x, y); };
+    }
 
     Surface565 surf(640, 420);  // UNVERIFIED: Größe der Szenenoberfläche (COMPOSITOR.md)
     Scene scene(paths, g, surf);
@@ -178,7 +199,14 @@ int main(int argc, char** argv) {
                 SDL_ConvertEventToRenderCoordinates(ren, &ev);
                 scene.onClick(static_cast<int>(ev.button.x), static_cast<int>(ev.button.y));
             }
+            // WM_MOUSEMOVE → OnMouseMove 0x00402790 → CSzene_MouseMove (MOUSE.md); Zeiger folgen
+            if (ev.type == SDL_EVENT_MOUSE_MOTION) {
+                SDL_ConvertEventToRenderCoordinates(ren, &ev);
+                scene.onMouseMove(static_cast<int>(ev.motion.x), static_cast<int>(ev.motion.y));
+            }
         }
+        if (frame == 1 && opt.mouseX >= 0) scene.onMouseMove(opt.mouseX, opt.mouseY);
+        pollTimers(g);  // Port: Timer im Hauptthread je Schleifendurchlauf (TIMING.md)
         scene.update(true);
         if (scene.compose(false)) {
             if (auto r = scene.output().first()) present(surf, *r, screen);

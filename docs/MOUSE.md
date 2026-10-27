@@ -62,6 +62,11 @@ Wechsel des Bereichs (oder Verlassen des Szenenstreifens) startet erneut.
 - Port: Liberation Sans Bold Italic (bzw. Arial des Systems) über FreeType, einfarbig
   gerastert, Größe so, dass Ascent + Descent (OS/2 `usWin*`) = 15 px (GDI-Zellenhöhe).
   Bewusste Abweichung (Entscheidung 2026-10-27): GDI-Hinting ist nicht nachbildbar.
+  `Font::open`: Pixel-em = `round(15 · unitsPerEm / (usWinAscent + usWinDescent))`
+  (UNVERIFIED: GDI-Rundung), Vorschub = gehintete Breite, keine Unterschneidung;
+  `TA_CENTER` = `x − Breite/2` (UNVERIFIED: Rundung). Suche: `arialbi.ttf`, sonst
+  `LiberationSans-BoldItalic.ttf` (Windows: `%WINDIR%\Fonts`; sonst `~/.local/share/fonts`,
+  `~/.fonts`, `/usr/local/share/fonts`, `/usr/share/fonts`), Betrachter: `--font`.
 
 ## Zeiger `Renderer_SetCursor(n)` `0x0043E960`
 Die Zeiger sind 32×32-Schwarzweiß-Cursor (`RT_GROUP_CURSOR`) der **installierten**
