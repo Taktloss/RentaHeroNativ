@@ -118,6 +118,8 @@
 - `docs/locations/loc01.md`: Szenen, Flags, Bereich→ID-Tabelle und Fall-Zusammenfassung,
   erzeugt mit `tools/loc_areas.py` und `tools/case_summary.py` (Dekompilate mit Namen in
   `re/private/decomp-loc/`). `CGame+0x04` = Position aus Spielstand (SCRIPTING.md).
-- Nächste Schritte: dieselbe Übersicht für alle übrigen Schauplätze erzeugen, dann je
-  Schauplatz Flag-Bedeutungen;  offene Punkte: `CAnimLayer_Play`-Parameter, Laufmodus 3,
+- `docs/locations/locNN.md` für alle 29 übrigen Schauplätze automatisch erzeugt
+  (`tools/gen_loc_docs.py`).
+- Nächste Schritte: Flag-Bedeutungen und Abläufe je Schauplatz von Hand ergänzen, oder
+  mit dem Port-Gerüst (Phase 5) beginnen;  offene Punkte: `CAnimLayer_Play`-Parameter, Laufmodus 3,
   Sofort-Flag bei Timern, Rolle von `0x0047D130`/`0x0047D74C`.

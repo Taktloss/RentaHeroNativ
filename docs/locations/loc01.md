@@ -65,7 +65,7 @@ Flag-Änderungen wörtlich übernehmen.
 | 45 | `KanalTalk` | `0x00405DC0` |
 | 101 | `Gegenstand 13` | `0x00405DC0` |
 
-## Ereignis-Handler (Zusammenfassung je Fall)
+## Ereignis-Handler (Zusammenfassung je Fall; `== N` = Zweig einer If-Kette: Ereignis-ID oder Flag-Wert)
 ```
 # 004065c0.c FUN_004065c0 @ 004065c0
   Anfang: ruft FUN_004065c0
