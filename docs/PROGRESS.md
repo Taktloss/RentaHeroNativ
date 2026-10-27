@@ -24,8 +24,6 @@
   Nutzer möchte die eigene Neuimplementierung. go-rent-a-hero dient nur als Hinweisquelle.
 
 ### Offene Fragen an den Nutzer
-0. MM-Timer im Port im Hauptthread statt eigenem Thread (TIMING.md) – vorgeschlagen,
-   noch ausdrücklich bestätigen lassen.
 1. Demo von archive.org herunterladen und auf einen anderen Build prüfen?
 2. go-rent-a-hero: Autor um Lizenz anfragen? (Bis dahin kein Code-Reuse.)
 
