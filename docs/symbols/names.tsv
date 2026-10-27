@@ -205,3 +205,10 @@
 00442730	CAnimLayer_NextFrame	f
 00481ea8	g_LipSyncData	d
 00481edc	g_LipSyncRate	d
+004414c0	CHelp_Show	f
+004416f0	Hlp_Decode	f
+0044df00	CWave_Open	f
+0044de80	CWave_ctor	f
+004382c0	CImageBmp_Load	f
+0043c7c0	CImageAvi_Load	f
+0043c9a0	CImageAvi_Rewind	f

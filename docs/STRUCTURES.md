@@ -23,7 +23,7 @@ Belegstufen: **V** = Vorlage + Code stimmen überein, **C** = aus Code abgeleite
 | `CImageTcc` | 0x3A4 | `0x00438390` | `0x0046B7E0` (14) | C | Typ 1 |
 | `CImageA16 : CImageTcc` | 0xABC | `0x0043BAA0` | `0x0046B820` (14) | C | Typ 2; Ctor ruft `CImageTcc`-Ctor |
 | `CImageAvi` | 0x478 | `0x0043C5C0` | `0x0046B890` (14) | C | Typ 3 |
-| (unbenutzt) | ? | `0x0043BEE0` | `0x0046B858` (14) | ? | erbt `CImage`; keine Aufrufer → vermutlich toter Code |
+| (unbenutzt, AVIFile/DrawDib) | ? | `0x0043BEE0` | `0x0046B858` (14) | C | erbt `CImage`; nie erzeugt → toter Code, siehe formats/media.md |
 | `IRenderer` (abstrakt) | – | – | `0x0046B8CC` (3× `_purecall`) | C | Schnittstelle |
 | Renderer Vollbild | global | `0x00401CF0` | `0x0046B3FC` (3) | C | Objekt `0x0047C870`, gewählt bei `FullScreen` |
 | Renderer Fenster | global | `0x00401D60` | `0x0046B408` (3) | C | Objekt `0x0047C230` |
