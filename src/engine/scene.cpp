@@ -18,8 +18,42 @@ inline int ftol(double v) {
 
 Scene::Scene(const DataPaths& paths, EngineGlobals& globals, Surface565& target, std::uint16_t colorKey, int yOffset)
     : paths_(paths), g_(globals), surface_(target), colorKey_(colorKey), yOffset_(yOffset) {
+    g_.toggleScene = this;  // orig: 0x004483DE
+    if (!g_.toggleEvent && !editor_) {
+        // orig: 0x004484E8 – einmalig, deaktiviert, Funktions-Handler 0x0044C8D0
+        g_.toggleEvent = std::make_unique<Event>();
+        EngineGlobals* g = &g_;
+        g_.toggleEvent->setHandler([g](Event&, int) {
+            // orig: Rent-A-Hero.exe 0x0044C8D0 Scene_ToggleTimerEvent
+            if (!g->textVisible) {
+                g->textVisible = true;
+                g->toggleEvent->enabled = true;
+                setEventTimer(*g, *g->toggleEvent, 2000, 0);
+                g->sceneChanged = true;
+                return;
+            }
+            g->textVisible = false;
+            g->toggleEvent->enabled = false;
+            g->toggleEvent->pending = false;
+            if (g->toggleScene) {
+                g->toggleScene->invalidateAll();
+                g->toggleScene->lastHit_ = nullptr;
+            }
+        });
+    }
     windowStart_ = g_.now();  // orig: 0x004485FD in CSzene_ctor
     g_.hitGrid.clear();       // orig: 0x00448603
+}
+
+Scene::~Scene() {
+    if (g_.toggleScene == this) g_.toggleScene = nullptr;  // Original lässt den Zeiger stehen
+}
+
+void Scene::hideToggle() {
+    if (g_.toggleEvent) {
+        g_.toggleEvent->enabled = false;
+        g_.toggleEvent->pending = false;
+    }
 }
 
 namespace {
@@ -62,7 +96,7 @@ void Scene::moveZ(unsigned oldZ, unsigned newZ) {
 
 void Scene::dispatchEvents() {
     fireEvent(g_, sceneEvent_, sceneEvent_.type);
-    // !Editor: globales Ereignis 0x00481F2C (2-s-Umschalter 0x0044C8D0) folgt mit den Timern.
+    if (!editor_ && g_.toggleEvent) fireEvent(g_, *g_.toggleEvent, g_.toggleEvent->type);
     // Vollbildobjekt +0x5DC und Figuren +0x5E0/+0x5E4 folgen mit deren Port.
     for (auto& slot : layers_) {
         Layer* L = slot.get();
@@ -272,7 +306,14 @@ bool Scene::compose(bool force) {
     if (!g_.sceneChanged && !force) return false;
     // Vollbildobjekt +0x5DC (Schritt 2) und Figuren (Schritte 4, 8, 11) folgen mit ihren Klassen.
     if (!background_) return false;
-    // Schritt 5: Bereichsname unter der Maus folgt mit CArea.
+    // 5. Bereichstext unter der Maus: Rechteck in A und B (Editor-Vollbild +0x5C8 folgt)
+    if (textShown()) {
+        Rect t{textX_ - 160, textY_ - 90, textX_ + 160, textY_ - 50};
+        if (clipToScene(t)) {
+            listA_.add(t);
+            listB_.add(t);
+        }
+    }
 
     // 6. Rechteck aus A clippen (in A selbst) und nach B
     if (listA_.first()) {
@@ -335,7 +376,9 @@ bool Scene::compose(bool force) {
             }
         }
     }
-    // 12. Bereichsname/Editor-Rahmen folgen; Slot +0x10 der letzten Ebene ist ein Debug-Text.
+    // 12. Bereichstext (CArea_DrawText über GetDC); Editor-Rahmen und Slot +0x10 der letzten
+    // Ebene (Debug-Text) entfallen
+    if (textShown() && g_.drawAreaText) g_.drawAreaText(surface_, *lastHit_, textX_, textY_ - 60);
     g_.sceneChanged = false;
     return true;
 }
@@ -426,8 +469,8 @@ void Scene::onClick(int x, int y) {
         return;
     }
     if (y < 60 || y >= 480) {
-        // Hinweis-Symbol (x ≥ 581) folgt mit der Hilfe. Sonst: 0x00481F24 == 0 →
-        // Umschalt-Ereignis *0x00481F2C abschalten – folgt mit den Timern.
+        // Hinweis-Symbol (x ≥ 581) folgt mit der Hilfe.
+        if (!g_.textVisible) hideToggle();
         return;
     }
     lastHit_ = hitTest(x, y - 60);
@@ -436,6 +479,45 @@ void Scene::onClick(int x, int y) {
     if (lastHit_) return;  // nicht der Bereich der Figur (Figuren folgen)
     // Figur aktiv → CActor_WalkToClick folgt.
     markEvent(g_, sceneEvent_, 0x16);
+}
+
+}  // namespace rah
+
+namespace rah {
+
+int Scene::onMouseMove(int x, int y) {
+    clickX_ = x;
+    clickY_ = y;
+    int cursor = 0;
+    // Hilfe +0x9F8 und Vollbildobjekt +0x5DC folgen mit deren Port.
+    if (y < 60 || y > 479) {
+        if (!g_.textVisible) hideToggle();
+        return cursor;
+    }
+    Area* before = lastHit_;
+    lastHit_ = hitTest(x, y - 60);
+    if (lastHit_) cursor = lastHit_->cursor;
+    // Inventarleiste +0x5B4 (Typ 0x0D bzw. 0x00441D40) folgt.
+    if (lastHit_ != before || !g_.textVisible) {
+        const bool redraw = showTexts && g_.textVisible && before && before != lastHit_;
+        g_.textVisible = false;
+        hideToggle();
+        if (lastHit_) {
+            cursor = lastHit_->cursor;
+            if (showTexts) {
+                textX_ = clickX_;
+                textY_ = static_cast<unsigned>(clickY_) < 390u ? clickY_ + 25 : clickY_ - 20;
+                if (g_.toggleEvent) {
+                    g_.toggleEvent->enabled = true;
+                    setEventTimer(g_, *g_.toggleEvent, g_.mouseDelay, 0);
+                }
+            }
+        } else {
+            cursor = 0;
+        }
+        if (redraw) invalidateAll();
+    }
+    return cursor;
 }
 
 }  // namespace rah

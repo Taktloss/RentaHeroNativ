@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include <fstream>
+#include <tuple>
 #include <map>
 
 #include "core/bytes.hpp"
@@ -368,4 +369,53 @@ TEST(area_text_from_ger) {
     CHECK(f.scene.area(0)->text == "Rote Kiste");  // Ebenenbereich: Name = Dateiname
     CHECK(f.scene.area(1)->text == "Tür zum Hof" || f.scene.area(1)->text == "T\xFCr zum Hof");
     CHECK(f.scene.area(2)->text.empty());
+}
+
+TEST(mouse_hover_text_timing_and_cursor) {
+    Fixture f;
+    f.fs.put("GAME/MENU/T7.szn",
+             "[GENERAL]\r\nBackground1=Bg\r\nArea1=Door\r\nArea2=Win\r\n[Bg]\r\nFilename=BG.bmp\r\n"
+             "[Door]\r\nX1=200\r\nX2=300\r\nY1=50\r\nY2=80\r\nCursorType=3\r\n"
+             "[Win]\r\nX1=400\r\nX2=450\r\nY1=330\r\nY2=360\r\n");
+    std::uint32_t clock = 5000;
+    f.g.now = [&] { return clock; };
+    std::vector<std::tuple<std::string, int, int>> drawn;
+    f.g.drawAreaText = [&](Surface565&, const Area& a, int x, int y) { drawn.emplace_back(a.name, x, y); };
+    REQUIRE(f.scene.load("T7", 0));
+    f.scene.background()->enable();
+    f.scene.area(0)->setEvent(1);
+    f.scene.area(1)->setEvent(2);
+    auto frame = [&] {
+        pollTimers(f.g);
+        f.scene.update(true);
+        f.scene.compose(false);
+        f.scene.clearOutput();
+        f.scene.dispatchEvents();
+    };
+    frame();
+    CHECK(f.scene.onMouseMove(10, 300) == 0);
+    CHECK(f.scene.onMouseMove(250, 120) == 3);  // Szenen-y 60 → Tür
+    CHECK(f.g.toggleEvent->enabled && f.g.toggleEvent->timerRunning);
+    clock += 249;
+    frame();
+    CHECK(!f.g.textVisible && drawn.empty());
+    clock += 1;
+    frame();  // Timer 250 ms → sichtbar, nächster Frame zeichnet
+    CHECK(f.g.textVisible);
+    frame();
+    REQUIRE(!drawn.empty());
+    CHECK(drawn.back() == std::make_tuple(std::string("Door"), 250, 145 - 60));  // y + 25, dann − 60
+    CHECK(f.scene.onMouseMove(260, 125) == 3);  // gleicher Bereich: Text bleibt
+    CHECK(f.g.textVisible);
+    clock += 2000;
+    frame();  // nach 2000 ms ausgeblendet
+    CHECK(!f.g.textVisible && f.scene.lastHit() == nullptr);
+    const auto n = drawn.size();
+    frame();
+    CHECK(drawn.size() == n);
+    CHECK(f.scene.onMouseMove(420, 400) == 10);  // Fenster (Szenen-y 340): Zeiger 0 → 10; y ≥ 390 → Text bei y − 20
+    clock += 250;
+    frame();
+    frame();
+    CHECK(std::get<2>(drawn.back()) == 400 - 20 - 60);
 }

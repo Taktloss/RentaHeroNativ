@@ -30,6 +30,9 @@ public:
     // orig: Rent-A-Hero.exe 0x0044A680 CSzene_SetDevice (Oberfläche, Farbschlüssel, Y-Versatz)
     Scene(const DataPaths& paths, EngineGlobals& globals, Surface565& target, std::uint16_t colorKey = 0,
           int yOffset = 0);
+    ~Scene();
+    Scene(const Scene&) = delete;
+    Scene& operator=(const Scene&) = delete;
 
     // orig: Rent-A-Hero.exe 0x004492E0 CSzene_Load(name, loadMask) – "<Szenenordner><name>.szn",
     // sonst Szenenordner der CD
@@ -58,6 +61,10 @@ public:
     // orig: Rent-A-Hero.exe 0x0044C950 CSzene_OnClick (Bildschirmkoordinaten)
     void onClick(int x, int y);
     Area* lastHit() const { return lastHit_; }
+    // orig: Rent-A-Hero.exe 0x0044CBB0 CSzene_MouseMove – liefert den gewünschten Zeigertyp;
+    // der Aufrufer setzt ihn, wenn er vom aktuellen abweicht (0x0043EA60/0x0043E960)
+    int onMouseMove(int x, int y);
+    bool showTexts = true;       // +0x5CC (Ctor 1)
     // Schauplatznummer +0x5D0 (0 = Menü), für die Bereichstexte aus LocNN.GER
     void setLocationNumber(int n) { location_ = n; }
     bool clicksEnabled = true;   // +0x514 (Ctor 1)
@@ -106,6 +113,7 @@ private:
     std::array<std::unique_ptr<Area>, kMaxAreas> areas_{};     // +0xA4
     Area* lastHit_ = nullptr;                                   // +0x2C8
     int clickX_ = 0, clickY_ = 0;                               // +0x500, +0x504
+    int textX_ = 0, textY_ = 0;                                 // +0x508, +0x50C
     int location_ = 0;                                          // +0x5D0
     bool barShown_ = false;                                     // +0x5BC
     Event sceneEvent_;                                          // +0x2C4 (Klick ins Leere, Typ 0x16)
@@ -115,6 +123,8 @@ private:
     int unsupported_ = 0;
 
     void moveZ(unsigned oldZ, unsigned newZ);
+    bool textShown() const { return showTexts && lastHit_ && g_.textVisible; }
+    void hideToggle();
 };
 
 }  // namespace rah
