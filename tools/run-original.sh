@@ -18,7 +18,8 @@ root=$(cd "$(dirname "$0")/.." && pwd)
 export WINEPREFIX=$(realpath "${1:-$root/wineprefix}")
 cd "$WINEPREFIX/drive_c/Program Files (x86)/neoSoftware/Rent-A-Hero"
 
-cmd=(wine explorer /desktop=RentAHero,640x480 Rent-A-Hero.exe)
+# explorer /desktop braucht den vollen Windows-Pfad; ein relativer Name wird nicht gefunden
+cmd=(wine explorer /desktop=RentAHero,640x480 'C:\Program Files (x86)\neoSoftware\Rent-A-Hero\Rent-A-Hero.exe')
 if [ $scale = 1 ] && command -v gamescope >/dev/null; then
     # Ausgabehöhe: größtes ganzzahliges Vielfaches von 480, das auf den Bildschirm passt
     screen_h=$(xrandr --current 2>/dev/null | awk '/\*/{split($1,a,"x"); print a[2]; exit}')
