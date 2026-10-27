@@ -106,5 +106,5 @@
 - `docs/LOCATIONS.md`: Übersicht aller 33 Schauplätze (40 Ereignis-Handler, registrierte
   IDs, Szenenwechsel, Flags, Musik) per `tools/loc_summary.py`; Aufbau eines Schauplatzes.
 - Nächste Schritte: Einzeldokumentation je Schauplatz (Start: Loc40 = Neues Spiel,
-  Loc01), Laufbefehle `0x00434D70`/`0x00434D90`/`0x00435BF0` benennen; offene Punkte: `CAnimLayer_Play`-Parameter, Laufmodus 3,
+  Loc01), Wegsuche in `CActor_WalkCore` (Laufmodus 3); offene Punkte: `CAnimLayer_Play`-Parameter, Laufmodus 3,
   Sofort-Flag bei Timern, Rolle von `0x0047D130`/`0x0047D74C`.

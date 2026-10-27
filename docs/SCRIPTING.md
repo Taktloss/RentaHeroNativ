@@ -78,3 +78,26 @@ optional fester Startwert. `abs(INT_MIN)` bleibt negativ (Original-Verhalten).
 `OnMouseButton` (EVENTS.md): Doppelklick → `CActor+0x58 = 1` (`0x00435320`), die Figur
 wird dann in **jedem** Bild aktualisiert statt im Animationstakt (TIMING.md) → läuft
 schneller. Jeder andere Klick → `0x0047D130 = 0`, `CActor+0x58 = 0` (`0x00435330`).
+
+## Figur: Laufen und Drehen (`CActor`)
+| Adresse | Name | Wirkung |
+|---|---|---|
+| `0x00434D70` | `CActor_WalkTo(x, y, cb, dir)` | ruft `0x00434D90` (297× im Spielcode) |
+| `0x00434D90` | `CActor_WalkTo2(x, y, cb, dir)` | mit `cb`: `+0x1AE8 = 0` (Ziel-erreicht-Merker); dann `0x00434DC0` (149×) |
+| `0x00434DC0` | `CActor_SetWalk` | `cb` → Ereignis `+0x1C8` (bei Bedarf neu, aktiv); `dir != -1` → End-Richtung `+0x1AD4`; dann Kern |
+| `0x00434E80` | `CActor_WalkToClick(x, y)` | End-Richtung −1, Kern ohne Rückruf (Klick ins Leere, EVENTS.md) |
+| `0x00434EA0` | `CActor_WalkCore(x, y, hatCb)` | siehe unten |
+| `0x00435BF0` | `CActor_Turn(dir, cb)` | schon in Richtung `dir` → Standbild `+0x1A60[dir]`, sofort **0x29**; sonst Drehung starten (`+0x1A8C` = alte, `+0x15CC` = neue Richtung, `+0x1AD8 = 1`) |
+
+`CActor_WalkCore` (Anfang belegt, Wegsuche folgt):
+- Figur nicht bereit (`+0x15C8 == 0`) → nichts.
+- Ziel = aktuelle Position (`+0x15D0/+0x15D4`): End-Richtung gesetzt und abweichend →
+  `CActor_Turn(dir, Handler des Rückrufs)`; sonst Ereignis **0x29** („angekommen“)
+  auslösen, `+0x1AE8 = 1`. Jeweils `CActor_ClearRun`.
+- Neuer Befehl **ohne** Rückruf, während ein alter Rückruf noch offen ist
+  (`+0x1AE8 == 0`): altes Ereignis mit **0x2A** („abgebrochen“) auslösen.
+
+Zusammen mit `CGame_WaitDone_i` (0x2A → Platz 3): **Klickt der Spieler während eines
+Skript-Laufwegs ins Leere, wird der Weg ersetzt, das Skript bekommt „abgebrochen“ und
+der Handler endet** (`if (!CGame_Wait()) return;`). Ereignistypen: 0x29 = Figur
+angekommen/gedreht, 0x2A = Laufbefehl abgebrochen (EVENTS.md).

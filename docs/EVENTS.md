@@ -31,8 +31,8 @@ Speichert `x, y` in `CSzene+0x500/+0x504`. Bildschirmaufteilung (Szene 640×360 
     0x0B; sofort `CEvent_Fire` nur bei Sofort-Flag `+0x0C`).
   - Treffer gleich Bereich des Objekts `+0x5B4` (+0x428) → `FUN_00441d40`, Ende.
   - Treffer, aber nicht der Bereich der Figur → Ende.
-  - Kein (anderer) Treffer und Figur aktiv (`+0x1A4`) → `FUN_00434e80(figur, x, y-60)`
-    (vermutlich „hinlaufen“, UNVERIFIED).
+  - Kein (anderer) Treffer und Figur aktiv (`+0x1A4`) → `CActor_WalkToClick(figur, x, y-60)`
+    (SCRIPTING.md).
   - sonst Szenen-Ereignis `CSzene+0x2C4` mit **Typ 0x16** markieren.
 
 ## 3. Treffer-Prüfung `CSzene_HitTest` (`0x0044C3C0`, Szenenkoordinaten)
@@ -75,7 +75,8 @@ Normalfall: Auslöser setzen nur `pending`, Typ und `Param`; `CSzene_DispatchEve
 Timerliste auf.
 
 Ereignistypen bisher: **0x01** = Animation fertig, **0x0B** = Klick auf Bereich,
-**0x15** = Timer, **0x16** = Klick ins Leere / Szene.
+**0x15** = Timer, **0x16** = Klick ins Leere / Szene, **0x29** = Figur angekommen/gedreht,
+**0x2A** = Laufbefehl abgebrochen (SCRIPTING.md).
 `DAT_0047e608` und `event+0x08` steuern eine Variante beim Aufruf (Bedeutung offen).
 
 ## 5. `CArea` (Klickbereich)

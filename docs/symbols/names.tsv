@@ -273,3 +273,9 @@
 00440c40	CGame_ShowHint	f
 004414a0	CHelp_IconOn	f
 004414b0	CHelp_IconOff	f
+00434d70	CActor_WalkTo	f
+00434d90	CActor_WalkTo2	f
+00434dc0	CActor_SetWalk	f
+00434e80	CActor_WalkToClick	f
+00434ea0	CActor_WalkCore	f
+00435bf0	CActor_Turn	f
