@@ -221,3 +221,5 @@
 0047d37c	g_CommonPathCd	d
 0047d480	g_ScenePath	d
 0047d584	g_ScenePathCd	d
+00440ad0	CGame_DescribeItem	f
+00404360	Config_ReadCdMap	f

@@ -80,5 +80,5 @@
 - `docs/formats/ger.md`: LocNN.GER (`[AREA_TEXT]`, `[SPEECH]`), Sprachausgabe, ACS-Lippensync.
 
 ### Phase 3 – nächste Schritte
-- Vollbild-Videos (`0x004050B0`, Filtergraph), Inhalt von `common` (DATA1.CAB) prüfen.
+- Vollbild-Videos (`0x004050B0`, Filtergraph); DATA1.CAB-Format (InstallShield 5) für eigenen Entpacker.
 - Renderer: Pixelformat (16/24 Bit, TrueColor), Kanalreihenfolge der TCC-Ebenen bestätigen.

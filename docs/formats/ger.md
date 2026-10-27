@@ -16,6 +16,12 @@ Dateipfad über `FUN_00448b30(szene, "LocNN", "GER")` (Pfadauflösung wie SZN, o
   Datei `Loc%02d.GER`. Fehlender Schlüssel (`"NULL"` als Vorgabe) → kein Text.
 - `SPEECH` fehlt → Text wird `Sorry, but Speech [%s] not found...` (so auch im Port).
 
+## DefInvent.ger (Common-Ordner) – Inventartexte
+Wie LocNN.GER, nur Sektion `[SPEECH]`, Schlüssel `INVENT001…`. `CGame_DescribeItem(n)`
+(`0x00440AD0`): Figur vorhanden und aktiv (`+0x1A4`) → Figur dreht sich (`Slot +0x24`),
+spricht `INVENT%03d` (mit WAV/ACS aus Common); sonst nur Text `INVENT%03dH`.
+Eine `DefInvent.eng` liegt ebenfalls bei, wird vom Code aber nicht verwendet (Endung fest `GER`).
+
 ## Sprachausgabe `CSpeech_Load(ini, name, stream)` (`0x004460F0`)
 Objekt `CSpeech` (0x400 Bytes = Textpuffer, Ctor `0x00445FB0`), aufgerufen u. a. von
 `CGame_Say` `0x004404C0` (`stream = 1`) und `0x004405D0`.

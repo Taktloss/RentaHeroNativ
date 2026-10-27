@@ -47,11 +47,22 @@ Erster Treffer per `_access(pfad, 0)` (`0x0044E810`) gewinnt; ohne Treffer liefe
 Position `len−4` ein `.`, bleibt der Name, sonst wird `"." + ext` angehängt.
 Namen mit kurzer Endung (z. B. `a.b`) erhalten also zusätzlich die Endung.
 
+## Inhalt von `CommonPath` (Festplatte, aus `DATA1.CAB` installiert)
+128 Spieldateien, die **nicht** auf den CDs als Einzeldateien liegen: 77+1 WAV, 33 A16,
+12 AVI, 3 TCC (u. a. Inventar-Animationen), `DefInvent.ger`/`.eng` (Inventartexte,
+formats/ger.md) und `CDMap.ini`; dazu die Spielstände.
+
+`CDMap.ini` (`%sCDMAP.INI` mit `CommonPath`, gelesen in `0x00404360`): Sektion `[CDMAP]`,
+Schlüssel `loc01…`, Wert = CD-Nummer (1 oder 2; 4 × CD1, 29 × CD2). Dient nur dem
+CD-Wechsel und wird im Port nicht gebraucht.
+
 ## Port
 - Der Nutzer gibt ein Datenverzeichnis an (zusammengeführte CD, siehe SETUP.md).
   Abbildung: `ScenePath` = `ScenePathCd` = `<daten>/GAME/`, `CommonPathCd` =
-  `<daten>/GAME/COMMONCD/`, `CommonPath` = Installationsordner `common`
-  (vom Setup aus `DATA1.CAB` – Inhalt prüfen) bzw. Benutzerordner für Spielstände.
+  `<daten>/GAME/COMMONCD/`, `CommonPath` = installierter Ordner `Common`. Die
+  Common-Dateien gibt es nur in `DATA1.CAB` (InstallShield 5): Port braucht entweder
+  eine Installation oder einen eigenen Entpacker (Format später prüfen).
+  Spielstände in einen eigenen Benutzerordner.
 - Windows-Dateisystem ist case-insensitiv; die CD-Daten sind großgeschrieben, die
   Namen im Code gemischt (`Loc05`, `hlp`). Port: case-insensitive Suche
   (Verzeichnis-Index beim Start).
