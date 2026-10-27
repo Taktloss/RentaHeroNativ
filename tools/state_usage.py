@@ -5,7 +5,7 @@
 Liest lokale Ghidra-Dekompilate (re/private/decomp-game/*.c, nicht im Repo) und die
 Namensliste docs/symbols/names.tsv; schreibt eine kompakte Übersicht als TSV.
 
-  python3 -I tools/state_usage.py <decomp-dir> <names.tsv> <out.tsv>
+  python3 -I tools/state_usage.py <decomp-dir>[,<decomp-dir>...] <names.tsv> <out.tsv>
 """
 import collections
 import glob
@@ -38,7 +38,11 @@ def main(ddir, names, out):
     use = collections.defaultdict(lambda: {'r': 0, 'w': 0, 'vals': collections.Counter(), 'locs': set()})
     unmatched = 0
     dyn = []
-    for p in sorted(glob.glob(os.path.join(ddir, '*.c'))):
+    files = {}
+    for d in ddir.split(','):
+        for f in glob.glob(os.path.join(d, '*.c')):
+            files.setdefault(os.path.basename(f), f)
+    for p in sorted(files.values()):
         addr = int(os.path.basename(p)[:8], 16)
         loc = loc_of(addr, ctors)
         aliases = set()

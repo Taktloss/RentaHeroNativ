@@ -112,5 +112,8 @@
 - `docs/AUDIO.md`: Lautstärke/Frequenz/3D, Blenden im 100-ms-Timer, Animations-Cues
   (Intro Loc40). `tools/compact_c.py`: Dekompilate verdichtet lesen.
 - `docs/locations/loc40.md`: Intro (3 Szenen, Bild-Ereignisketten, Überspringen per Klick).
-- Nächste Schritte: Loc35/Loc37 (Intro-Fortsetzung), dann Loc01 (Spielbeginn S7);  offene Punkte: `CAnimLayer_Play`-Parameter, Laufmodus 3,
+- `docs/locations/loc35-37.md`: spielbare Intro-Abschnitte; SCRIPTING.md: Animations-Modi
+  (0/10 ausblenden, 1/11 stehen, 12 zurück, 13 Schleife), Inventar-Funktionen.
+- Flag-Statistik korrigiert: jetzt inkl. Ereignis-Handler (159 Flags mit Zugriff).
+- Nächste Schritte: Loc01 (Spielbeginn S7), `CGame+0x04` klären, `0x00440890`;  offene Punkte: `CAnimLayer_Play`-Parameter, Laufmodus 3,
   Sofort-Flag bei Timern, Rolle von `0x0047D130`/`0x0047D74C`.

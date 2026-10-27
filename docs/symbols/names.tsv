@@ -335,3 +335,17 @@
 00443030	CAnimLayer_PlayEndEvent	f
 0044c880	CSzene_SetClickEvent	f
 0044b190	CSzene_ClearFlag510	f
+00442e70	CAnimLayer_PlayRange	f
+004429d0	CAnimLayer_OnEnd	f
+00441b00	Inventory_Remove	f
+00442240	Inventory_SetEvent	f
+00430a20	Loc35_ctor	f
+00430cd0	Loc35_Start	f
+00430d70	Loc35_OnEvent	f
+00431260	Loc37_ctor	f
+00431540	Loc37_Start	f
+004316f0	Loc37_OnEvent	f
+00434ab0	CActor_SetPos	f
+00433de0	CActor_Hide	f
+00433e10	CActor_Show	f
+00440290	CGame_PlaySfxRandom3D	f

@@ -101,3 +101,33 @@ Zusammen mit `CGame_WaitDone_i` (0x2A → Platz 3): **Klickt der Spieler währen
 Skript-Laufwegs ins Leere, wird der Weg ersetzt, das Skript bekommt „abgebrochen“ und
 der Handler endet** (`if (!CGame_Wait()) return;`). Ereignistypen: 0x29 = Figur
 angekommen/gedreht, 0x2A = Laufbefehl abgebrochen (EVENTS.md).
+
+## Animationen abspielen (`CAnimLayer`)
+| Adresse | Name | Wirkung |
+|---|---|---|
+| `0x004430F0` | `CAnimLayer_Start(modus)` | aktiv/sichtbar/dirty, Modus siehe unten |
+| `0x00443030` | `CAnimLayer_PlayEndEvent(modus, ev)` | Ende-Ereignis `+0x1C4` (Typ 0x01) setzen bzw. löschen (`ev = 0`), dann `Start(modus)` |
+| `0x00442E70` | `CAnimLayer_PlayRange(modus, ev, von, bis)` | Bereich `+0x2D8/+0x2DC` (−1 = Anfang/Ende), `von ≠ −1` → `ShowFrame(von)` (bei Videos nur `von ≠ 0`); `bis < von` → **rückwärts** (`+0x2E0`); dann `PlayEndEvent` |
+| `0x00443400` | `CAnimLayer_SetFrameEvent(ev, bild)` | Ereignis `+0x1CC` beim Erreichen von Bild `+0x2CC` (Kette: im Handler neu setzen) |
+| `0x004429D0` | `CAnimLayer_OnEnd` | siehe unten |
+
+Modus (Sprungtabelle `0x00443214`, Felder `+0x1AC` Schleife, `+0x1B0`, `+0x1B4`
+am Ende ausblenden):
+| Modus | Wirkung |
+|---|---|
+| 0, 10 | einmal, **am Ende ausblenden** (`+0x1B4 = 1`) |
+| 1, 11 | einmal, letztes Bild bleibt stehen |
+| 12 | einmal, am Ende auf das Startbild zurück und stehen bleiben (`+0x1B0 = 2`) |
+| 13 | **Schleife** (`+0x1AC = 1`) |
+| 2…9 | Flags unverändert (Vorzustand) |
+
+Ende (`CAnimLayer_OnEnd`): Schleife oder Modus 12 → auf Bereichsanfang zurück
+(Videos: `Seek`); ohne Schleife Bereich löschen, `+0x1A8 = 0`, `+0x2E4 = 1`.
+`CSzene_DispatchEvents` blendet beendete Ebenen mit `+0x1B4` aus und löst danach
+deren Ende-Ereignis aus.
+
+## Inventar (Auswahl)
+| Adresse | Name | Wirkung |
+|---|---|---|
+| `0x00441B00` | `Inventory_Remove(id)` | Eintrag (0x14 Bytes, max. 50) entfernen, Rest nachrücken, Auswahl ggf. −1 |
+| `0x00442240` | `Inventory_SetEvent(id, ev)` | Ereignis-ID am Gegenstand (`+0x10`); UNVERIFIED: wird beim Benutzen des Gegenstands ausgelöst |
