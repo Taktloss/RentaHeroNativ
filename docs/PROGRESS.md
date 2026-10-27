@@ -162,6 +162,6 @@
   installiert. `rentahero` ist ein Szenen-Betrachter mit dem Frame-Ablauf von Game_Idle:
   `rentahero --cd RentAHero --common <Common> --loc 1 --scene 7A` (Kopflos:
   `SDL_VIDEO_DRIVER=offscreen … --frames N --dump x.ppm --hidden`). LOC01/7A läuft mit allen
-  A16-Animationen. 44 Tests grün.
+  A16-Animationen. 43 Tests grün.
 - Nächste Schritte: Bereiche (CArea, AddArea, HitTest) + Maus, CLayer_Update-Interpolation,
   Timer (CEvent_FireTimers), AVI-Ebenen (FFmpeg), Inventarleiste, Figuren, Loc40.
