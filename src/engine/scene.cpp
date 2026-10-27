@@ -47,7 +47,7 @@ bool Scene::loadSzn(const IniFile& szn, unsigned loadMask) {
             L->dirtyAlpha = true;
             if (L->hasImage) {
                 L->tcc.dirtyAlpha = true;
-                L->tcc.calcAlphaBounds();  // vtable +0x24
+                L->tcc.calcAlphaBounds(L->planes());  // vtable +0x24
             }
         }
         L->setPos(l.x, yOffset_ + l.y);
@@ -90,13 +90,14 @@ Layer* Scene::createLayer(const std::optional<FoundFile>& file, bool animated) {
     while (layers_[static_cast<std::size_t>(slot)]) {
         if (++slot >= kMaxLayers) return nullptr;
     }
-    if (animated) {
-        ++unsupported_;  // CAnimLayer (A16) wird gesondert portiert
+    std::unique_ptr<Layer> L;
+    if (animated) L = std::make_unique<AnimLayer>(g_);
+    else L = std::make_unique<Layer>();
+    std::string err;
+    if (!file || !L->load(*file, colorKey_, &err)) {
+        if (animated && file && layerKindFromName(file->path) != LayerKind::A16) ++unsupported_;  // AVI folgt
         return nullptr;
     }
-    auto L = std::make_unique<Layer>();
-    std::string err;
-    if (!file || !L->load(*file, colorKey_, &err)) return nullptr;
     L->setPos(0, yOffset_);
     lastLayer_ = slot;
     g_.sceneChanged = true;

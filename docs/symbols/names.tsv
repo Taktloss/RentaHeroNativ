@@ -388,3 +388,12 @@
 00481f28	g_SceneChanged	d
 # addr	name	f|d
 # Namen aus der eigenen Analyse (Belege: docs/STRUCTURES.md, CONTROLS.md, EDITOR.md, formats/szn.md)
+00442500	CAnimLayer_Load	f
+004425b0	CAnimLayer_CreateImage	f
+00442950	CAnimLayer_CatchUp	f
+00442f90	CAnimLayer_PlayRangeNoEvent	f
+00443260	CAnimLayer_Stop	f
+00443310	CAnimLayer_SeekFrame	f
+0043f260	CEvent_SetHandler	f
+0043f1b0	SetEventVariant	f
+0047e608	g_EventVariant	d

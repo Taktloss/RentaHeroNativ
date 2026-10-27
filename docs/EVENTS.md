@@ -77,7 +77,7 @@ Timerliste auf.
 Ereignistypen bisher: **0x01** = Animation fertig, **0x0B** = Klick auf Bereich,
 **0x15** = Timer, **0x16** = Klick ins Leere / Szene, **0x29** = Figur angekommen/gedreht,
 **0x2A** = Laufbefehl abgebrochen (SCRIPTING.md).
-`DAT_0047e608` und `event+0x08` steuern eine Variante beim Aufruf (Bedeutung offen).
+`g_EventVariant` (`0x0047E608`, gesetzt über `0x0043F1B0` aus `0x0047D26C`) und `event+0x08`: bei Funktions-Handlern wird dann `Param = Typ` gesetzt (Bedeutung offen). Auslöser markieren über `pending = 1`, Typ, `Param = Typ` (Port: `src/engine/event.*`).
 
 ## 5. `CArea` (Klickbereich)
 Aus `CSzene_HitTest`/`CSzene_OnClick`: `RECT` bei `+0x00`, Maske/Bildreferenz `+0xAC`,

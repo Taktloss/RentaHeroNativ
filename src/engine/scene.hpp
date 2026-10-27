@@ -10,6 +10,8 @@
 #include <optional>
 #include <string_view>
 
+#include "engine/animlayer.hpp"
+#include "engine/globals.hpp"
 #include "engine/layer.hpp"
 #include "engine/paths.hpp"
 #include "engine/rectlist.hpp"
@@ -19,11 +21,6 @@
 #include "render/surface.hpp"
 
 namespace rah {
-
-// Globale Zustände des Originals, die mehrere Szenen (Spiel, Menü) teilen.
-struct EngineGlobals {
-    bool sceneChanged = false;  // g_SceneChanged 0x00481F28
-};
 
 class Scene {
 public:

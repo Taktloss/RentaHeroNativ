@@ -25,7 +25,7 @@ bool Layer::load(const FoundFile& file, std::uint16_t key, std::string* error) {
     loaded = true;
     colorKey = key;
     if (active) dirty = true;
-    isVideo = kind == LayerKind::Avi;
+    if (kind == LayerKind::Avi) isAnim = true;
 
     // CLayer_CreateImage (vtable +0x0C)
     switch (kind) {
@@ -42,11 +42,11 @@ bool Layer::load(const FoundFile& file, std::uint16_t key, std::string* error) {
         tcc.dirtyAlpha = true;
         TccImage img;
         if (!img.load(*data, error)) return false;
-        tcc.planes = std::move(img.planes());
-        tcc.afterDecode();
-        width = tcc.width();
-        height = tcc.height();
-        alpha = tcc.hasAlpha();
+        still = std::move(img.planes());
+        tcc.afterDecode(still);
+        width = static_cast<int>(still.width);
+        height = static_cast<int>(still.height);
+        alpha = still.hasAlpha();
         hasImage = true;
         break;
     }
@@ -57,6 +57,13 @@ bool Layer::load(const FoundFile& file, std::uint16_t key, std::string* error) {
     }
     full = {0, 0, width, height};
     zoomed = full;
+    return true;
+}
+
+bool Layer::update(EngineGlobals&) {
+    if (tweenSteps == 0) return true;
+    // Noch nicht portiert: Interpolation von X/Y/Z/Zoom/Farbe und Ereignis Typ 2 (0x00447890);
+    // folgt mit den Setzern der Zielwerte (+0x228…, +0x278…), die +0x50 setzen.
     return true;
 }
 
@@ -139,7 +146,7 @@ bool Layer::draw(Surface565& s, int flag, const Rect& src, const ZMap* zmap) {
             }
         }
     } else {
-        if (!tcc.draw(s, r, flag, zBuffered ? zmap : nullptr, ftol(z), ftol(zoom))) return false;
+        if (!tcc.draw(s, planes(), r, flag, zBuffered ? zmap : nullptr, ftol(z), ftol(zoom))) return false;
     }
     dirty = false;
     return true;

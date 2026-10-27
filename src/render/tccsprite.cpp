@@ -5,9 +5,9 @@
 
 namespace rah {
 
-void TccSprite::calcAlphaBounds() {
-    if (!hasAlpha()) {
-        alphaRect = {0, 0, width(), height()};
+void TccSprite::calcAlphaBounds(const TccPlanes& planes) {
+    if (!planes.hasAlpha()) {
+        alphaRect = {0, 0, static_cast<int>(planes.width), static_cast<int>(planes.height)};
         return;
     }
     unsigned minX = 10000, minY = 10000, maxX = 0, maxY = 0;
@@ -35,7 +35,8 @@ void TccSprite::setClip(const Rect& r) {
     if (r.bottom > 360) clip.bottom = r.bottom - 360;
 }
 
-bool TccSprite::draw(Surface565& s, Rect rect, int flag, const ZMap* zmap, int z, int zoom) {
+bool TccSprite::draw(Surface565& s, const TccPlanes& planes, Rect rect, int flag, const ZMap* zmap, int z,
+                     int zoom) {
     if (planes.rgb[0].empty()) return false;  // +0x390: kein Bild
     setClip(rect);
     lastRect = rect;
@@ -46,7 +47,7 @@ bool TccSprite::draw(Surface565& s, Rect rect, int flag, const ZMap* zmap, int z
     if (rect.left < 0 || rect.top < 0 || rect.right > s.width || rect.bottom > s.height) return false;
 
     // orig: 0x0043B9ED–0x0043BA1C – Z wird vorzeichenlos gegen 255.0 verglichen
-    if (!hasAlpha() || flag == 0 || static_cast<unsigned>(z) >= 255u) {
+    if (!planes.hasAlpha() || flag == 0 || static_cast<unsigned>(z) >= 255u) {
         blitOpaque565(s, planes, rect.left, rect.top);
         return true;
     }
@@ -58,7 +59,7 @@ bool TccSprite::draw(Surface565& s, Rect rect, int flag, const ZMap* zmap, int z
         blitAlphaZoom565(s, planes, lastRect, visible, clip.left, clip.top, depth);
         return true;
     }
-    const int w = width(), h = height();
+    const int w = static_cast<int>(planes.width), h = static_cast<int>(planes.height);
     int left0, top0, width0, height0;
     if (dirtyAlpha) {
         // orig: 0x0043AF02–0x0043AFCF (Eigenheiten: gespeicherter unterer Rand schrumpft beim

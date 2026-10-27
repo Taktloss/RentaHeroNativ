@@ -69,8 +69,23 @@ expandiert** (Schleife `> 0`) – Original-Bug, nachbilden. In den Daten derzeit
   Ein Alpha-Puffer wird nur angelegt, wenn das erste Bild Alpha hat.
 - `Next` (`0x0043BD20`): nach dem Laden liefert der erste Aufruf nur `1` (Bild 0 bleibt);
   am Dateiende `0`. Zähler `+0xAB8`.
-- `Seek(n)` (`0x0043BDC0`): `n < 1` → zurück auf Bild 0; `n > 299` → Fehler; sonst
-  vom letzten Schlüsselbild ≤ n (oder vom aktuellen Bild, wenn näher) vorwärts dekodieren.
+- Zustand: Lesezeiger `+0x390` (nach dem Dekodieren: Daten des aktuellen Bilds), Größen
+  des zuletzt gelesenen Kopfs (`+0x08…+0x14`), Halte-Flag `+0xAB4`, Zähler `+0xAB8`.
+  `Next`: Halte-Flag → nur löschen, 1. Sonst Zeiger += Größen; ≥ Dateiende → 0; Kopf
+  lesen, dekodieren, Zähler + 1. Laden: Bild 0, Halte-Flag 1, Zähler 0.
+- `Rewind` (`0x0043BCE0`): Bild 0 dekodieren, Zähler 0, Halte-Flag **unverändert**.
+- `Seek(n)` (`0x0043BDC0`):
+  - `n < 1`: Größen 0, Zeiger = Dateianfang, Zähler −1, Halte-Flag 0 (nichts dekodiert;
+    das nächste `Next` liefert Bild 0).
+  - `n > 299` → 0. `n == Zähler` → Halte-Flag 1. `n == Zähler + 1` → nichts.
+  - Schlüsselbild `n`: Größen 0, Zeiger = Kopf von `n` (fehlt → 0), **nichts dekodiert**.
+  - Deltabild: `k` = letztes Schlüsselbild vor `n` (bis 0). Ist `k < Zähler`, wird ab
+    `Zähler + 1` weiterdekodiert, sonst ab `k`; `Next` bis Bild `n − 1`.
+    **Eigenheit:** Bei einem Rückwärts-Seek mit `k < Zähler` dekodiert die Schleife nichts
+    – das Bild bleibt stehen, das folgende `Next` liefert das Bild nach dem alten Stand.
+    Ein gesetztes Halte-Flag verbraucht einen der `Next`-Schritte.
+  - Danach Halte-Flag 0, Zähler = `n − 1`; das folgende `Next` liefert Bild `n`.
+  (Tests: `tests/test_tcc.cpp`.)
 - Statistik: max. 141 Bilder je Datei, Breite/Höhe innerhalb einer Datei konstant.
 
 ## Daten-Besonderheit

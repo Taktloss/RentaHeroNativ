@@ -149,6 +149,13 @@
   Test: LOC01/7A wird korrekt zusammengesetzt (Hintergrund + statische TCC-Ebenen).
 - Ebenen und Hintergrund starten inaktiv; die Schauplätze aktivieren sie (Hintergrund über
   `CGame+0x60` aus `CGame_GetViewObjects`, 22 Schauplätze).
-- Nächste Schritte: CAnimLayer (A16, Takt aus CSzene_Update), Bereiche (CArea, HitTest),
-  SDL-Fenster + Hauptschleife (wartet auf SDL3-devel), Ereignisse/Timer/Wartestellen,
-  Figuren (CActor_Draw), Loc40.
+- 2026-10-28: CAnimLayer analysiert (`docs/ANIMATION.md`) und portiert
+  (`engine/animlayer`): Start-Modi aus Sprungtabelle `0x00443214`, Update-Takt,
+  Nachhol-Eigenheit (A16: Cues/Bild-Ereignis doppelt ohne Bildwechsel), OnEnd, Bereiche
+  vorwärts/rückwärts, ShowFrame, Stop. `A16Anim` als exaktes Zustandsmodell von
+  CImageA16 neu (Halte-Flag, Zähler, Seek-Eigenheiten, tcc.md). `engine/event` (CEvent,
+  CEvent_Fire), `engine/globals`. Szene legt A16-Ebenen jetzt an; AVI bleibt offen.
+  40 Tests grün.
+- Nächste Schritte: CSzene_Update-Tick (Fälligkeit, 200-ms-Fenster, TIMING.md) und
+  CSzene_DispatchEvents, CLayer_Update-Interpolation, Bereiche (CArea, HitTest),
+  SDL-Fenster + Hauptschleife (wartet auf SDL3-devel), Figuren (CActor_Draw), Loc40.

@@ -122,65 +122,95 @@ bool TccImage::load(std::span<const std::uint8_t> data, std::string* error) {
 // orig: Rent-A-Hero.exe 0x0043BB60 CImageA16_Load
 bool A16Anim::load(Bytes data, std::string* error) {
     data_ = std::move(data);
-    offsets_.clear();
-    keys_.clear();
+    offsets_.fill(kNull);
+    keys_.fill(false);
+    count_ = 0;
     std::size_t off = 0;
     TccHeader h;
-    while (offsets_.size() < kMaxFrames && tccReadHeader(data_, off, h)) {
+    while (count_ < kMaxFrames && tccReadHeader(data_, off, h)) {
         const std::size_t len = TccHeader::kSize + std::size_t{h.sizes[0]} + h.sizes[1] + h.sizes[2] + h.sizes[3];
         if (off + len > data_.size()) break;
-        offsets_.push_back(off);
-        keys_.push_back((h.flags & 0x10) == 0);
+        offsets_[static_cast<std::size_t>(count_)] = off;
+        keys_[static_cast<std::size_t>(count_)] = (h.flags & 0x10) == 0;
+        ++count_;
         off += len;
     }
-    if (offsets_.empty()) {
+    if (count_ == 0) {
         if (error) *error = "A16 ohne Bilder";
         return false;
     }
-    current_ = 0;
-    fresh_ = true;
-    if (!decodeInto(data_, offsets_[0], planes_, true, nullptr, error)) return false;
-    color_.apply(planes_);
+    if (!decodeAt(offsets_[0], true)) {
+        if (error) *error = "A16: Bild 0 fehlerhaft";
+        return false;
+    }
+    hold_ = true;
+    counter_ = 0;
     return true;
 }
 
-bool A16Anim::decode(int i) {
-    if (!decodeInto(data_, offsets_[static_cast<std::size_t>(i)], planes_, false, nullptr, nullptr)) return false;
+bool A16Anim::decodeAt(std::size_t headerOff, bool first) {
+    TccHeader h;
+    if (!tccReadHeader(data_, headerOff, h)) return false;
+    body_ = std::size_t{h.sizes[0]} + h.sizes[1] + h.sizes[2] + h.sizes[3];
+    ptr_ = headerOff + TccHeader::kSize;
+    if (!decodeInto(data_, headerOff, planes_, first, nullptr, nullptr)) return false;
     // LUT in-place auf den persistenten Zustand → Tönung kumuliert (docs/formats/tcc.md)
     color_.apply(planes_);
-    current_ = i;
+    ++decodes_;
     return true;
 }
 
 bool A16Anim::next() {
-    if (fresh_) {
-        fresh_ = false;
+    if (ptr_ == kNull) return false;
+    if (hold_) {
+        hold_ = false;
         return true;
     }
-    if (current_ + 1 >= frameCount()) return false;
-    return decode(current_ + 1);
+    const std::size_t np = ptr_ + body_;
+    ptr_ = np;
+    if (np >= data_.size()) return false;
+    if (!decodeAt(np, false)) return false;  // UNVERIFIED: Original prüft den Kopf nicht
+    ++counter_;
+    return true;
 }
 
 void A16Anim::rewind() {
-    decode(0);
-    fresh_ = true;
+    decodeAt(0, false);
+    counter_ = 0;
 }
 
 bool A16Anim::seek(int n) {
     if (n < 1) {
-        rewind();
+        body_ = 0;
+        ptr_ = 0;
+        counter_ = -1;
+        hold_ = false;
         return true;
     }
-    // UNVERIFIED: Verhalten für n >= Bildzahl (Original prüft nur n > 299)
-    if (n > kMaxFrames - 1 || n >= frameCount()) return false;
-    int start = n;
-    while (start > 0 && !keys_[static_cast<std::size_t>(start)]) --start;
-    if (current_ >= start && current_ < n) start = current_ + 1;  // vom aktuellen Bild aus näher
-    else if (current_ == n) return true;
-    for (int i = start; i <= n; ++i) {
-        if (!decode(i)) return false;
+    if (n > kMaxFrames - 1) return false;
+    if (n == counter_) {
+        hold_ = true;
+        return true;
     }
-    fresh_ = false;
+    if (n != counter_ + 1) {
+        if (!keys_[static_cast<std::size_t>(n)]) {
+            int k = n - 1;
+            while (!keys_[static_cast<std::size_t>(k)] && k > 0) --k;
+            if (k < counter_) {
+                k = counter_ + 1;  // vom aktuellen Bild aus weiter
+            } else {
+                body_ = 0;
+                ptr_ = offsets_[static_cast<std::size_t>(k)];
+            }
+            for (int i = k; i < n; ++i) next();  // ein gesetztes Flag verbraucht hier einen Schritt
+        } else {
+            body_ = 0;
+            ptr_ = offsets_[static_cast<std::size_t>(n)];
+            if (ptr_ == kNull) return false;
+        }
+        hold_ = false;
+        counter_ = n - 1;
+    }
     return true;
 }
 

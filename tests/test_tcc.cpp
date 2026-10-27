@@ -88,3 +88,67 @@ TEST(zbf_all_original_maps) {
     CHECK(ok == 119);
     CHECK(bad == 0);
 }
+
+namespace {
+
+void put32le(Bytes& b, std::uint32_t v) {
+    for (int i = 0; i < 4; ++i) b.push_back(static_cast<std::uint8_t>(v >> (8 * i)));
+}
+
+// A16 aus 2×2-Bildern, Rotwert = 10·(i+1); `key[i]` = Schlüsselbild
+Bytes makeA16(const std::vector<bool>& key) {
+    Bytes f;
+    for (std::size_t i = 0; i < key.size(); ++i) {
+        put32le(f, key[i] ? 0 : 0x10);
+        for (int c = 0; c < 3; ++c) put32le(f, 3);
+        put32le(f, 0);
+        put32le(f, 2);
+        put32le(f, 2);
+        const auto r = static_cast<std::uint8_t>(10 * (i + 1));
+        for (std::uint8_t v : {r, std::uint8_t{0}, std::uint8_t{0}}) {
+            f.push_back(1);
+            f.push_back(4);
+            f.push_back(v);
+        }
+    }
+    return f;
+}
+
+int shown(const A16Anim& a) {
+    return a.planes().rgb[0][0] / 10 - 1;
+}
+
+}  // namespace
+
+TEST(a16_next_hold_and_end) {
+    A16Anim a;
+    REQUIRE(a.load(makeA16({true, false, false}), nullptr));
+    CHECK(shown(a) == 0 && a.counter() == 0 && a.hold());
+    CHECK(a.next() && shown(a) == 0);  // erstes Next nach dem Laden bleibt stehen
+    CHECK(a.next() && shown(a) == 1 && a.counter() == 1);
+    CHECK(a.next() && shown(a) == 2);
+    CHECK(!a.next());
+    a.rewind();
+    CHECK(shown(a) == 0 && a.counter() == 0 && !a.hold());
+    CHECK(a.next() && shown(a) == 1);  // Rewind setzt das Halte-Flag nicht
+}
+
+TEST(a16_seek_semantics) {
+    A16Anim a;
+    REQUIRE(a.load(makeA16({true, false, false, true, false}), nullptr));
+    a.next();
+    a.next();  // Bild 1
+    CHECK(a.seek(3) && shown(a) == 1 && a.counter() == 2);  // Schlüsselbild: noch nicht dekodiert
+    CHECK(a.next() && shown(a) == 3 && a.counter() == 3);
+    CHECK(a.seek(0) && a.counter() == -1);
+    CHECK(a.next() && shown(a) == 0 && a.counter() == 0);
+    CHECK(a.seek(2) && shown(a) == 1 && a.counter() == 1);  // Deltabild: bis n−1 dekodiert
+    CHECK(a.next() && shown(a) == 2);
+    CHECK(a.seek(2) && a.hold());  // n == Zähler → nächstes Next bleibt stehen
+    CHECK(a.next() && shown(a) == 2);
+    // Original-Eigenheit: rückwärts auf ein Deltabild, dessen Schlüsselbild älter als der
+    // Zähler ist → es wird vom aktuellen Bild aus weiterdekodiert
+    a.next();
+    a.next();  // Bild 4, Zähler 4
+    CHECK(a.seek(1) && shown(a) == 4 && a.counter() == 0);
+}

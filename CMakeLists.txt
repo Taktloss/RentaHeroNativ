@@ -30,6 +30,8 @@ add_library(rah_core STATIC
   src/formats/szn.cpp
   src/engine/paths.cpp
   src/engine/layer.cpp
+  src/engine/event.cpp
+  src/engine/animlayer.cpp
   src/engine/scene.cpp
   src/formats/bmp.cpp
   src/render/tccsprite.cpp
@@ -61,6 +63,7 @@ if(RAH_BUILD_TESTS)
     tests/test_blit.cpp
     tests/test_szn.cpp
     tests/test_scene.cpp
+    tests/test_anim.cpp
   )
   target_link_libraries(rah_tests PRIVATE rah_core)
   add_test(NAME rah_tests COMMAND rah_tests)
