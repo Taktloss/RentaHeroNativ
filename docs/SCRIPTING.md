@@ -60,6 +60,9 @@ treffen. Menübefehle während einer Wartestelle gehen wie im Original verloren.
 | `0x0043FFB0` | `CGame_LoadAnim(name)` | `.AVI` suchen, `CAnimLayer` anlegen |
 | `0x004400C0` | `CGame_PlayMusic(name)` | gleiche Musik läuft weiter, sonst wechseln |
 | `0x00440430` | `CGame_Speak(ini, key, …, cb)` | Sprachausgabe (ger.md); Varianten `0x004403E0`, `0x00440400` |
+| `0x00440890` | `CGame_WalkAndComment(x, y, dir, key)` | hinlaufen (warten), bei Erfolg `CGame_Comment(key)` |
+| `0x004408D0` | `CGame_Comment(key)` | Eingabe aus, 300 ms, zur Kamera drehen (Richtung 0, warten), Eingabe an, `CGame_HeroSay(key)`, Eingabe aus, 300 ms, zurückdrehen, Eingabe-Zustand wiederherstellen |
+| `0x00440960` | `CGame_HeroSay(key)` | `wsprintf("Loc%02d", CGame+0x28)` als GER-Abschnitt, Sprache des Helden (`0x00440400`, Figur `CGame+0x1C`), warten |
 | `0x0043F6C0` | `CGame_GetViewObjects` | Figuren der Szene → `CGame+0x1C` (Held), `+0x54` (sein Bereich) … |
 | `0x0044A330` | `CSzene_SetModal(obj)` | `CSzene+0x5DC`; 0 → altes Objekt Slot `+0x24(0)` |
 | `0x004492C0` | `CSzene_LoadAll(name)` | `CSzene_Load(name, 0xFFFF)` |
@@ -131,3 +134,11 @@ deren Ende-Ereignis aus.
 |---|---|---|
 | `0x00441B00` | `Inventory_Remove(id)` | Eintrag (0x14 Bytes, max. 50) entfernen, Rest nachrücken, Auswahl ggf. −1 |
 | `0x00442240` | `Inventory_SetEvent(id, ev)` | Ereignis-ID am Gegenstand (`+0x10`); UNVERIFIED: wird beim Benutzen des Gegenstands ausgelöst |
+
+## `CGame+0x04`: Position aus Spielstand
+`Game_SwitchLocation` (`0x004036E0`) setzt vor `Start` (vtable `+4`) `CGame+0x04 = 1`
+und die Figur auf die gespeicherte Position (`0x0047D758/0x0047D75C`), wenn
+`g_RestorePos` (`0x0047D764`, Save_Process beim Laden) gesetzt ist; sonst 0. Nach
+`Start` wieder 0. Schauplätze überspringen damit Auftritts-Sequenzen (z. B. Loc37).
+Vor `Start` werden ausstehende Maus- (0x200–0x209) und Tastatur-Nachrichten
+(0x100–0x108) verworfen.

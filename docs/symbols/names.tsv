@@ -349,3 +349,8 @@
 00433de0	CActor_Hide	f
 00433e10	CActor_Show	f
 00440290	CGame_PlaySfxRandom3D	f
+00440890	CGame_WalkAndComment	f
+004408d0	CGame_Comment	f
+004409b0	CGame_HeroSay	f
+00440960	CGame_HeroSayWait	f
+0047d764	g_RestorePos	d
