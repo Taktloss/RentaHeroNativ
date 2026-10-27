@@ -103,6 +103,8 @@
 - `docs/formats/gamestate.md`: Aufteilung (Hinweis-Countdowns pro Szene + 164 Flags),
   Flag-Tabelle mit Startwerten und Zugriffen (`tools/state_usage.py`).
 - `docs/HINTS.md`: Hinweissystem komplett (Tabelle Szene → Bedingung → HLP, Zeiten).
-- Nächste Schritte: Schauplatz für Schauplatz (Ereignis-IDs, Zustandsänderungen, Szenenwechsel) per
-  Skript zusammenfassen; offene Punkte: `CAnimLayer_Play`-Parameter, Laufmodus 3,
+- `docs/LOCATIONS.md`: Übersicht aller 33 Schauplätze (40 Ereignis-Handler, registrierte
+  IDs, Szenenwechsel, Flags, Musik) per `tools/loc_summary.py`; Aufbau eines Schauplatzes.
+- Nächste Schritte: Einzeldokumentation je Schauplatz (Start: Loc40 = Neues Spiel,
+  Loc01), Laufbefehle `0x00434D70`/`0x00434D90`/`0x00435BF0` benennen; offene Punkte: `CAnimLayer_Play`-Parameter, Laufmodus 3,
   Sofort-Flag bei Timern, Rolle von `0x0047D130`/`0x0047D74C`.
