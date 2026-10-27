@@ -4,6 +4,7 @@
 #pragma once
 
 #include <cstdint>
+#include <memory>
 #include <string>
 
 #include "core/rect.hpp"
@@ -37,7 +38,17 @@ public:
     bool dirtyAlpha = false;     // +0x19C
     bool dirty = false;          // +0x1A0
     bool active = false;         // +0x1A4
+    // Abspielzustand; im CLayer angelegt, genutzt von CAnimLayer und CSzene_DispatchEvents
+    bool running = false;        // +0x1A8
+    bool loop = false;           // +0x1AC
+    int endMode = 0;             // +0x1B0 (1 normal, 2 = am Ende auf den Bereichsanfang)
+    bool hideAtEnd = false;      // +0x1B4
+    bool ended = false;          // +0x1B8
     bool isAnim = false;         // +0x1BC: CAnimLayer (CLayer_Load setzt es für AVI)
+    std::unique_ptr<Event> endEvent;    // +0x1C4 (Typ 1)
+    std::unique_ptr<Event> frameEvent;  // +0x1CC (Typ 3)
+    std::unique_ptr<Event> countEvent;  // +0x1D0 (Typ 4)
+    std::unique_ptr<Event> tweenEvent;  // +0x1D4 (Interpolation fertig, CLayer_Update)
     bool loaded = false;         // +0x1D8
     std::uint16_t colorKey = 0;  // +0x1E4
     int width = 0, height = 0;   // +0x1E8, +0x1EC
@@ -60,6 +71,12 @@ public:
     void setPos(int nx, int ny);
     // orig: Rent-A-Hero.exe 0x00447470 CLayer_Enable
     void enable();
+    // orig: Rent-A-Hero.exe 0x00447490 CLayer_Disable (Bereich +0x1C0 folgt mit CArea)
+    void disable() {
+        if (!active) return;
+        active = false;
+        dirty = true;
+    }
     // orig: Rent-A-Hero.exe 0x00447030 CLayer_SetZoom + 0x00447060
     void setZoom(int zoomVal);
     // orig: Rent-A-Hero.exe 0x00447B80 CLayer_GetRect

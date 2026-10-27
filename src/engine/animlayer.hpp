@@ -39,14 +39,6 @@ public:
     bool reverse = false;      // +0x2E0
     bool endPending = false;   // +0x2E4
     std::uint32_t nextTime = 0;// +0x2E8
-    bool running = false;      // +0x1A8
-    bool loop = false;         // +0x1AC
-    int endMode = 0;           // +0x1B0 (1 normal, 2 = am Ende auf den Bereichsanfang)
-    bool hideAtEnd = false;    // +0x1B4
-    bool ended = false;        // +0x1B8
-    std::unique_ptr<Event> endEvent;    // +0x1C4 (Typ 1)
-    std::unique_ptr<Event> frameEvent;  // +0x1CC (Typ 3)
-    std::unique_ptr<Event> countEvent;  // +0x1D0 (Typ 4)
     std::array<AnimCue, kMaxCues> cues{};
     A16Anim anim;              // Bild +0x0C (CImageA16)
 

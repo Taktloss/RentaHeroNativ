@@ -74,6 +74,21 @@ Normalfall: Auslöser setzen nur `pending`, Typ und `Param`; `CSzene_DispatchEve
 (`0x0044C690`) ruft einmal pro Frame `CEvent_Fire` für alle bekannten Ereignisse und die
 Timerliste auf.
 
+### Reihenfolge in `CSzene_DispatchEvents` (`0x0044C690`)
+1. Szenen-Ereignis `+0x2C4`; ohne Editor (`+0xAC8 == 0`) das globale Ereignis
+   `*0x00481F2C` (2-s-Umschalter `0x0044C8D0`, Bedeutung offen).
+2. Vollbildobjekt `+0x5DC`: beendet (`+0x1B8`) und ausblenden (`+0x1B4`) → Slot 9 (0),
+   Objekt freigeben, `CSzene_InvalidateAll`; dann sein Ereignis `+0x1C4`, danach `+0x1CC`.
+3. Figuren `+0x5E0/+0x5E4`: Ereignis `+0x1C8`, sonst `+0x16F0`.
+4. Ebenen `+0x04[0..39]` bis zum ersten leeren Platz: beendet und ausblenden →
+   `CLayer_Disable` (`0x00447490`: inaktiv, dirty, Bereich `+0x1C0` inaktiv) **vor** den
+   Ereignissen `+0x1C4`, `+0x1CC`, `+0x1D0`, `+0x1D4`.
+5. Freie Bereiche `+0xA4[0..59]` bis zum ersten leeren: Ereignis `+0xB0`.
+6. Ohne Editor: statisches Ereignis `0x00481EE8`, `CEvent_FireTimers` (`0x0043F4A0`),
+   Inventarleiste `+0x5B4`: Bereich `+0x428` (Ereignis `+0xB0`), Ereignis `+0x424`.
+Jedes Ereignis wird mit seinem gespeicherten Typ (`+0x10`) ausgelöst.
+Port: `Scene::dispatchEvents` (Schritte 1, 4 und das Ereignis aus 6; Rest folgt).
+
 Ereignistypen bisher: **0x01** = Animation fertig, **0x0B** = Klick auf Bereich,
 **0x15** = Timer, **0x16** = Klick ins Leere / Szene, **0x29** = Figur angekommen/gedreht,
 **0x2A** = Laufbefehl abgebrochen (SCRIPTING.md).

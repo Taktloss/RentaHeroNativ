@@ -397,3 +397,6 @@
 0043f260	CEvent_SetHandler	f
 0043f1b0	SetEventVariant	f
 0047e608	g_EventVariant	d
+00481ee8	g_ClickEvent	d
+00481f2c	g_ToggleEvent	d
+0044c8d0	Scene_ToggleTimerEvent	f

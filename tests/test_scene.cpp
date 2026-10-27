@@ -231,3 +231,28 @@ TEST(scene_update_skips_after_gap) {
     f.scene.update(true);
     CHECK(f.scene.tickWindowStart() == 1250);  // start + 200 < now → start = now
 }
+
+TEST(scene_dispatch_hides_and_fires_end) {
+    Fixture f;
+    f.fs.put("GAME/MENU/A.A16", a16Solid(2));
+    f.fs.put("GAME/MENU/T3.szn", "[GENERAL]\r\nLayer1=Anim\r\n[Anim]\r\nFilename=A.A16\r\nfps=10\r\n");
+    std::uint32_t clock = 0;
+    f.g.now = [&] { return clock; };
+    std::vector<std::pair<int, int>> fired;
+    f.g.eventProc = [&](Event& e, int t) { fired.emplace_back(e.param, t); };
+    REQUIRE(f.scene.load("T3", 0));
+    auto* a = dynamic_cast<AnimLayer*>(f.scene.layer(0));
+    REQUIRE(a);
+    a->playEndEvent(0, 42);  // Modus 0: am Ende ausblenden
+    int frames = 0;
+    for (clock = 0; clock < 2000 && fired.empty(); clock += 10, ++frames) {
+        f.scene.update(true);
+        f.scene.compose(false);
+        f.scene.clearOutput();
+        if (fired.empty()) CHECK(a->active);
+        f.scene.dispatchEvents();
+    }
+    REQUIRE(fired.size() == 1);
+    CHECK(fired[0] == std::make_pair(42, 1));
+    CHECK(!a->active && a->dirty);  // ausgeblendet, Bereich wird im nächsten Frame restauriert
+}

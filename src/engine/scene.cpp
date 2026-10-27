@@ -45,6 +45,25 @@ void Scene::moveZ(unsigned oldZ, unsigned newZ) {
     }
 }
 
+void Scene::dispatchEvents() {
+    fireEvent(g_, sceneEvent_, sceneEvent_.type);
+    // !Editor: globales Ereignis 0x00481F2C (2-s-Umschalter 0x0044C8D0) folgt mit den Timern.
+    // Vollbildobjekt +0x5DC und Figuren +0x5E0/+0x5E4 folgen mit deren Port.
+    for (auto& slot : layers_) {
+        Layer* L = slot.get();
+        if (!L) break;
+        if (L->ended && L->hideAtEnd) L->disable();  // vor dem Ende-Ereignis
+        for (Event* e : {L->endEvent.get(), L->frameEvent.get(), L->countEvent.get(), L->tweenEvent.get()}) {
+            if (e) fireEvent(g_, *e, e->type);
+        }
+    }
+    // Freie Bereiche +0xA4[60] (Ereignis +0xB0) folgen mit CArea.
+    if (!editor_) {
+        fireEvent(g_, g_.clickEvent, g_.clickEvent.type);
+        // CEvent_FireTimers (0x0043F4A0) und Inventarleiste +0x5B4 (+0x428/+0x424) folgen.
+    }
+}
+
 void Scene::update(bool realtime) {
     if (!loaded_) return;
     std::array<bool, 4> tick{};
