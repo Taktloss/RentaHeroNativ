@@ -34,7 +34,7 @@ SHA-256 `a1ccd604…4927`, 716 873 Bytes. Werkzeuge: `tools/peinfo.py`, Ghidra 1
 
 | Bereich | Funktionen | Bytes | Inhalt (belegt durch API-Aufrufe/Strings) |
 |---|---:|---:|---|
-| 0x00401000–0x004051FF | 37 | 10 716 | WinMain/Fenster, Hauptschleife `0x004036E0` (PeekMessage, Ortswechsel „Change FAILED to Location %d Szene %d“), `rah.ini`/Pfade/CD-Erkennung `0x00404B60`, Prüfung DirectX Media (`CoCreateInstance`, `0x004050B0`) und Indeo 5 (`ICOpen`, `0x004050F0`) |
+| 0x00401000–0x004051FF | 37 | 10 716 | WinMain/Fenster mit Hauptschleife (PeekMessage), `Game_Idle` `0x004030C0`, Ortswechsel `0x004036E0` ( „Change FAILED to Location %d Szene %d“), `rah.ini`/Pfade/CD-Erkennung `0x00404B60`, Prüfung DirectX Media (`CoCreateInstance`, `0x004050B0`) und Indeo 5 (`ICOpen`, `0x004050F0`) |
 | 0x00405200–0x00434FFF | 227 | 125 775 | **Spiellogik pro Schauplatz/Szene** (Funktionen referenzieren `S<nn>_…`, `Loc<nn>`, Sprach-IDs wie `099_ROD_08`); größte: `0x00414A50` (4,7 KB, Szene 37), Intro `0x00431920` |
 | 0x00435000–0x0044EA4F | 450 | 77 216 | **Engine**: Grafik (DirectDraw/GDI/DrawDib), Timer (`timeSetEvent` `0x0044D7D0`), Eingabe, SZN-Lader `0x00449380` (`Background1`, `Layer%-d`, `LoadCond`, `DirtyAlpha`), WAV über mmio `0x0044DED0`…, Registry `0x00448290` |
 | 0x0044EA50–0x0046A667 | 703 | 104 120 | VC6-CRT (statisch, Debug-Variante); Function ID erkennt nur ~330 davon |

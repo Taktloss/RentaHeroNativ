@@ -28,8 +28,11 @@ DirectShow-Multimedia-Streaming, nicht AVIFile:
 Daten: 124 AVI-Dateien, alle **10 fps**; Codecs Cinepak (`cvid`, 93), Indeo 5 (`IV50`,
 29), Indeo 3 (`IV32`, 2). FFmpeg dekodiert alle drei (`cinepak`, `indeo5`, `indeo3`).
 
-Vollbild-Videos (Intro, Zwischensequenzen) laufen dagegen über einen DirectShow-
-Filtergraphen (`CoCreateInstance` in `0x004050B0`) – Analyse offen.
+Es gibt **keinen separaten Vollbild-Videopfad**: alle 124 AVIs liegen in Schauplatz-
+ordnern (`GAME/LOCnn`, Intro in `LOC40` – Startschauplatz eines neuen Spiels) und
+werden als 640×360-Ebenen abgespielt. `0x004050B0` erzeugt `AMMultiMediaStream` nur
+probeweise beim Start (Prüfung, ob DirectX Media installiert ist), `0x004050F0`
+prüft analog Indeo 5 (`ICOpen`).
 
 Die zusätzlich importierten `AVIStream*`- und `DrawDib*`-Funktionen gehören zur
 Klasse mit vtable `0x0046B858` (Ctor `0x0043BEE0`, Dtor `0x0043BFC0`, Zeichnen

@@ -24,6 +24,8 @@
   Nutzer möchte die eigene Neuimplementierung. go-rent-a-hero dient nur als Hinweisquelle.
 
 ### Offene Fragen an den Nutzer
+0. MM-Timer im Port im Hauptthread statt eigenem Thread (TIMING.md) – vorgeschlagen,
+   noch ausdrücklich bestätigen lassen.
 1. Demo von archive.org herunterladen und auf einen anderen Build prüfen?
 2. go-rent-a-hero: Autor um Lizenz anfragen? (Bis dahin kein Code-Reuse.)
 
@@ -80,5 +82,5 @@
 - `docs/formats/ger.md`: LocNN.GER (`[AREA_TEXT]`, `[SPEECH]`), Sprachausgabe, ACS-Lippensync.
 
 ### Phase 3 – nächste Schritte
-- Vollbild-Videos (`0x004050B0`, Filtergraph); DATA1.CAB-Format (InstallShield 5) für eigenen Entpacker.
+- AVI-Zeiteinheit (`STREAM_TIME / 1e6`) im Testlauf prüfen; DATA1.CAB-Format (InstallShield 5) für eigenen Entpacker.
 - Renderer: Pixelformat (16/24 Bit, TrueColor), Kanalreihenfolge der TCC-Ebenen bestätigen.

@@ -223,3 +223,5 @@
 0047d584	g_ScenePathCd	d
 00440ad0	CGame_DescribeItem	f
 00404360	Config_ReadCdMap	f
+004050b0	CheckDirectXMedia	f
+004050f0	CheckIndeo5	f
