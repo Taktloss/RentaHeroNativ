@@ -5,6 +5,7 @@
 #include "core/strings.hpp"
 #include "audio/mixer.hpp"
 #include "game/loc01.hpp"
+#include "game/loc06.hpp"
 #include "game/loc35.hpp"
 #include "game/loc37.hpp"
 #include "game/loc40.hpp"
@@ -341,4 +342,24 @@ TEST(loc01_start_scene9_and_ambient_timer) {
     CHECK(r.scene->clicksEnabled);
     for (int i = 0; i < 400; ++i) r.frame();  // Umgebungsklänge ohne Tonsystem: nur Timer
     CHECK(!r.ctx->request.pending);
+}
+
+TEST(loc06_visit_counter_and_entry_flags) {
+    Rig r(10);
+    auto& st = r.ctx->state;
+    CHECK(st.at(0x3EE8) == 0 && st.at(0x3EEC) == 1 && st.at(0x3EF0) == 1 && st.at(0x3E8C) == 0);
+    {
+        Loc06 a(*r.ctx, 99, 1);  // unbekannte Szene → 26, erster Besuch
+        CHECK(a.location() == 6 && a.sceneNumber() == 26 && st.at(0x3EE8) == 1);
+        CHECK(r.g.fnHandlers.count(0x0040F4F0) == 1 && r.g.fnHandlers.count(0x0040F4E0) == 1);
+    }
+    CHECK(r.g.fnHandlers.count(0x0040F4F0) == 0);
+    { Loc06 b(*r.ctx, 26, 1); }
+    CHECK(st.at(0x3EE8) == 2);
+    { Loc06 c(*r.ctx, 27, 26); }  // Gespräch: Besuchszähler bleibt 2
+    CHECK(st.at(0x3EE8) == 2);
+    { Loc06 d(*r.ctx, 27, 2003); }  // Sprungziel: Ring, Gesprächsstufe 3
+    CHECK(st.at(0x3EE8) == 2 && st.at(0x3E8C) == 1 && st.at(0x3EEC) == 3);
+    { Loc06 e(*r.ctx, 26, 1001); }  // 0 → +1
+    CHECK(st.at(0x3EE8) == 1);
 }

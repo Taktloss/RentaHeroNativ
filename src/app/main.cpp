@@ -47,6 +47,11 @@ struct Options {
     std::string font;  // Schriftdatei für die Bereichstexte (sonst Systemsuche)
     int mouseX = -1, mouseY = -1;  // Mausbewegung nach dem ersten Frame (kopflose Prüfung)
     int clickX = -1, clickY = -1;  // Klick im zweiten Frame (kopflose Prüfung)
+    struct TimedClick {
+        int frame, x, y;
+        bool done = false;  // verschachteltes Game_Idle läuft mit derselben Bildnummer
+    };
+    std::vector<TimedClick> clicksAt;  // --click-at <bild> <x> <y> (mehrfach)
     int walkX = -1, walkY = -1;    // Held läuft im zweiten Frame dorthin (Szenenkoordinaten)
     std::vector<int> items;        // Inventarleiste zeigen und diese Gegenstände hinzufügen
     std::string hint;              // Hilfe-Symbol zeigen; Klick darauf öffnet diese HLP-Datei
@@ -63,7 +68,7 @@ void usage() {
                  "rentahero --cd <Ordner|.iso|.cue> [--cd …] [--common <Ordner>]\n"
                  "          [--loc <n>] [--scene <Name>] [--mask <n>]\n"
                  "          [--frames <n>] [--frame-ms <n>] [--dump <datei.ppm>] [--hidden]\n"
-                 "          [--exe <Rent-A-Hero.exe>] [--font <datei.ttf>] [--mouse <x> <y>] [--click <x> <y>] [--walk <x> <y>]\n"
+                 "          [--exe <Rent-A-Hero.exe>] [--font <datei.ttf>] [--mouse <x> <y>] [--click <x> <y>] [--click-at <bild> <x> <y>] [--walk <x> <y>]\n"
                  "          [--items <id,id,…>] [--hint <HLP-Name, z. B. 04_006_A>]\n"
                  "          [--game <Schauplatz> <Szene> (Intro: --game 40 114)] [--subtitles]\n"
                  "          [--mute] [--music-vol <0-100>] [--sfx-vol <0-100>] [--speech-vol <0-100>]\n"
@@ -122,6 +127,11 @@ bool parse(int argc, char** argv, Options& o) {
         else if (a == "--click" && i + 1 < argc) {
             o.clickX = std::atoi(v);
             o.clickY = std::atoi(argv[++i]);
+        }
+        else if (a == "--click-at" && i + 2 < argc) {
+            const int f = std::atoi(v);
+            const int x = std::atoi(argv[++i]);
+            o.clicksAt.push_back({f, x, std::atoi(argv[++i])});
         }
         else if (a == "--walk" && i + 1 < argc) {
             o.walkX = std::atoi(v);
@@ -439,6 +449,11 @@ int main(int argc, char** argv) {
         ++g.idleDepth;
         if (frame == 1 && opt.mouseX >= 0) mouseMove(opt.mouseX, opt.mouseY);
         if (frame == 2 && opt.clickX >= 0) scene.onClick(opt.clickX, opt.clickY);
+        for (auto& c : opt.clicksAt)
+            if (frame == c.frame && !c.done) {
+                c.done = true;
+                scene.onClick(c.x, c.y);
+            }
         if (frame == 2 && opt.walkX >= 0 && scene.actor(0)) scene.actor(0)->walkTo(opt.walkX, opt.walkY, 0, -1);
         pollTimers(g);  // Port: Timer im Hauptthread je Schleifendurchlauf (TIMING.md)
         scene.update(true);

@@ -266,5 +266,10 @@
   `CGame_DescribeItem`, `Scene::replaceBackground`. Korrektur: `CSzene_LoadAll` in Loc37 =
   Maske 0xFFFF; Startwert `S[0x3E98]` = 1. Probelauf: Intro S116 → Loc01/S7 (Gleiter landet,
   Gleiter schwebt). 106 Tests.
-- Nächste Schritte: Loc06 (Rodrigos Haus, Ziel der Haustür) bzw. weitere Ziele aus Loc01
-  (Loc05 Büro/10, Loc26, Loc12, Loc31/113, Loc47); Spielstand laden (`CGame+0x04`).
+- 2026-10-28: Loc06 (Ranama im Kloster, Szenen 26/27) portiert; schwebende Ranama per
+  MoveTo-Rückruf, Ring-Gespräch mit Zeitfenster, Gegenstand 14. Prüfoption
+  `--click-at <bild> <x> <y>` (mehrfach; feuert je einmal, auch in verschachteltem Game_Idle).
+  Kette Loc01/S7 → Abflug → Kloster → Loc06/S26 geprüft. 107 Tests.
+  Korrektur: Die Haustür in Loc01 führt nach Loc04/Szene 6, nicht Loc06.
+- Nächste Schritte: Loc04 (Rodrigos Haus, Szene 6), dann Loc05 (Büro), Loc12, Loc26, Loc31,
+  Loc47 – die übrigen Ziele aus Loc01; Spielstand laden (`CGame+0x04`).
