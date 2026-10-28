@@ -42,6 +42,7 @@ struct Options {
     std::string exe;   // installierte Rent-A-Hero.exe (Zeiger); sonst <Common>/../Rent-A-Hero.exe
     std::string font;  // Schriftdatei für die Bereichstexte (sonst Systemsuche)
     int mouseX = -1, mouseY = -1;  // Mausbewegung nach dem ersten Frame (kopflose Prüfung)
+    std::vector<int> items;        // Inventarleiste zeigen und diese Gegenstände hinzufügen
 };
 
 void usage() {
@@ -49,7 +50,8 @@ void usage() {
                  "rentahero --cd <Ordner|.iso|.cue> [--cd …] [--common <Ordner>]\n"
                  "          [--loc <n>] [--scene <Name>] [--mask <n>]\n"
                  "          [--frames <n>] [--frame-ms <n>] [--dump <datei.ppm>] [--hidden]\n"
-                 "          [--exe <Rent-A-Hero.exe>] [--font <datei.ttf>] [--mouse <x> <y>]\n");
+                 "          [--exe <Rent-A-Hero.exe>] [--font <datei.ttf>] [--mouse <x> <y>]\n"
+                 "          [--items <id,id,…>]\n");
 }
 
 bool parse(int argc, char** argv, Options& o) {
@@ -72,6 +74,14 @@ bool parse(int argc, char** argv, Options& o) {
         else if (a == "--dump") o.dump = v;
         else if (a == "--font") o.font = v;
         else if (a == "--exe") o.exe = v;
+        else if (a == "--items") {
+            for (const char* p = v; *p;) {
+                char* end = nullptr;
+                o.items.push_back(static_cast<int>(std::strtol(p, &end, 10)));
+                if (end == p) return false;
+                p = *end == ',' ? end + 1 : end;
+            }
+        }
         else if (a == "--mouse" && i + 1 < argc) {
             o.mouseX = std::atoi(v);
             o.mouseY = std::atoi(argv[++i]);
@@ -83,18 +93,19 @@ bool parse(int argc, char** argv, Options& o) {
 
 // Szenenausschnitt `r` (Szenenkoordinaten) in den Bildschirmpuffer, Ziel y + 60
 // (orig: Ausgabe des Vollbild-Renderers 0x0043E210, COMPOSITOR.md)
-void present(const Surface565& s, const Rect& r, std::vector<std::uint16_t>& screen) {
+void present(const Surface565& s, const Rect& r, Surface565& screen) {
     for (int y = r.top; y < r.bottom; ++y) {
         const int sy = y + kSceneTop;
         if (y < 0 || y >= s.height || sy >= kScreenH) continue;
         for (int x = r.left; x < r.right; ++x) {
             if (x < 0 || x >= s.width || x >= kScreenW) continue;
-            screen[static_cast<std::size_t>(sy * kScreenW + x)] = s.row(y)[x];
+            screen.row(sy)[x] = s.row(y)[x];
         }
     }
 }
 
-void writePpm(const std::vector<std::uint16_t>& px, const std::string& path) {
+void writePpm(const Surface565& screen, const std::string& path) {
+    const auto& px = screen.pixels;
     std::ofstream o(path, std::ios::binary);
     o << "P6\n" << kScreenW << " " << kScreenH << "\n255\n";
     for (auto p : px) {
@@ -201,7 +212,23 @@ int main(int argc, char** argv) {
             g.drawAreaText = [&areaFont](Surface565& s, const Area& a, int x, int y) { drawAreaText(areaFont, s, a, x, y); };
     }
 
+    // Statustext des Renderers: Arial 12 normal (RENDERER.md)
+    Font statusFont;
+    {
+        const std::string file = Font::findSystemFont(false, false);
+        std::string err;
+        if (file.empty() || !statusFont.open(file, 12, &err))
+            std::fprintf(stderr, "Schrift %s: %s – Statustext aus\n", file.c_str(),
+                         file.empty() ? "nicht gefunden" : err.c_str());
+    }
+
     Surface565 surf(640, 420);  // UNVERIFIED: Größe der Szenenoberfläche (COMPOSITOR.md)
+    Surface565 screen(kScreenW, kScreenH);
+    // Renderer-Slot 0 (Szenenrechteck → Bildschirm) und Statustext (0x0043E600) direkt auf den Bildschirm
+    g.outputSceneRect = [&](const Rect& r) { present(surf, r, screen); };
+    g.drawStatusText = [&](const Rect& r, const std::string& t) {
+        if (statusFont.isOpen()) drawTextCentered(statusFont, screen, r, t, 0xFFFF);
+    };
     Scene scene(paths, g, surf);
     scene.setLocationNumber(opt.location);
     if (!scene.load(opt.scene, opt.loadMask) || !scene.background()) {
@@ -258,7 +285,12 @@ int main(int argc, char** argv) {
         SDL_CreateTexture(ren, SDL_PIXELFORMAT_RGB565, SDL_TEXTUREACCESS_STREAMING, kScreenW, kScreenH);
     SDL_SetTextureScaleMode(tex, SDL_SCALEMODE_NEAREST);
 
-    std::vector<std::uint16_t> screen(static_cast<std::size_t>(kScreenW * kScreenH), 0);
+    if (!opt.items.empty() && scene.inventory()) {
+        scene.setBarShown(true);  // Game_SwitchLocation: +0x5BC = g_CurGame
+        for (int id : opt.items)
+            if (!scene.inventory()->add(id)) std::fprintf(stderr, "Gegenstand %d nicht geladen\n", id);
+        scene.inventory()->setDescribe(0, [](int id) { std::fprintf(stderr, "Beschreibung %d\n", id); });
+    }
     bool quit = false;
     for (int frame = 0; !quit && (opt.frames < 0 || frame < opt.frames); ++frame) {
         SDL_Event ev;
@@ -284,11 +316,17 @@ int main(int argc, char** argv) {
         if (frame == 1 && opt.mouseX >= 0) mouseMove(opt.mouseX, opt.mouseY);
         pollTimers(g);  // Port: Timer im Hauptthread je Schleifendurchlauf (TIMING.md)
         scene.update(true);
+        // Game_Idle: Compose, Inventarleiste (0x00441C30), Ausgabe, dann Statustext (0x0043E830)
         if (scene.compose(false)) {
             if (auto r = scene.output().first()) present(surf, *r, screen);
             scene.clearOutput();
-            SDL_UpdateTexture(tex, nullptr, screen.data(), kScreenW * 2);
         }
+        if (scene.inventory() && scene.inventory()->draw()) {
+            present(surf, scene.inventory()->takeOutputRect(), screen);
+            rendererRedrawStatusText(g);
+        }
+        // Statustext und Löschen schreiben auch außerhalb davon in den Bildschirm
+        SDL_UpdateTexture(tex, nullptr, screen.pixels.data(), kScreenW * 2);
         SDL_RenderClear(ren);
         SDL_RenderTexture(ren, tex, nullptr, nullptr);
         SDL_RenderPresent(ren);

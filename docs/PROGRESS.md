@@ -188,5 +188,11 @@
   0.0, Farb-Eigenheit am Ende, Ereignis Typ 2. `CLayer_SetColor` mit Neu-Dekodieren
   (TCC: Dateiinhalt bleibt in der Ebene; A16: `A16Anim::setColor` vom Lesezeiger).
   Neues Ghidra-Skript `FpuOps.java` (ftol-Operanden zuordnen). 61 Tests grün.
-- Nächste Schritte: Inventarleiste (`+0x5B4`, Typ 0x0D in
-  MouseMove), Hilfe-Symbol, Figuren, Loc40 (Intro; braucht CGame_LoadAnim/Direktweg).
+- 2026-10-28: Inventarleiste (`docs/INVENTORY.md`, `engine/inventory`): Einträge, Add/Remove/
+  Clear/Has, Gegenstands- und Benutzungs-Ereignisse, Takt, Zeichnen (dunkel −128 außerhalb,
+  jedes Mal neu getönt), Blättern am Rand, Hover-Schleife mit Text aus `DefInvent.GER`,
+  Klick → Ereignis oder `CGame_DescribeItem`-Haken. Statustext des Renderers
+  (`0x0043E600/0x0043E7C0/0x0043E830`) über Plattform-Haken; `Font::ascent`,
+  `drawTextCentered`. Szene: HitTest-Streifen, OnClick/MouseMove/Update/DispatchEvents.
+  Betrachter: `--items 1,2,3`. 64 Tests grün.
+- Nächste Schritte: Hilfe-Symbol, Figuren, Loc40 (Intro; braucht CGame_LoadAnim/Direktweg).

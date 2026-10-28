@@ -19,6 +19,7 @@ inline int ftol(double v) {
 Scene::Scene(const DataPaths& paths, EngineGlobals& globals, Surface565& target, std::uint16_t colorKey, int yOffset)
     : paths_(paths), g_(globals), surface_(target), colorKey_(colorKey), yOffset_(yOffset) {
     g_.toggleScene = this;  // orig: 0x004483DE
+    if (!editor_) bar_ = std::make_unique<InventoryBar>(*this, g_);  // orig: 0x00448638
     if (!g_.toggleEvent && !editor_) {
         // orig: 0x004484E8 – einmalig, deaktiviert, Funktions-Handler 0x0044C8D0
         g_.toggleEvent = std::make_unique<Event>();
@@ -113,7 +114,10 @@ void Scene::dispatchEvents() {
     if (!editor_) {
         fireEvent(g_, g_.clickEvent, g_.clickEvent.type);
         fireTimers(g_);
-        // Inventarleiste +0x5B4 (+0x428/+0x424) folgt.
+        if (bar_) {
+            fireEvent(g_, *bar_->area().event, bar_->area().event->type);
+            if (Event* e = bar_->useEvent()) fireEvent(g_, *e, e->type);
+        }
     }
 }
 
@@ -176,7 +180,7 @@ void Scene::update(bool realtime) {
         }
         if (L->dirty) g_.sceneChanged = true;
     }
-    // Inventarleiste +0x5B4 (FUN_00441CE0 bei +0x408 oder Stufe 1) folgt.
+    if (bar_ && (bar_->needsRedraw() || tick[1])) bar_->tick();  // 0x00441CE0
 }
 
 bool Scene::load(std::string_view name, unsigned loadMask) {
@@ -439,7 +443,8 @@ Area* Scene::hitTest(int x, int y) {
         return a && a->active && ptInRect(a->rect, x, y) && (!a->mask || !a->mask->isTransparentAt(x, y));
     };
     if (y >= 360 && y <= 420) {
-        return nullptr;  // Inventarleiste +0x5B4 (Bereich +0x428) folgt
+        if (barShown_ && bar_ && hits(&bar_->area())) return &bar_->area();
+        return nullptr;
     }
     if (!(editor_ || g_.hitGrid.test(x, y))) return nullptr;
     for (unsigned z = static_cast<unsigned>(zMin_); z <= static_cast<unsigned>(zMax_); ++z) {
@@ -480,7 +485,10 @@ void Scene::onClick(int x, int y) {
     }
     lastHit_ = hitTest(x, y - 60);
     if (lastHit_) markEvent(g_, *lastHit_->event, 0x0B);
-    // Inventarbereich → 0x00441D40 folgt.
+    if (bar_ && lastHit_ == &bar_->area()) {
+        bar_->leave(false);
+        return;
+    }
     if (lastHit_) return;  // nicht der Bereich der Figur (Figuren folgen)
     // Figur aktiv → CActor_WalkToClick folgt.
     markEvent(g_, sceneEvent_, 0x16);
@@ -502,7 +510,14 @@ int Scene::onMouseMove(int x, int y) {
     Area* before = lastHit_;
     lastHit_ = hitTest(x, y - 60);
     if (lastHit_) cursor = lastHit_->cursor;
-    // Inventarleiste +0x5B4 (Typ 0x0D bzw. 0x00441D40) folgt.
+    if (!editor_ && bar_) {
+        if (lastHit_ == &bar_->area()) {
+            markEvent(g_, *lastHit_->event, 0x0D);
+            lastHit_ = nullptr;
+        } else {
+            bar_->leave(true);
+        }
+    }
     if (lastHit_ != before || !g_.textVisible) {
         const bool redraw = showTexts && g_.textVisible && before && before != lastHit_;
         g_.textVisible = false;

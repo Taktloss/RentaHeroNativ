@@ -42,6 +42,13 @@ struct EngineGlobals {
     std::function<void(Surface565&, const Area&, int x, int y)> drawAreaText;
     // timeGetTime() – im Spiel die echte Uhr, in Tests steuerbar
     std::function<std::uint32_t()> now = [] { return std::uint32_t{0}; };
+    // Statustext des Renderers (+0x200 Rechteck, +0x210 Text; docs/INVENTORY.md)
+    Rect statusRect;
+    std::string statusText;
+    // Plattform: Rechteck der Szenenoberfläche auf den Bildschirm (Renderer-Slot 0, Ziel y + 60)
+    std::function<void(const Rect& sceneRect)> outputSceneRect;
+    // Plattform: Statustext direkt auf den Bildschirm (DrawTextA, Arial 12, weiß, zentriert)
+    std::function<void(const Rect& screenRect, const std::string& cp1252)> drawStatusText;
     // Ton-Cues einer Animation (AUDIO.md); bis zum Audio-Port nur ein Haken
     std::function<void(AnimLayer&, const AnimCue&)> runCue;
 };

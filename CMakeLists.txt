@@ -35,6 +35,7 @@ add_library(rah_core STATIC
   src/engine/animlayer.cpp
   src/engine/aviimage.cpp
   src/engine/scene.cpp
+  src/engine/inventory.cpp
   src/formats/bmp.cpp
   src/formats/pe.cpp
   src/render/tccsprite.cpp
@@ -75,6 +76,7 @@ if(RAH_BUILD_TESTS)
     tests/test_main.cpp
     tests/test_vfs.cpp
     tests/test_tcc.cpp
+    tests/test_inventory.cpp
     tests/test_ini.cpp
     tests/test_blit.cpp
     tests/test_szn.cpp

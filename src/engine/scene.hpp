@@ -2,7 +2,7 @@
 // Szene (CSzene, 0xACC Bytes): Hintergrund, Ebenen, Tiefen-/Wegkarte, Z-Verwaltung und der
 // Compositor CSzene_Compose (docs/COMPOSITOR.md, docs/formats/szn.md).
 // Noch nicht enthalten: Bereiche (CArea), Figuren (CActor), animierte Ebenen (CAnimLayer),
-// Videoebenen, Vollbildobjekt +0x5DC, Inventarleiste +0x5B4.
+// Videoebenen, Vollbildobjekt +0x5DC.
 #pragma once
 
 #include <array>
@@ -13,6 +13,7 @@
 #include "engine/animlayer.hpp"
 #include "engine/area.hpp"
 #include "engine/globals.hpp"
+#include "engine/inventory.hpp"
 #include "engine/layer.hpp"
 #include "engine/paths.hpp"
 #include "engine/rectlist.hpp"
@@ -86,6 +87,13 @@ public:
     int zMin() const { return zMin_; }
     int zCount(int z) const { return z >= 0 && z < 256 ? zCount_[static_cast<std::size_t>(z)] : 0; }
     int unsupportedLayers() const { return unsupported_; }
+    // Inventarleiste +0x5B4 (nur ohne Editor) und „Leiste aktiv“ +0x5BC (Game_SwitchLocation:
+    // = g_CurGame, CGame_dtor: 0)
+    InventoryBar* inventory() { return bar_.get(); }
+    void setBarShown(bool on) { barShown_ = on; }
+    const DataPaths& paths() const { return paths_; }
+    Surface565& surface() { return surface_; }
+    int mouseX() const { return clickX_; }  // +0x500
 
 private:
     // orig: Rent-A-Hero.exe 0x00449E70 – Hintergrund (Z = 255) anlegen
@@ -116,6 +124,7 @@ private:
     int textX_ = 0, textY_ = 0;                                 // +0x508, +0x50C
     int location_ = 0;                                          // +0x5D0
     bool barShown_ = false;                                     // +0x5BC
+    std::unique_ptr<InventoryBar> bar_;                         // +0x5B4
     Event sceneEvent_;                                          // +0x2C4 (Klick ins Leere, Typ 0x16)
     bool editor_ = false;                                       // +0xAC8
     std::uint32_t windowStart_ = 0;                             // +0x2DC

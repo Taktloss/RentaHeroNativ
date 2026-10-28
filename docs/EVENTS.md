@@ -87,7 +87,7 @@ Timerliste auf.
 6. Ohne Editor: statisches Ereignis `0x00481EE8`, `CEvent_FireTimers` (`0x0043F4A0`),
    Inventarleiste `+0x5B4`: Bereich `+0x428` (Ereignis `+0xB0`), Ereignis `+0x424`.
 Jedes Ereignis wird mit seinem gespeicherten Typ (`+0x10`) ausgelöst.
-Port: `Scene::dispatchEvents` (Schritte 1, 4 und das Ereignis aus 6; Rest folgt).
+Port: `Scene::dispatchEvents` (Schritte 1, 4, 5 und 6 inkl. Inventarleiste; Rest folgt).
 
 Ereignistypen bisher: **0x01** = Animation fertig, **0x0B** = Klick auf Bereich,
 **0x15** = Timer, **0x16** = Klick ins Leere / Szene, **0x29** = Figur angekommen/gedreht,

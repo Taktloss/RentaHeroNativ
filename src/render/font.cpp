@@ -27,6 +27,7 @@ char32_t cp1252ToUnicode(unsigned char c) {
 struct Font::Impl {
     FT_Library lib = nullptr;
     FT_Face face = nullptr;
+    int cell = 0, ascent = 0;
     ~Impl() {
         if (face) FT_Done_Face(face);
         if (lib) FT_Done_FreeType(lib);
@@ -59,8 +60,15 @@ bool Font::open(const std::string& file, int cellHeight, std::string* err) {
                       : static_cast<double>(impl_->face->ascender - impl_->face->descender);
     const auto ppem = static_cast<FT_UInt>(std::lround(cellHeight * impl_->face->units_per_EM / cell));
     if (FT_Set_Pixel_Sizes(impl_->face, 0, ppem)) return fail("Schriftgröße nicht setzbar");
+    impl_->cell = cellHeight;
+    const double asc = os2 && os2->usWinAscent + os2->usWinDescent > 0 ? os2->usWinAscent
+                                                                         : impl_->face->ascender;
+    impl_->ascent = static_cast<int>(std::lround(cellHeight * asc / cell));
     return true;
 }
+
+int Font::cellHeight() const { return isOpen() ? impl_->cell : 0; }
+int Font::ascent() const { return isOpen() ? impl_->ascent : 0; }
 
 int Font::textWidth(std::string_view s) const {
     if (!isOpen()) return 0;
@@ -143,6 +151,17 @@ void drawAreaText(const Font& font, Surface565& s, const Area& a, int x, int y) 
     for (int dx : {-1, 1})
         for (int dy : {-1, 1}) font.textOut(s, x + dx, y + dy, t, al, 0x0000);
     font.textOut(s, x, y, t, al, 0xFFFF);
+}
+
+}  // namespace rah
+
+namespace rah {
+
+void drawTextCentered(const Font& font, Surface565& s, const Rect& r, std::string_view text, std::uint16_t color) {
+    // GDI: x = links + (Breite − Textbreite) / 2, y = oben + (Höhe − tmHeight) / 2
+    const int x = r.left + (r.width() - font.textWidth(text)) / 2;
+    const int y = r.top + (r.height() - font.cellHeight()) / 2;
+    font.textOut(s, x, y + font.ascent(), text, TextAlign::Left, color);
 }
 
 }  // namespace rah

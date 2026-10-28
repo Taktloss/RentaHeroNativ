@@ -9,6 +9,7 @@
 #include <string>
 #include <string_view>
 
+#include "core/rect.hpp"
 #include "render/surface.hpp"
 
 namespace rah {
@@ -28,6 +29,10 @@ public:
     // CreateFontA mit positiver Höhe = Zellenhöhe (usWinAscent + usWinDescent)
     bool open(const std::string& file, int cellHeight, std::string* err = nullptr);
     bool isOpen() const;
+    // GDI tmHeight / tmAscent. UNVERIFIED: Rundung von GDI (hier: Zellenhöhe und
+    // round(Zellenhöhe · usWinAscent / (usWinAscent + usWinDescent)))
+    int cellHeight() const;
+    int ascent() const;
 
     // Vorschubbreite des Textes (GetTextExtentPoint32A-Breite, ohne Unterschneidung)
     int textWidth(std::string_view cp1252) const;
@@ -46,6 +51,10 @@ private:
 TextAlign areaTextAlign(std::size_t len, int x);
 // orig: Rent-A-Hero.exe 0x00436230 CArea_DrawText (Schrift: Arial 15, fett, kursiv)
 void drawAreaText(const Font& font, Surface565& s, const Area& a, int x, int y);
+
+// DrawTextA(DT_CENTER | DT_VCENTER | DT_SINGLELINE) ohne DT_NOCLIP, transparenter Hintergrund.
+// UNVERIFIED: Ausschnitt am Rechteck wird nicht nachgebildet (Texte passen in die Daten)
+void drawTextCentered(const Font& font, Surface565& s, const Rect& r, std::string_view cp1252, std::uint16_t color);
 
 // Codepage 1252 → Unicode (ANSI-Codepage des deutschen Windows)
 char32_t cp1252ToUnicode(unsigned char c);
