@@ -18,6 +18,9 @@ Ziel: exakt originalgetreues Verhalten (Logik, Timing, Grafik, Ton, Spielstände
 - Datenquellen (2026-10-27): Port akzeptiert (a) zusammengeführten CD-Ordner, (b) die
   originalen CD-Images direkt (BIN/CUE `MODE2/2352` und `.iso`; eigener ISO-9660-Leser),
   plus optional einen vorhandenen `Common`-Ordner.
+- Indeo-5-Transparenz (2026-10-28): selbst dekodieren – Maskenformat aus `ir50_32.dll`
+  verstehen (Ghidra) und in `docs/` beschreiben, Referenz per Wine-Messprogramm mit dem
+  Original-Codec, eigener Maskenleser zusätzlich zu FFmpeg (VIDEO.md).
 
 ## Zu Beginn jeder Sitzung
 1. `docs/PROGRESS.md` und diese Datei lesen.

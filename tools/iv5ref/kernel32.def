@@ -1,0 +1,11 @@
+LIBRARY kernel32.dll
+EXPORTS
+CreateFileA@28
+ReadFile@20
+WriteFile@20
+CloseHandle@4
+LoadLibraryA@4
+GetProcAddress@8
+VirtualAlloc@16
+ExitProcess@4
+GetStdHandle@4

@@ -242,4 +242,8 @@
   `CEvent_SetTimerHandler` als `Game::setTimerHandler`, Destruktor-Reihenfolge LocNN → CGame
   (`destroyLocal`). Probelauf bis zum Wechsel nach 40/115. Gefunden: 80 von 136 AVIs nutzen
   Indeo-5-Transparenz, die FFmpeg ignoriert (graue Kästen; VIDEO.md). 99 Tests.
-- Nächste Schritte: Indeo-5-Transparenz klären (Entscheidung Nutzer), dann Loc37, Loc1.
+- 2026-10-28: Indeo-5-Transparenz – Entscheidung: selbst dekodieren (CLAUDE.md). Messprogramm
+  `tools/iv5ref` (Win32 ohne CRT, VfW-DriverProc direkt) unter Wine: Original-Codec füllt
+  transparente Pixel mit Schwarz (= Farbschlüssel). VIDEO.md.
+- Nächste Schritte: `ir50_32.dll` in Ghidra (eigenes Projekt in `re/private/`): Maske und
+  Füllfarbe im Bitstrom, dann eigener Leser zusätzlich zu FFmpeg; danach Loc37, Loc1.
