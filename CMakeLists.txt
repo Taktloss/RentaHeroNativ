@@ -33,6 +33,8 @@ add_library(rah_core STATIC
   src/engine/event.cpp
   src/engine/area.cpp
   src/engine/animlayer.cpp
+  src/engine/actor.cpp
+  src/engine/pathfinder.cpp
   src/engine/aviimage.cpp
   src/engine/scene.cpp
   src/engine/inventory.cpp
@@ -94,6 +96,7 @@ if(RAH_BUILD_TESTS)
     tests/test_avi.cpp
     tests/test_game.cpp
     tests/test_audio.cpp
+    tests/test_actor.cpp
   )
   target_link_libraries(rah_tests PRIVATE rah_core)
   if(FFMPEG_FOUND)

@@ -104,8 +104,10 @@ void HelpOverlay::show(std::string_view name) {
     std::string text(data->begin(), data->end());
     hlpDecode(text);
     if (const auto nul = text.find('\0'); nul != std::string::npos) text.resize(nul);
-    // Figur CSzene+0x5E0 fehlt oder x > 319 → links. Figuren sind noch nicht portiert.
-    useLeft();
+    // Figur CSzene+0x5E0 fehlt oder Fuß-x (+0x15D0) > 319 → links, sonst rechts (0x00441040)
+    const Actor* hero = scene_->actor(0);
+    if (!hero || hero->footX > 319) useLeft();
+    else useRight();
     Surface565& s = scene_->surface();  // Renderer+0x18
     if (mask_) mask_->draw(s, 1, nullptr);
     if (g_.drawHelpText) g_.drawHelpText(s, textRect_, text);

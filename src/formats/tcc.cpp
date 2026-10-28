@@ -180,9 +180,15 @@ bool A16Anim::next() {
     return true;
 }
 
-void A16Anim::setColor(const TccColorAdd& c) {
+void A16Anim::clearAlphaRows(int n) {
+    if (planes_.alpha.empty() || n <= 0) return;  // ohne Alpha: Original schreibt über Zeiger 0
+    const std::size_t len = std::min(planes_.alpha.size(), static_cast<std::size_t>(planes_.width) * static_cast<std::size_t>(n));
+    std::fill(planes_.alpha.begin(), planes_.alpha.begin() + static_cast<std::ptrdiff_t>(len), std::uint8_t{0});
+}
+
+void A16Anim::setColor(const TccColorAdd& c, bool redecode) {
     color_ = c;
-    if (ptr_ == kNull) return;
+    if (!redecode || ptr_ == kNull) return;
     if (body_ == 0) {
         decodeAt(ptr_, false);
         return;

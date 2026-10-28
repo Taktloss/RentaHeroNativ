@@ -12,6 +12,7 @@
 
 #include "engine/area.hpp"
 #include "engine/event.hpp"
+#include "engine/pathfinder.hpp"
 
 namespace rah {
 
@@ -74,6 +75,15 @@ struct EngineGlobals {
     std::vector<std::uint16_t> lipSyncData;
     bool lipSyncLoaded = false;
     int lipSyncRate = 20;
+    // Wegsuche g_PathGrid 0x0047E64C (die zuletzt aufgebaute Figur bestimmt es)
+    PathGrid pathGrid;
+    // MSVC-Laufzeit srand (0x0044F0C0) / rand: Startwert je Thread (+0x14)
+    std::uint32_t randSeed = 1;
+    void srand(std::uint32_t seed) { randSeed = seed; }
+    int rand() {
+        randSeed = randSeed * 214013u + 2531011u;
+        return static_cast<int>((randSeed >> 16) & 0x7FFF);
+    }
     // Protokoll von Ton-Aufrufen ohne Wirkung im Port (Eigenschaften ohne 3D-Hardware …)
     std::function<void(const std::string&)> audioTrace;
 };

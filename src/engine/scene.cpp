@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+#include "core/ftol.hpp"
 #include "engine/scene.hpp"
 
 #include "engine/help.hpp"
@@ -9,14 +10,6 @@
 #include "core/strings.hpp"
 
 namespace rah {
-
-namespace {
-
-inline int ftol(double v) {
-    return static_cast<int>(std::trunc(v));
-}
-
-}  // namespace
 
 Scene::Scene(const DataPaths& paths, EngineGlobals& globals, Surface565& target, std::uint16_t colorKey, int yOffset)
     : paths_(paths), g_(globals), surface_(target), colorKey_(colorKey), yOffset_(yOffset) {
@@ -61,15 +54,6 @@ void Scene::hideToggle() {
 
 namespace {
 
-// _splitpath(path, 0, 0, fname, 0) – orig: Rent-A-Hero.exe 0x00447F00
-std::string fileStem(const std::string& path) {
-    const auto slash = path.find_last_of("/\\:");
-    std::string f = slash == std::string::npos ? path : path.substr(slash + 1);
-    const auto dot = f.rfind('.');
-    if (dot != std::string::npos) f.resize(dot);
-    return f;
-}
-
 void markEvent(EngineGlobals& g, Event& e, int type) {
     e.mark(g, type);
 }
@@ -112,7 +96,13 @@ void Scene::dispatchEvents() {
         fireEvent(g_, e, e.type);
     }
     if (modal_ && modal_->frameEvent) fireEvent(g_, *modal_->frameEvent, modal_->frameEvent->type);
-    // Figuren +0x5E0/+0x5E4 folgen mit CActor.
+    // Figuren: nur das Laufereignis +0x1C8, sonst das abgebrochene +0x16F0 (Ebenen-Ereignisse
+    // der Figur werden hier nicht ausgelöst)
+    for (auto& a : actors_) {
+        if (!a) continue;
+        Event* e = a->walkEvent ? a->walkEvent.get() : a->oldWalkEvent.get();
+        if (e) fireEvent(g_, *e, e->type);
+    }
     for (auto& slot : layers_) {
         Layer* L = slot.get();
         if (!L) break;
@@ -182,7 +172,18 @@ void Scene::update(bool realtime) {
             if (background_->dirty) g_.sceneChanged = true;
         }
     }
-    // Figuren +0x5E0/+0x5E4 folgen mit CActor.
+    for (auto& a : actors_) {
+        if (!a) continue;
+        if (a->alwaysUpdate) {
+            a->dirty = true;
+            a->update(g_);
+        } else {
+            if (!a->dirty && !tick[static_cast<std::size_t>(stageOf(a->fps))]) continue;
+            a->update(g_);
+            if (!a->dirty) continue;
+        }
+        g_.sceneChanged = true;
+    }
 
     // Schleife bricht beim ersten leeren Platz ab (0x0044B544)
     for (auto& slot : layers_) {
@@ -253,7 +254,46 @@ bool Scene::loadSzn(const IniFile& szn, unsigned loadMask) {
         Rect r{a.x1, a.y1, a.x2, a.y2};
         addArea(&a.section, &r, a.cursorType);
     }
-    // Figuren folgen mit CActor.
+    for (int n = 0; n < 2; ++n) {
+        const auto& oc = d.characters[static_cast<std::size_t>(n)];
+        if (!oc) continue;
+        const SznCharacter& c = *oc;
+        auto& slot = actors_[static_cast<std::size_t>(n)];
+        if (slot && c.type != slot->type) {  // anderer Typ → neu anlegen
+            // Abweichung: Original lässt den Bereich mit hängendem Masken-Zeiger stehen
+            if (slot->area) slot->area->mask = nullptr;
+            slot.reset();
+        }
+        const bool fresh = !slot;
+        Actor* a = createActor(n, paths_.findPath(c.filename), fresh);
+        if (!a) continue;  // UNVERIFIED: Original arbeitet mit Zeiger 0 weiter
+        if (c.sfxLeft) {
+            const auto r = c.sfxRight ? paths_.findPath(*c.sfxRight) : std::nullopt;
+            const auto al = c.sfxAlt ? paths_.findPath(*c.sfxAlt) : std::nullopt;
+            setStepSounds(a, paths_.findPath(*c.sfxLeft), r, al);
+        }
+        a->setType(c.type);
+        a->perCor = c.perCor;
+        a->setColor(c.redAdd, c.greenAdd, c.blueAdd);
+        for (std::size_t i = 0; i < 10; ++i) {
+            const SznColorAdd& t = c.colorAdd[i];
+            a->tintR[i] = t.red;
+            a->tintG[i] = t.green;
+            a->tintB[i] = t.blue;
+            a->tintX[i] = t.x;
+            a->tintY[i] = t.y;
+            a->tintRange[i] = t.range;
+            if (t.range != 0) a->tintZones = true;
+        }
+        a->zpos = c.zpos;
+        a->zBuffered = c.zBuffered != 0;
+        if (path_) a->zScale = static_cast<double>(a->zpos - path_->vMin) * path_->k + path_->sMin;
+        a->zoomVal = c.zoomVal;
+        a->name = c.section;
+        a->setPos(c.x, c.y);  // vtable +0x14 → CActor_SetPosition(x, y, 0)
+        a->stop(0);           // vtable +0x24
+        a->setDirection(c.direction);
+    }
     loaded_ = true;
     g_.sceneChanged = true;
     return true;
@@ -298,6 +338,7 @@ Layer* Scene::createLayer(const std::optional<FoundFile>& file, bool animated) {
     L->setPos(0, yOffset_);
     lastLayer_ = slot;
     g_.sceneChanged = true;
+    lastCreated_ = L.get();
     // Ebenen werden nicht aktiviert (Bedingung „Dateiname == NULL“, 0x0044AC48); das tun die
     // Schauplätze.
     layers_[static_cast<std::size_t>(slot)] = std::move(L);
@@ -307,6 +348,53 @@ Layer* Scene::createLayer(const std::optional<FoundFile>& file, bool animated) {
     layer->name = stem;
     if (!barShown_) layer->update(g_);  // vtable +0x18, wenn +0x5BC == 0
     return layer;
+}
+
+Actor* Scene::createActor(int slotNr, const std::optional<FoundFile>& file, bool fresh) {
+    auto& slot = actors_[static_cast<std::size_t>(slotNr)];
+    if (!fresh) {
+        slot->reset();  // 0x00433B70
+    } else {
+        if (slot) {
+            removeArea(slot->area);
+            slot.reset();
+        }
+        auto a = std::make_unique<Actor>(g_);
+        std::string err;
+        if (!file || !a->load(*file, colorKey_, &err)) return nullptr;
+        a->renderToSurface();  // 0x00446C90
+        slot = std::move(a);
+    }
+    Actor* a = slot.get();
+    if (path_) a->setPathMap(&*path_);
+    a->setPos(0, yOffset_);  // vtable +0x14
+    g_.sceneChanged = true;
+    lastCreated_ = a;
+    lastLayer_ = 40;
+    const std::string name = slotNr == 0 ? "Rodrigo" : "Girlfriend";
+    if (Area* ar = addArea(&name, nullptr, 0)) ar->attach(*a);
+    a->name = fileStem(a->path);
+    return a;
+}
+
+bool Scene::setStepSounds(Actor* a, const std::optional<FoundFile>& left, const std::optional<FoundFile>& right,
+                          const std::optional<FoundFile>& alt) {
+    if (!a || !g_.audio || !left) return false;
+    a->setStepSounds(g_.audio, &*left, right ? &*right : nullptr, alt ? &*alt : nullptr);
+    return true;
+}
+
+bool Scene::removeArea(Area* a) {
+    for (std::size_t i = 0; i < areas_.size(); ++i) {
+        if (areas_[i].get() != a || !a) continue;
+        removedAreas_.push_back(std::move(areas_[i]));
+        for (std::size_t j = i; j + 1 < areas_.size(); ++j) areas_[j] = std::move(areas_[j + 1]);
+        areas_.back().reset();
+        if (a->mask) a->mask->area = nullptr;  // CArea_DetachLayer 0x00436170
+        a->mask = nullptr;
+        return true;
+    }
+    return false;
 }
 
 void Scene::loadMap(const std::optional<FoundFile>& file, std::optional<ZMap>& out) {
@@ -333,9 +421,10 @@ void Scene::reset() {
     background_.reset();
     for (auto& L : layers_) L.reset();
     for (auto& a : areas_) a.reset();
-    // Figuren +0x5E0/+0x5E4 löschen – folgen mit CActor
+    for (auto& a : actors_) a.reset();
     g_.hitGrid.clear();
     lastLayer_ = -1;   // +0x5D8 = 0, +0x2B8 = 0 (Port: kein Platz)
+    lastCreated_ = nullptr;
     depth_.reset();    // +0x2BC = 0 (ohne Löschen)
     path_.reset();     // +0x2C0 = 0 (ohne Löschen)
     modal_ = nullptr;  // +0x5DC = 0 ohne Löschen
@@ -414,6 +503,27 @@ bool Scene::compose(bool force) {
     }
     // Figuren (Schritte 4, 8, 11) folgen mit CActor.
     if (!background_) return false;
+    // 4. Figuren klassifizieren: 1 = hinter Zmax, 2 = im Bereich, 3 = vor Zmin (vorzeichenlos)
+    std::array<int, 2> cls{};
+    std::array<unsigned, 2> zc{};
+    for (std::size_t i = 0; i < 2; ++i) {
+        Actor* a = actors_[i].get();
+        if (!a || (!a->dirty && !a->active)) continue;
+        zc[i] = static_cast<unsigned>(ftol(a->z));
+        if (zc[i] < static_cast<unsigned>(zMin_)) cls[i] = static_cast<unsigned>(zMax_) < zc[i] ? 1 : 3;
+        else cls[i] = static_cast<unsigned>(zMax_) < zc[i] ? 1 : 2;
+    }
+    const auto actorRect = [&](std::size_t i) {
+        Rect r = actors_[i]->getRect();
+        clipToScene(r);
+        return r;
+    };
+    const auto addOld = [&](Layer& L) {
+        if (isRectEmpty(L.old)) return;
+        Rect t = L.old;
+        listA_.add(t);
+        listB_.add(t);
+    };
     // 5. Bereichstext unter der Maus: Rechteck in A und B (Editor-Vollbild +0x5C8 folgt)
     if (textShown()) {
         Rect t{textX_ - 160, textY_ - 90, textX_ + 160, textY_ - 50};
@@ -444,7 +554,24 @@ bool Scene::compose(bool force) {
             listB_.add(t);
         }
     }
-    // 8. Ausbreitung über Überlappung mit B, danach von vorn
+    // 8. Figuren (zweiter Durchgang nur, wenn Figur 1 dirty ist und Figur 0 noch nicht)
+    for (int pass = 0; pass < 2; ++pass) {
+        for (std::size_t i = 0; i < 2; ++i) {
+            if (cls[i] == 0) continue;
+            Actor& a = *actors_[i];
+            const Rect r = actorRect(i);
+            if (!a.dirty && a.active && listB_.intersects(r)) a.dirty = true;
+            if (!a.dirty) {
+                if (i == 1 && pass == 0) pass = 2;
+                continue;
+            }
+            Rect rr = r;
+            listB_.add(rr);
+            addOld(a);
+            if (i == 1 && actors_[0] && actors_[0]->dirty) pass = 2;
+        }
+    }
+    // Ausbreitung über Überlappung mit B (Figuren erneut prüfen), danach von vorn
     for (int i = 0; i < kMaxLayers; ++i) {
         Layer* L = layers_[static_cast<std::size_t>(i)].get();
         if (!L) break;
@@ -459,6 +586,17 @@ bool Scene::compose(bool force) {
             if (L->z != 255.0) listA_.add(t);
             listB_.add(t);
         }
+        for (std::size_t k = 0; k < 2; ++k) {
+            if (cls[k] == 0) continue;
+            Actor& a = *actors_[k];
+            if (a.dirty || !a.active) continue;
+            Rect ar = actorRect(k);
+            if (!listB_.intersects(ar)) continue;
+            a.dirty = true;
+            listB_.add(ar);
+            addOld(a);
+            k = static_cast<std::size_t>(-1);  // Figuren von vorn
+        }
         i = -1;
     }
     // 9. Hintergrund für A, flag 0
@@ -468,13 +606,20 @@ bool Scene::compose(bool force) {
         listB_.add(r);
     }
     listA_.clear();
+    for (std::size_t i = 0; i < 2; ++i)
+        if (cls[i] != 0 && !actors_[i]->dirty) cls[i] = 0;  // nicht dirty → nicht zeichnen
     // 10. Ebenen mit Z = 255.0, flag 0, ohne Tiefe
     for (auto& L : layers_) {
         if (!L) break;
         if (L->z == 255.0 && L->dirty) L->draw(surface_, 0, nullptr);
     }
-    // 11. Z-Stufen von hinten nach vorn
+    // 11. Z-Stufen von hinten nach vorn; Figuren-Z vorübergehend mitzählen
     const ZMap* zmap = depth_ ? &*depth_ : nullptr;
+    const auto zslot = [this](unsigned z) -> short* { return z < 256 ? &zCount_[z] : nullptr; };  // UNVERIFIED: Z > 255
+    for (std::size_t i = 0; i < 2; ++i)
+        if (short* c = zslot(zc[i])) ++*c;
+    // Reihenfolge: z0 ≤ z1 → erst Figur 1, dann Figur 0
+    const std::array<std::size_t, 2> order = zc[0] <= zc[1] ? std::array<std::size_t, 2>{1, 0} : std::array<std::size_t, 2>{0, 1};
     for (int lvl = zMax_ + 1; zMin_ <= lvl; --lvl) {
         if (lvl == 0) break;
         if (zCount(lvl) != 0) {  // zCount[256] liest im Original +0x500 (Klick-X), ohne Wirkung
@@ -483,6 +628,17 @@ bool Scene::compose(bool force) {
                 if (ftol(L->z) == lvl && L->dirty && L->z != 255.0) L->draw(surface_, 1, zmap);
             }
         }
+        for (const std::size_t i : order) {
+            const int c = cls[i];
+            if (c == 1 || (c == 2 && zc[i] == static_cast<unsigned>(lvl)) || (c == 3 && lvl == zMin_)) {
+                actors_[i]->drawActor(surface_, 1, zmap);
+                cls[i] = 0;
+            }
+        }
+    }
+    for (const std::size_t i : order) {
+        if (short* c = zslot(zc[i])) --*c;
+        if (cls[i] != 0) actors_[i]->drawActor(surface_, 1, zmap);
     }
     // 12. Bereichstext (CArea_DrawText über GetDC); Editor-Rahmen und Slot +0x10 der letzten
     // Ebene (Debug-Text) entfallen
@@ -569,7 +725,7 @@ Area* Scene::hitTest(int x, int y) {
 void Scene::onClick(int x, int y) {
     clickX_ = x;
     clickY_ = y;
-    // +0x5BC == 0: Figur läuft zum Klick (0x0044CB60) – folgt mit CActor.
+    if (!barShown_) clickWalk(x, y);  // +0x5BC == 0
     if (help_ && help_->isOpen()) {
         help_->close();
         return;
@@ -594,9 +750,22 @@ void Scene::onClick(int x, int y) {
         bar_->leave(false);
         return;
     }
-    if (lastHit_) return;  // nicht der Bereich der Figur (Figuren folgen)
-    // Figur aktiv → CActor_WalkToClick folgt.
+    Actor* hero = actors_[0].get();
+    if (lastHit_ && (!hero || lastHit_ != hero->area)) return;  // nicht der Bereich der Figur
+    if (hero && hero->active) {
+        hero->walkToClick(x, y - 60);
+        return;
+    }
     markEvent(g_, sceneEvent_, 0x16);
+}
+
+void Scene::clickWalk(int x, int y) {
+    Actor* second = actors_[1].get();
+    if (lastCreated_ == second) {
+        if (second) second->walkToClick(x, y - 60);
+    } else if (actors_[0]) {
+        actors_[0]->walkToClick(x, y - 60);
+    }
 }
 
 }  // namespace rah

@@ -91,7 +91,7 @@ protected:
     int sceneNr_;             // +0x2C
     int prevScene_;           // +0x30
     AudioStream* music_ = nullptr;  // +0x08 (gehört GameContext::music)
-    AnimLayer* hero_ = nullptr;     // +0x1C Held (CSzene+0x5E0; CActor folgt)
+    Actor* hero_ = nullptr;         // +0x1C Held (CSzene+0x5E0)
     std::array<int, 5> waits_{};  // +0x34 Warteplätze (SCRIPTING.md)
     std::uint32_t seed_;      // +0x20 timeGetTime()
     std::unique_ptr<Speech> speech_;  // +0x70

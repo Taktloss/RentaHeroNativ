@@ -90,8 +90,13 @@ public:
     // orig: Rent-A-Hero.exe 0x004384F0 CImageTcc_SetColor(r, g, b, 1): LUT setzen und das
     // aktuelle Bild erneut dekodieren (0x0043B740). Größen 0 (nach Seek) → Kopf am Zeiger
     // lesen und den Zeiger auf dessen Daten setzen.
-    void setColor(const TccColorAdd& c);
+    // redecode = 0: nur die LUT (wirkt ab dem nächsten Dekodieren)
+    void setColor(const TccColorAdd& c, bool redecode = true);
+    const TccColorAdd& color() const { return color_; }
     const TccPlanes& planes() const { return planes_; }
+    // orig: Rent-A-Hero.exe 0x004387B0 CImage_ClearRows(n) – Breite · n Bytes der
+    // Alpha-Ebene (+0x3A0) ab oben auf 0
+    void clearAlphaRows(int n);
 
 private:
     bool decodeAt(std::size_t headerOff, bool first);

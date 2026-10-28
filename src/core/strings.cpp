@@ -44,4 +44,12 @@ std::vector<std::string> splitPath(std::string_view path) {
     return parts;
 }
 
+std::string fileStem(const std::string& path) {
+    const auto slash = path.find_last_of("/\\:");
+    std::string f = slash == std::string::npos ? path : path.substr(slash + 1);
+    const auto dot = f.rfind('.');
+    if (dot != std::string::npos) f.resize(dot);
+    return f;
+}
+
 }  // namespace rah

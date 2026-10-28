@@ -3,6 +3,7 @@
 
 #include <cstdio>
 
+#include "engine/actor.hpp"
 #include "engine/animlayer.hpp"
 #include "engine/audio.hpp"
 #include "engine/inventory.hpp"
@@ -109,7 +110,12 @@ void Speech::play(int doneHandler) {
             else
                 g_.speaker->setLipSync(&g_.lipSyncData, g_.lipSyncRate, g_.speechBuffer, 0);
         }
-        // Figur-Variante (0x00435DF0 / 0x00435E00) folgt mit CActor
+        else {
+            // Figur (Held): Kopf spricht – 0x00435DF0 ohne, 0x00435E00 mit Lippendaten
+            auto* a = static_cast<Actor*>(g_.speaker);
+            if (!g_.lipSyncLoaded || !g_.speechBuffer) a->startTalk(nullptr, 0, nullptr);
+            else a->startTalk(&g_.lipSyncData, g_.lipSyncRate, g_.speechBuffer);
+        }
     }
     if (!g_.speechBuffer) {
         // ohne Audiopuffer: Dauer nach Textlänge
@@ -133,7 +139,9 @@ void speechEnd(EngineGlobals& g) {
     rendererClearStatusText(g);
     g.speechRunning = false;
     if (g.speechBuffer) g.speechBuffer->stop();  // 0x004375E0(0) wirkt nicht; vtable +0x14
-    if (g.speaker && !g.speakerActor) {
+    if (g.speaker && g.speakerActor) {
+        static_cast<Actor*>(g.speaker)->endTalk();  // 0x00435F10
+    } else if (g.speaker) {
         g.speaker->stop(0);  // vtable +0x24(0)
         if (g.speakerMode == 10) g.speaker->disable();
         else if (g.speakerMode == 11) {
@@ -142,7 +150,6 @@ void speechEnd(EngineGlobals& g) {
             g.speaker->showFrame(g.speakerFrom != -1 ? g.speakerFrom : 0);
         }
     }
-    // Figur-Variante (0x00435F10) folgt mit CActor
     g.speechDone.mark(g, 0x1F);
     fireEvent(g, g.speechDone, g.speechDone.type);
 }
@@ -159,7 +166,12 @@ void speechStop(EngineGlobals& g) {
         delete g.speechBuffer;  // Original lässt den Zeiger stehen; der nächste CSpeech_ctor setzt 0
         g.speechBuffer = nullptr;
     }
-    // Figur-Variante: läuft und Figur → 0x00435F10 (folgt mit CActor)
+    // läuft (nach 0x004460C0 nie) und Figur → 0x00435F10
+    if (g.speechRunning && g.speakerActor && g.speaker) {
+        static_cast<Actor*>(g.speaker)->endTalk();
+        g.speakerActor = false;
+    }
+    g.speechRunning = false;
     g.lipSyncLoaded = false;
     g.lipSyncData.clear();
 }

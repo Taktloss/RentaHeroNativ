@@ -86,3 +86,13 @@ Liste `+0x20` mit 20 Paaren `(x, y)` in Pixeln, Leseindex `+0xC0`, Ende = `(0, 0
   (Endzelle nicht) auf Rasterbyte `≠ 0`.
 - **Keine Obergrenze**: mehr als 19 Wegpunkte überschreiben `+0xC0` und folgende Felder
   (Original-Fehler; Port: gleiches Speicherlayout nachbilden oder optional begrenzen).
+
+## Port (`engine/pathfinder`)
+Wörtlich: Raster `PathGrid` in `EngineGlobals` (global wie `g_PathGrid`), Knoten-Pool ab 1,
+Indexliste mit offener Liste (aufsteigend) und geschlossenem Stapel, Einfügen/Entfernen mit
+Verschiebung, In-place-Update ohne Neusortierung, Vergleich mit Knoten 0 bei nur
+geschlossenen Knoten (Knoten 0 = `0xCDCDCDCD`, UNVERIFIED), veralteter Knoten beim Einfügen
+im unerreichbaren Zweig. Abweichungen: Rasterzugriffe außerhalb gelten als gesperrt; mehr
+als 19 Wegpunkte werden angehängt statt `+0xC0` ff. zu überschreiben. Sichtlinie mit
+vorzeichenbehafteter Division (`IDIV`) und `SAR` (Abrunden), Heuristik `ftol(√(dx²+dy²)·1000)`
+(`0x0046B910` = 1000.0). Tests: `tests/test_actor.cpp` (Ränder, Umweg, West-Fehler).

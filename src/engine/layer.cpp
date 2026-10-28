@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+#include "core/ftol.hpp"
 #include "engine/layer.hpp"
 
 #include "engine/area.hpp"
@@ -6,15 +7,6 @@
 #include <cmath>
 
 namespace rah {
-
-namespace {
-
-// __ftol: Abschneiden Richtung 0
-inline int ftol(double v) {
-    return static_cast<int>(std::trunc(v));
-}
-
-}  // namespace
 
 bool Layer::load(const FoundFile& file, std::uint16_t key, std::string* error) {
     path = file.path;

@@ -81,7 +81,7 @@ public:
     // orig: Rent-A-Hero.exe 0x00443400 CAnimLayer_SetFrameEvent(ev, bild)
     void setFrameEvent(int ev, int atFrame);
     // orig: Rent-A-Hero.exe 0x00443260 (vtable +0x24): x ≠ 0 → Endmodus; x = 0 → anhalten
-    void stop(int x);
+    virtual void stop(int x);
     // orig: Rent-A-Hero.exe 0x00442BB0 / 0x00442C10 / 0x00442C70 / 0x00442D10
     void addCue(const AnimCue& c);
     void clearCues() { cues.fill({}); }
@@ -90,13 +90,19 @@ public:
     // orig: Rent-A-Hero.exe 0x00442EF0 CAnimLayer_SetLipSync(daten, rate, audio, bildoffset)
     void setLipSync(const std::vector<std::uint16_t>* data, int rate, AudioBuffer* audio, int offset);
 
-private:
+    // Bild-Slot 10 (+0x28) SetColor(r, g, b, 0): nur LUT (CActor_SetPosition)
+    void setImageColorNoDecode(int r, int g, int b);
+    const TccColorAdd& imageColor() const { return anim.color(); }
+
+protected:
     // Bild-vtable: Slot 4 Next, Slot 7 Seek, Slot 6 Rewind (A16 bzw. AVI)
     bool imageNext();
     bool imageSeek(int n);
     void imageRewind();
     void afterImageCall();  // Alpha-Rechteck nach jedem Dekodieren (0x0043B8A7)
     EngineGlobals& g_;
+
+private:
     std::uint32_t seenDecodes_ = 0;
 };
 

@@ -225,5 +225,13 @@
   Auswertung in `NextFrame`, Rücksetzen in `Stop(0)`), Sprecher-Parameter `0x00446660` und
   Sprechende (Modus 10/11/12), `GetPos` (Puffer: Abspielzeiger, Stream: Zeit). 84 Tests.
   Offen: Figur-Variante der Sprache (CActor).
-- Nächste Schritte: Figuren (`CActor`), Wartestellen, dann Loc35/Loc37/Loc1 für den Anschluss
-  nach dem Intro.
+- 2026-10-28: Figuren und Wegsuche. `CActor` vollständig (ACTOR.md: Konstruktor, vtable,
+  Typen, Fußpunkt/Zoom/Tönung, Richtungen, Drehen, Laufen inkl. exakter Schrittrechnung aus der
+  Disassembly, Schrittgeräusche, Begleiter, Sprechkopf `…Talk.a16` mit Alpha-Zeilen-Löschung);
+  `CPathFinder` wörtlich (A* mit Original-Listen, Wegpunkte, Sichtlinie, West-Fehler).
+  Szene: Laden aus der SZN, Update, Laufereignisse 0x29/0x2A, Compositor mit Figuren, Klick →
+  Laufen; Sprache mit Figur-Variante; Hilfe-Seite nach Fuß-x. Testlauf LOC04/006 mit
+  `--walk`: Rodrigo läuft mit Weg und Schrittbildern. Gefunden: bei `Zpos 0` teilt das
+  Laufen durch 0 (Original). 93 Tests.
+- Nächste Schritte: Wartestellen (`CGame_BeginWait/Wait`), dann Loc35/Loc37/Loc1 für den
+  Anschluss nach dem Intro.

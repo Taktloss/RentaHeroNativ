@@ -47,6 +47,7 @@ struct Options {
     std::string font;  // Schriftdatei für die Bereichstexte (sonst Systemsuche)
     int mouseX = -1, mouseY = -1;  // Mausbewegung nach dem ersten Frame (kopflose Prüfung)
     int clickX = -1, clickY = -1;  // Klick im zweiten Frame (kopflose Prüfung)
+    int walkX = -1, walkY = -1;    // Held läuft im zweiten Frame dorthin (Szenenkoordinaten)
     std::vector<int> items;        // Inventarleiste zeigen und diese Gegenstände hinzufügen
     std::string hint;              // Hilfe-Symbol zeigen; Klick darauf öffnet diese HLP-Datei
     int gameLoc = -1, gameScene = 0;  // Spielmodus: Schauplatz/Szene starten (Intro: 40 114)
@@ -62,7 +63,7 @@ void usage() {
                  "rentahero --cd <Ordner|.iso|.cue> [--cd …] [--common <Ordner>]\n"
                  "          [--loc <n>] [--scene <Name>] [--mask <n>]\n"
                  "          [--frames <n>] [--frame-ms <n>] [--dump <datei.ppm>] [--hidden]\n"
-                 "          [--exe <Rent-A-Hero.exe>] [--font <datei.ttf>] [--mouse <x> <y>] [--click <x> <y>]\n"
+                 "          [--exe <Rent-A-Hero.exe>] [--font <datei.ttf>] [--mouse <x> <y>] [--click <x> <y>] [--walk <x> <y>]\n"
                  "          [--items <id,id,…>] [--hint <HLP-Name, z. B. 04_006_A>]\n"
                  "          [--game <Schauplatz> <Szene> (Intro: --game 40 114)] [--subtitles]\n"
                  "          [--mute] [--music-vol <0-100>] [--sfx-vol <0-100>] [--speech-vol <0-100>]\n"
@@ -121,6 +122,10 @@ bool parse(int argc, char** argv, Options& o) {
         else if (a == "--click" && i + 1 < argc) {
             o.clickX = std::atoi(v);
             o.clickY = std::atoi(argv[++i]);
+        }
+        else if (a == "--walk" && i + 1 < argc) {
+            o.walkX = std::atoi(v);
+            o.walkY = std::atoi(argv[++i]);
         }
         else if (a == "--mouse" && i + 1 < argc) {
             o.mouseX = std::atoi(v);
@@ -346,6 +351,10 @@ int main(int argc, char** argv) {
     }
     if (!game) std::fprintf(stderr, "LOC%02d/%s: %d animierte Ebenen, %d nicht unterstützt, %d Bereiche\n",
                  opt.location, opt.scene.c_str(), anims, scene.unsupportedLayers(), areas);
+    for (int i = 0; !game && i < 2; ++i)
+        if (const Actor* a = scene.actor(i))
+            std::fprintf(stderr, "Figur %d: %s Typ %d Fuß (%d, %d) Z %.0f Zoom %.1f Richtung %d Kopf %s\n", i,
+                         a->name.c_str(), a->type, a->footX, a->footY, a->z, a->zoom, a->dir, a->head ? "ja" : "nein");
 
     Cursors cursors;
     {
@@ -421,6 +430,7 @@ int main(int argc, char** argv) {
         }
         if (frame == 1 && opt.mouseX >= 0) mouseMove(opt.mouseX, opt.mouseY);
         if (frame == 2 && opt.clickX >= 0) scene.onClick(opt.clickX, opt.clickY);
+        if (frame == 2 && opt.walkX >= 0 && scene.actor(0)) scene.actor(0)->walkTo(opt.walkX, opt.walkY, 0, -1);
         pollTimers(g);  // Port: Timer im Hauptthread je Schleifendurchlauf (TIMING.md)
         scene.update(true);
         // Game_Idle: Compose, Inventarleiste (0x00441C30), Ausgabe, dann Statustext (0x0043E830)
@@ -450,6 +460,7 @@ int main(int argc, char** argv) {
     if (!opt.dump.empty()) writePpm(screen, opt.dump);
     ctx.current.reset();  // vor Hilfe und Szene abbauen (CGame_dtor greift auf beide zu)
     ctx.music.reset();
+    scene.reset();  // Figuren mit ihren Schrittgeräuschen vor dem Mischer abbauen
     if (audioOut) SDL_DestroyAudioStream(audioOut);  // vor dem Mischer
     audioOut = nullptr;
     if (sink.record) {

@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Szene (CSzene, 0xACC Bytes): Hintergrund, Ebenen, Tiefen-/Wegkarte, Z-Verwaltung und der
 // Compositor CSzene_Compose (docs/COMPOSITOR.md, docs/formats/szn.md).
-// Noch nicht enthalten: Bereiche (CArea), Figuren (CActor), animierte Ebenen (CAnimLayer),
-// Videoebenen, Vollbildobjekt +0x5DC.
 #pragma once
 
 #include <array>
@@ -10,6 +8,7 @@
 #include <optional>
 #include <string_view>
 
+#include "engine/actor.hpp"
 #include "engine/animlayer.hpp"
 #include "engine/area.hpp"
 #include "engine/globals.hpp"
@@ -47,6 +46,13 @@ public:
     Layer* getObject(std::string_view name);
     Layer* background() { return background_.get(); }
     Layer* layer(int i) { return layers_[static_cast<std::size_t>(i)].get(); }
+    // Figuren +0x5E0 (Held, Bereich „Rodrigo“) und +0x5E4 („Girlfriend“)
+    Actor* actor(int i) { return actors_[static_cast<std::size_t>(i)].get(); }
+    // orig: Rent-A-Hero.exe 0x0044A770(platz, datei, neu) – Figur anlegen bzw. wiederverwenden
+    Actor* createActor(int slot, const std::optional<FoundFile>& file, bool fresh);
+    // orig: Rent-A-Hero.exe 0x0044A8F0(figur, links, rechts, alt) – nur mit Audio-Manager
+    bool setStepSounds(Actor* a, const std::optional<FoundFile>& left, const std::optional<FoundFile>& right,
+                       const std::optional<FoundFile>& alt);
 
     // orig: Rent-A-Hero.exe 0x0044B280 CSzene_Update – Animations-Takt (TIMING.md)
     void update(bool realtime);
@@ -122,6 +128,10 @@ public:
     int mouseX() const { return clickX_; }  // +0x500
 
 private:
+    // orig: Rent-A-Hero.exe 0x0044AD70 – Bereich aus der Liste nehmen und lösen (nicht löschen)
+    bool removeArea(Area* a);
+    // orig: Rent-A-Hero.exe 0x0044CB60 CSzene_ClickWalk (ohne Inventarleiste)
+    void clickWalk(int x, int y);
     // orig: Rent-A-Hero.exe 0x00449E70 – Hintergrund (Z = 255) anlegen
     bool createBackground(const std::optional<FoundFile>& file);
     // orig: Rent-A-Hero.exe 0x0044AB10 CSzene_CreateLayer
@@ -139,7 +149,10 @@ private:
     std::array<std::unique_ptr<Layer>, kMaxLayers> layers_{};   // +0x04
     std::unique_ptr<Layer> background_;                         // +0x5C0
     std::optional<ZMap> depth_, path_;                          // +0x2BC, +0x2C0
-    int lastLayer_ = -1;                                        // +0x2B8 / +0x5D8
+    int lastLayer_ = -1;                                        // +0x2B8 (40 = Figur)
+    Layer* lastCreated_ = nullptr;                              // +0x5D8
+    std::array<std::unique_ptr<Actor>, 2> actors_{};            // +0x5E0, +0x5E4
+    std::vector<std::unique_ptr<Area>> removedAreas_;           // 0x0044AD70 löscht nicht
     DirtyRegion listA_;                                         // +0x2F4
     DirtyRegion listB_;                                         // +0xAC4
     int zMax_ = 0, zMin_ = 0xFF;                                // +0x2F8, +0x2FC

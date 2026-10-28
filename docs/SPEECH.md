@@ -55,8 +55,8 @@ Ergänzt formats/ger.md (Dateien) und AUDIO.md.
 Ende über `g_ClickEvent`. Ohne Tonausgabegerät legt der Port keinen Audio-Manager an; dann
 nimmt jede Sprache den Timer-Weg (3) (Dauer nach Textlänge).
 Sprecher `0x00446660(ebene, modus, von, bis)`; `CGame_Speak` setzt bei Sprecher == Held
-(`CGame+0x1C`) Modus −1 = Figur-Variante (`0x00435DF0/0x00435E00/0x00435F10`, folgt mit
-`CActor`). Ebenen-Sprecher: mit ACS und Puffer Lippensync (ger.md), sonst Bereich in
+(`CGame+0x1C`) Modus −1 = Figur-Variante (`0x00435DF0/0x00435E00/0x00435F10`, ACTOR.md
+„Sprechen“). Ebenen-Sprecher: mit ACS und Puffer Lippensync (ger.md), sonst Bereich in
 Schleife (Modus 0x0D); Ende: `Stop(0)`, dann Modus 10 ausblenden, 11 Bild `bis` (≠ −1),
 12 Bild `von` (−1 → 0). 3D-Position aus der X-Mitte der Ebene (`0x00447CB0` = lineare
 Abbildung 0…639 → −0.2…0.2, z = 0.1). `CGame_Say` hat keinen Sprecher (Ctor setzt 0).

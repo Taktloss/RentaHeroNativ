@@ -111,6 +111,11 @@ void AnimLayer::applyImageColor(int r, int g, int b) {
     afterImageCall();
 }
 
+void AnimLayer::setImageColorNoDecode(int r, int g, int b) {
+    if (avi) return;
+    anim.setColor({r, g, b}, false);
+}
+
 void AnimLayer::afterImageCall() {
     if (anim.decodes() != seenDecodes_) {
         seenDecodes_ = anim.decodes();

@@ -95,8 +95,8 @@ public:
     // Bild-Slot 11: TCC/A16 (0x004384D0) LUT neu und aktuelles Bild neu dekodieren; BMP/AVI
     // (0x004388A0) nur speichern, Slot 12 leer
     virtual void applyImageColor(int r, int g, int b);
-    // orig: Rent-A-Hero.exe 0x00446E70 (vtable +0x14 SetPos)
-    void setPos(int nx, int ny);
+    // orig: Rent-A-Hero.exe 0x00446E70 (vtable +0x14 SetPos; CActor: 0x00434A90)
+    virtual void setPos(int nx, int ny);
     // orig: Rent-A-Hero.exe 0x00447470 CLayer_Enable
     void enable();
     // orig: Rent-A-Hero.exe 0x00447490 CLayer_Disable
