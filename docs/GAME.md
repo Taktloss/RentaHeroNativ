@@ -59,6 +59,6 @@ Belege: `CGame_ctor` `0x0043F4D0`, `CGame_dtor` `0x0043F580`, `CGame_SetEventPro
 `Game` = `CGame`, `GameContext` hält, was im Original global ist (`g_CurScene`, `g_CurGame`,
 Hilfe, Wechsel-Globals). Schauplätze sind Unterklassen (`Loc40`), `createLocation` ist der
 `switch`. Bisher nur Loc40: jeder andere Wechsel scheitert und läuft in den Rücksprung mit
-vertauschten Werten – nach dem Intro-Teil 1 beginnt das Intro deshalb neu. Ton (Musik,
-Effekte, Puffer-Eigenschaften) ist bis zum Audio-Port nur Protokoll (`g.audioTrace`).
+vertauschten Werten – nach dem Intro-Teil 1 beginnt das Intro deshalb neu. Musik
+(`CSzene+0x1A8`) liegt in `GameContext::music` und überlebt Schauplatzwechsel (AUDIO.md).
 Programm: `rentahero --cd … --common … --game 40 114 [--subtitles]`.

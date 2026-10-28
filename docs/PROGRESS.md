@@ -213,5 +213,12 @@
   71 Tests grün. Ton nur als Protokoll (`g.audioTrace`).
   Offen: Wartestellen (`CGame_BeginWait/Wait`, verschachtelte Schleife), Figurparameter
   der Sprache (`0x00446660`), Renderer `0x0043E960`, `CSzene_Clear` exakt.
-- Nächste Schritte: Audio-Port (Musik, Effekte, Sprache, Cues – Intro hörbar), dann Figuren
-  (`CActor`) und Loc35/Loc37/Loc1 für den Anschluss nach dem Intro.
+- 2026-10-28: Ton. `CAudio`/`CAudioBuffer`/`CAudioStream` vollständig belegt (AUDIO.md:
+  Lautstärke linear in dB −33,33…0, Blend-Takt, Ende-Ereignisse, Musik-Wiederholung nach
+  30/40/…/300 s, Ausblenden-und-Löschen, 3D nur mit Hardware-3D). Port: WAV-Leser,
+  Software-Mischer (22 050 Hz/16 Bit/Stereo), `engine/audio`, SDL3-Ausgabe; Sprache mit
+  echten Puffern; Loc40 mit Musik, Effekten und allen 101 Cues (per
+  `re/scripts/CallArgsResolved.java` aus dem Binary). `--audio-dump` zur Prüfung. 79 Tests.
+  Offen: 3D-Nachbildung (Frage an den Nutzer), Lippensync, `GetPos`-Formel.
+- Nächste Schritte: Figuren (`CActor`), Wartestellen, dann Loc35/Loc37/Loc1 für den Anschluss
+  nach dem Intro.

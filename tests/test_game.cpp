@@ -2,6 +2,7 @@
 #include <map>
 
 #include "core/strings.hpp"
+#include "audio/mixer.hpp"
 #include "game/loc40.hpp"
 #include "test.hpp"
 
@@ -57,7 +58,7 @@ struct Rig {
         g.screen = &screen;
         g.drawStatusText = [this](const Rect&, const std::string& t) { status.push_back(t); };
         scene = std::make_unique<Scene>(paths, g, surf);
-        ctx = std::make_unique<GameContext>(GameContext{g, paths, *scene, nullptr, {}, nullptr});
+        ctx = std::make_unique<GameContext>(g, paths, *scene);
     }
     // ein Game_Idle: Timer, Update, Compose, Ereignisse, Schauplatzwechsel
     void frame(std::uint32_t ms = 100) {
@@ -116,4 +117,27 @@ TEST(loc40_intro_s116_prev_scene_quirk) {
     CHECK(r.ctx->request.pending && r.ctx->request.nextLocation == 1);
     CHECK(r.ctx->request.nextScene == 7 && r.ctx->request.prevScene == 5);
     CHECK(r.ctx->request.prevLocation == 40);
+}
+
+TEST(loc40_intro_cues_and_music) {
+    for (const auto& [scene, n] : {std::pair{114, 45}, std::pair{115, 52}, std::pair{116, 4}}) {
+        Rig r(10);
+        Mixer mixer;
+        AudioManager mgr(r.g, &mixer);
+        r.g.audio = &mgr;
+        r.fs.put("GAME/LOC40/S114_IntroPart1.avi", "x");
+        r.fs.put("GAME/LOC40/S115_IntroPart2.avi", "x");
+        r.fs.put("GAME/LOC40/S116_IntroPart3.avi", "x");
+        requestLocation(r.ctx->request, 40, scene, 0, false);
+        processLocationChange(*r.ctx);
+        auto* loc = dynamic_cast<Loc40*>(r.ctx->current.get());
+        REQUIRE(loc && loc->anim());
+        int cues = 0;
+        for (const auto& c : loc->anim()->cues) cues += c.type != 0;
+        CHECK(cues == n);
+        CHECK(r.ctx->music != nullptr);  // Musikobjekt auch ohne WAV-Datei (Open scheitert still)
+        r.ctx->current.reset();
+        r.ctx->music.reset();
+        r.g.audio = nullptr;
+    }
 }

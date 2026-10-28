@@ -45,5 +45,5 @@ Ton: S114 lädt 21 Effekte und setzt 78 Animations-Cues (AUDIO.md), S115/S116 we
 Werte stehen im Port-Code, nicht hier.
 
 ## Port
-`src/game/loc40.*` (GAME.md). Abweichungen bis zum Audio-Port: keine Musik/Effekte/Sprache
-hörbar; Sprachdauer nach Textlänge (SPEECH.md „Port“).
+`src/game/loc40.*` (GAME.md) mit Musik, allen Effekten und Ton-Cues (AUDIO.md). Die
+Eigenschafts-Aufrufe an der Musik (`0x00437560`/`0x004375B0`) bleiben ohne Hardware-3D wirkungslos.

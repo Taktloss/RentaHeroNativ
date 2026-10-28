@@ -18,7 +18,7 @@ namespace rah {
 struct AnimCue {
     int type = 0;   // +0x00: 0 frei, 1 einfach, 2 erweitert
     int frame = 0;  // +0x04
-    int buffer = 0; // +0x08: Puffer (bis zum Audio-Port als Kennung)
+    AudioBuffer* buffer = nullptr;  // +0x08
     int action = 0; // +0x0C
     int vol = 0, volMs = 0, freq = 0, freqMs = 0;  // +0x10…+0x1C
     float x = 0, y = 0, z = 0;                     // +0x20…+0x28

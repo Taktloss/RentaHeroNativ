@@ -4,6 +4,7 @@
 
 #include "core/strings.hpp"
 #include "engine/animlayer.hpp"
+#include "engine/audio.hpp"
 #include "test.hpp"
 
 using namespace rah;
@@ -40,6 +41,13 @@ Bytes a16(int n) {
     return f;
 }
 
+// Puffer-Attrappe: zählt Play-Aufrufe (Cue-Aktion 1) mit der aktuellen Bildnummer
+struct CueProbe final : AudioBuffer {
+    std::vector<int>* frames = nullptr;
+    AnimLayer** layer = nullptr;
+    void play() override { frames->push_back((*layer)->frame); }
+};
+
 struct Rig {
     OneFs fs;
     EngineGlobals g;
@@ -52,7 +60,6 @@ struct Rig {
         fs.data = a16(frames);
         g.now = [this] { return clock; };
         g.eventProc = [this](Event& e, int t) { fired.emplace_back(e.param, t); };
-        g.runCue = [this](AnimLayer& a, const AnimCue&) { cueFrames.push_back(a.frame); };
         L = std::make_unique<AnimLayer>(g);
         std::string err;
         REQUIRE(L->load(FoundFile{&fs, "T.A16"}, 0, &err));
@@ -126,9 +133,15 @@ TEST(anim_range_and_frame_event) {
 
 TEST(anim_catch_up_reruns_cues_without_advancing) {
     Rig r(5);
+    CueProbe probe;
+    AnimLayer* layer = r.L.get();
+    probe.frames = &r.cueFrames;
+    probe.layer = &layer;
     AnimCue c;
     c.type = 1;
     c.frame = 1;
+    c.buffer = &probe;
+    c.action = 1;
     r.L->addCue(c);
     r.L->start(1);
     r.L->nextTime = 1000;

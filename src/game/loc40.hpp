@@ -24,7 +24,15 @@ private:
     // orig: Rent-A-Hero.exe 0x00433100 Loc40_OnEvent116
     void onEvent116(Event& e, int type);
 
+    AudioBuffer* obj(int off);
+    void load(int off, std::string_view name);
+    void loadVol(int off, std::string_view name, int vol);
+    void cue(int frame, int off);
+    void cueAction(int frame, int off, int action);
+    void cueEx(int frame, int off, int action, int vol, int volMs, int freq, int freqMs, float x, float y, float z);
+
     std::unique_ptr<AnimLayer> anim_;  // +0x7C
+    std::array<std::unique_ptr<AudioBuffer>, 32> sfx_{};  // +0x80 … +0xFC
 };
 
 }  // namespace rah

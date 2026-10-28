@@ -51,6 +51,6 @@ Ergänzt formats/ger.md (Dateien) und AUDIO.md.
   deaktivieren, Puffer löschen, Lippensync freigeben.
 
 ## Port
-Bis zum Audio-Port gibt es keinen Audiopuffer: jede Sprache nimmt den Timer-Weg (3) des
-Originals – Dauer nach Textlänge statt WAV-Länge. Das ist das Verhalten des Originals bei
-fehlender WAV-Datei, aber für vorhandene Dateien eine **vorläufige Abweichung**.
+`engine/speech` mit echten Puffern (AUDIO.md): `CGame_Say` → Stream, `CGame_Speak` → Puffer;
+Ende über `g_ClickEvent`. Ohne Tonausgabegerät legt der Port keinen Audio-Manager an; dann
+nimmt jede Sprache den Timer-Weg (3) (Dauer nach Textlänge). Offen: Figur und Lippensync.

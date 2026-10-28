@@ -15,7 +15,9 @@
 #include <string>
 #include <vector>
 
+#include "audio/mixer.hpp"
 #include "engine/animlayer.hpp"
+#include "engine/audio.hpp"
 #include "engine/help.hpp"
 #include "engine/scene.hpp"
 #include "game/game.hpp"
@@ -49,6 +51,9 @@ struct Options {
     std::string hint;              // Hilfe-Symbol zeigen; Klick darauf öffnet diese HLP-Datei
     int gameLoc = -1, gameScene = 0;  // Spielmodus: Schauplatz/Szene starten (Intro: 40 114)
     bool subtitles = false;           // rah.ini [MODES] SubTitles
+    bool mute = false;                // ohne Tonausgabe
+    int musicVol = 100, sfxVol = 100, speechVol = 100;  // rah.ini [SOUNDS]
+    std::string audioDump;            // Mischer-Ausgabe als WAV mitschneiden (Prüfung)
 };
 
 void usage() {
@@ -58,7 +63,9 @@ void usage() {
                  "          [--frames <n>] [--frame-ms <n>] [--dump <datei.ppm>] [--hidden]\n"
                  "          [--exe <Rent-A-Hero.exe>] [--font <datei.ttf>] [--mouse <x> <y>] [--click <x> <y>]\n"
                  "          [--items <id,id,…>] [--hint <HLP-Name, z. B. 04_006_A>]\n"
-                 "          [--game <Schauplatz> <Szene> (Intro: --game 40 114)] [--subtitles]\n");
+                 "          [--game <Schauplatz> <Szene> (Intro: --game 40 114)] [--subtitles]\n"
+                 "          [--mute] [--music-vol <0-100>] [--sfx-vol <0-100>] [--speech-vol <0-100>]\n"
+                 "          [--audio-dump <datei.wav>]\n");
 }
 
 bool parse(int argc, char** argv, Options& o) {
@@ -68,6 +75,10 @@ bool parse(int argc, char** argv, Options& o) {
         const char* v = nullptr;
         if (a == "--hidden") {
             o.hidden = true;
+            continue;
+        }
+        if (a == "--mute") {
+            o.mute = true;
             continue;
         }
         if (a == "--subtitles") {
@@ -86,6 +97,10 @@ bool parse(int argc, char** argv, Options& o) {
         else if (a == "--font") o.font = v;
         else if (a == "--exe") o.exe = v;
         else if (a == "--hint") o.hint = v;
+        else if (a == "--audio-dump") o.audioDump = v;
+        else if (a == "--music-vol") o.musicVol = std::atoi(v);
+        else if (a == "--sfx-vol") o.sfxVol = std::atoi(v);
+        else if (a == "--speech-vol") o.speechVol = std::atoi(v);
         else if (a == "--items") {
             for (const char* p = v; *p;) {
                 char* end = nullptr;
@@ -256,11 +271,45 @@ int main(int argc, char** argv) {
     g.drawStatusText = [&](const Rect& r, const std::string& t) {
         if (statusFont.isOpen()) drawTextWordBreak(statusFont, screen, r, t, 0xFFFF);
     };
+    // Ton: DirectSound (Primärpuffer 22 050 Hz, 16 Bit, Stereo) → Mischer → SDL-Audiostrom
+    struct AudioSink {
+        Mixer mixer;
+        bool record = false;
+        std::vector<std::int16_t> recorded;  // nur im Audio-Thread beschrieben
+    } sink;
+    Mixer& mixer = sink.mixer;
+    sink.record = !opt.audioDump.empty();
+    SDL_AudioStream* audioOut = nullptr;
+    if (!opt.mute && SDL_InitSubSystem(SDL_INIT_AUDIO)) {
+        const SDL_AudioSpec spec{SDL_AUDIO_S16, 2, Mixer::kRate};
+        audioOut = SDL_OpenAudioDeviceStream(
+            SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &spec,
+            [](void* user, SDL_AudioStream* st, int additional, int) {
+                if (additional <= 0) return;
+                std::vector<std::int16_t> buf(static_cast<std::size_t>(additional / 2 + 2));
+                const int pairs = additional / 4;
+                auto* k = static_cast<AudioSink*>(user);
+                k->mixer.mix(buf.data(), pairs);
+                if (k->record) k->recorded.insert(k->recorded.end(), buf.begin(), buf.begin() + pairs * 2);
+                SDL_PutAudioStreamData(st, buf.data(), pairs * 4);
+            },
+            &sink);
+        if (audioOut) SDL_ResumeAudioStreamDevice(audioOut);
+        else std::fprintf(stderr, "Ton: %s – stumm\n", SDL_GetError());
+    }
+    // CSzene+0x5C4 = g_Audio; ohne Ausgabegerät kein Manager (Sprache dann über den Timer-Weg)
+    std::unique_ptr<AudioManager> audio;
+    if (audioOut) {
+        audio = std::make_unique<AudioManager>(g, &mixer);
+        audio->setMusicVolume(opt.musicVol);
+        audio->setSfxVolume(opt.sfxVol);
+        audio->setSpeechVolume(opt.speechVol);
+        g.audio = audio.get();
+    }
     Scene scene(paths, g, surf);
     const bool game = opt.gameLoc >= 0;
     g.subtitles = opt.subtitles;
-    g.audioTrace = [](const std::string& t) { std::fprintf(stderr, "Ton: %s\n", t.c_str()); };
-    GameContext ctx{g, paths, scene, nullptr, {}, nullptr};
+    GameContext ctx(g, paths, scene);
     scene.setLocationNumber(opt.location);
     if (!game && (!scene.load(opt.scene, opt.loadMask) || !scene.background())) {
         std::fprintf(stderr, "Szene %s nicht geladen\n", opt.scene.c_str());
@@ -395,6 +444,20 @@ int main(int argc, char** argv) {
     }
     if (!opt.dump.empty()) writePpm(screen, opt.dump);
     ctx.current.reset();  // vor Hilfe und Szene abbauen (CGame_dtor greift auf beide zu)
+    ctx.music.reset();
+    if (audioOut) SDL_DestroyAudioStream(audioOut);  // vor dem Mischer
+    audioOut = nullptr;
+    if (sink.record) {
+        std::ofstream o(opt.audioDump, std::ios::binary);
+        auto u32 = [&](std::uint32_t v) { o.write(reinterpret_cast<const char*>(&v), 4); };
+        auto u16 = [&](std::uint16_t v) { o.write(reinterpret_cast<const char*>(&v), 2); };
+        const auto bytes = static_cast<std::uint32_t>(sink.recorded.size() * 2);
+        o.write("RIFF", 4), u32(36 + bytes), o.write("WAVEfmt ", 8), u32(16), u16(1), u16(2);
+        u32(Mixer::kRate), u32(Mixer::kRate * 4), u16(4), u16(16), o.write("data", 4), u32(bytes);
+        o.write(reinterpret_cast<const char*>(sink.recorded.data()), bytes);
+    }
+    g.audio = nullptr;
+    audio.reset();
 
     SDL_DestroyTexture(tex);
     SDL_DestroyRenderer(ren);

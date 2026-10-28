@@ -8,6 +8,7 @@
 #include <string_view>
 
 #include "engine/animlayer.hpp"
+#include "engine/audio.hpp"
 #include "engine/scene.hpp"
 #include "engine/speech.hpp"
 
@@ -27,12 +28,16 @@ class Game;
 
 // Was im Original globale Objekte sind (g_CurScene, g_CurGame, CHelp, Wechsel-Globals)
 struct GameContext {
+    GameContext(EngineGlobals& g_, DataPaths& paths_, Scene& scene_) : g(g_), paths(paths_), scene(scene_) {}
     EngineGlobals& g;
     DataPaths& paths;
     Scene& scene;
     HelpOverlay* help = nullptr;
     LocationRequest request;
     std::unique_ptr<Game> current;  // g_CurGame
+    // Musik CSzene+0x1A8 und ihr Name +0x1AC: bleibt über Schauplatzwechsel bestehen
+    std::unique_ptr<AudioStream> music;
+    std::string musicName;
 };
 
 class Game {
@@ -66,10 +71,12 @@ protected:
     bool say(std::string_view ger, std::string_view name);
     // orig: Rent-A-Hero.exe 0x004403E0 → CGame_Speak(ger, name, 0, 0, -1, -1, ereignis) 0x00440430
     bool speak(std::string_view ger, std::string_view name, int doneEvent);
-    // orig: Rent-A-Hero.exe 0x004400C0 CGame_PlayMusic – Ton folgt (nur Protokoll)
-    void playMusic(std::string_view name);
-    // Ton-Aufrufe ohne Audio-Port (Puffer-Eigenschaften, Blenden): nur Protokoll
-    void audio(std::string_view what);
+    // orig: Rent-A-Hero.exe 0x004400C0 CGame_PlayMusic – gleiche Musik läuft weiter, sonst die
+    // alte ausblenden (2 s, dann löschen) und die neue laden (nicht abspielen)
+    AudioStream* playMusic(std::string_view name);
+    // orig: Rent-A-Hero.exe 0x004402F0 CGame_LoadSfx / 0x004403A0 CGame_LoadSfxVol
+    std::unique_ptr<AudioBuffer> loadSfx(std::string_view name);
+    std::unique_ptr<AudioBuffer> loadSfxVol(std::string_view name, int vol);
 
     GameContext& ctx_;
     EngineGlobals& g_;
@@ -77,6 +84,7 @@ protected:
     int location_;            // +0x28
     int sceneNr_;             // +0x2C
     int prevScene_;           // +0x30
+    AudioStream* music_ = nullptr;  // +0x08 (gehört GameContext::music)
     std::array<int, 5> waits_{};  // +0x34 Warteplätze (SCRIPTING.md)
     std::uint32_t seed_;      // +0x20 timeGetTime()
     std::unique_ptr<Speech> speech_;  // +0x70

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "game/game.hpp"
 
+#include "core/strings.hpp"
 #include "engine/help.hpp"
 #include "engine/inventory.hpp"
 
@@ -32,6 +33,7 @@ void Game::setEventProc(Handler h) {
 
 void Game::getViewObjects() {
     // Figuren +0x5E0/+0x5E4, Hilfe, Tiefen-/Wegekarte, Bild-Hinweistabelle folgen
+    music_ = ctx_.music.get();  // +0x08 = CSzene+0x1A8
     scene_.setSceneNumber(sceneNr_);  // CSzene+0x5D4 = +0x2C
 }
 
@@ -71,12 +73,39 @@ bool Game::speak(std::string_view ger, std::string_view name, int doneEvent) {
     return true;
 }
 
-void Game::playMusic(std::string_view name) {
-    if (g_.audioTrace) g_.audioTrace("Musik " + std::string(name));
+AudioStream* Game::playMusic(std::string_view name) {
+    if (music_) {
+        if (equalsNoCase(name, ctx_.musicName)) return music_;
+        // 0x00438000: +0x12C = 1, FadeVolume(0, 2000) – FadeTick löscht sie bei Lautstärke 0
+        music_->deleteWhenSilent = true;
+        music_->fadeVolume(0, 2000);
+        if (ctx_.music.get() == music_ && g_.audio) g_.audio->adopt(std::move(ctx_.music));
+        music_ = nullptr;
+    }
+    const auto file = scene_.paths().findFile(name, "WAV");
+    if (!g_.audio) return nullptr;  // CSzene+0x5C4 == 0
+    auto m = std::make_unique<AudioStream>();
+    m->open(file ? &*file : nullptr, g_.audio, kAudioMusic);
+    m->setPos3D(0.0f, 0.0f, -0.1f);
+    music_ = m.get();
+    ctx_.music = std::move(m);  // CSzene+0x1A8
+    ctx_.musicName = std::string(name);  // CSzene+0x1AC
+    return music_;
 }
 
-void Game::audio(std::string_view what) {
-    if (g_.audioTrace) g_.audioTrace(std::string(what));
+std::unique_ptr<AudioBuffer> Game::loadSfx(std::string_view name) {
+    const auto file = scene_.paths().findFile(name, "WAV");
+    if (!g_.audio) return nullptr;
+    auto b = std::make_unique<AudioBuffer>();
+    // UNVERIFIED: ohne Treffer öffnet das Original den zuletzt probierten Pfad – scheitert ebenso
+    b->open(file ? &*file : nullptr, g_.audio, kAudioSfx);
+    return b;
+}
+
+std::unique_ptr<AudioBuffer> Game::loadSfxVol(std::string_view name, int vol) {
+    auto b = loadSfx(name);
+    if (b) b->setVolume(vol);
+    return b;
 }
 
 void requestLocation(LocationRequest& r, int location, int scene, int prevScene, bool abort) {

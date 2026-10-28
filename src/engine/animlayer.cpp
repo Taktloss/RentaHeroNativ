@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "engine/animlayer.hpp"
 
+#include "engine/audio.hpp"
+
 namespace rah {
 
 namespace {
@@ -317,7 +319,24 @@ void AnimLayer::addCue(const AnimCue& c) {
 
 void AnimLayer::runCues(int atFrame) {
     for (const auto& c : cues) {
-        if (c.type != 0 && c.frame == atFrame && g_.runCue) g_.runCue(*this, c);
+        if (c.type == 0 || c.frame != atFrame) continue;
+        if (!c.buffer) continue;  // Port: Original ruft über den Nullzeiger (Absturz)
+        if (c.type != 1) {
+            if (c.type != 2) continue;
+            // Wert 0 = nicht ändern; Blendzeit 0 = sofort
+            if (c.vol != 0) {
+                if (c.volMs == 0) c.buffer->setVolume(c.vol);
+                else c.buffer->fadeVolume(c.vol, c.volMs);
+            }
+            if (c.freq != 0) {
+                if (c.freqMs == 0) c.buffer->setFreq(c.freq);
+                else c.buffer->fadeFreq(c.freq, c.freqMs);
+            }
+            if (c.x != 0.0f || c.y != 0.0f || c.z != 0.0f) c.buffer->setPos3D(c.x, c.y, c.z);
+        }
+        if (c.action == 1) c.buffer->play();
+        else if (c.action == 2) c.buffer->playLoop();
+        else if (c.action == 3) c.buffer->stop();
     }
 }
 

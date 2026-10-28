@@ -15,8 +15,8 @@ class Speech {
 public:
     // orig: Rent-A-Hero.exe 0x00445FB0 CSpeech_ctor – setzt die globalen Ereignisse zurück
     explicit Speech(EngineGlobals& g);
-    // orig: Rent-A-Hero.exe 0x004460F0 CSpeech_Load(ger, name, stream). Ohne Audio-Port wird
-    // kein Audiopuffer angelegt (SPEECH.md „Port“). Liefert wie das Original immer true.
+    // orig: Rent-A-Hero.exe 0x004460F0 CSpeech_Load(ger, name, stream). Liefert wie das Original
+    // immer true.
     bool load(const DataPaths& paths, const std::optional<FoundFile>& ger, std::string_view name, bool stream);
     // orig: Rent-A-Hero.exe 0x004463B0 CSpeech_Play(ereignis)
     void play(int doneHandler);

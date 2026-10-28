@@ -16,6 +16,8 @@
 namespace rah {
 
 struct AnimCue;
+class AudioManager;
+class AudioBuffer;
 class AnimLayer;
 class Scene;
 class Surface565;
@@ -59,10 +61,12 @@ struct EngineGlobals {
     bool speechRunning = false;
     bool subtitles = false;
     Rect subtitleRect{40, 424, 600, 475};
-    // Ton (Musik, Effekte, Sprache, Cues) folgt mit dem Audio-Port; bis dahin nur Protokoll
+    // Audio-Manager g_Audio 0x0047BF10 (CSzene+0x5C4); nullptr = kein Ton
+    AudioManager* audio = nullptr;
+    // Sprach-Puffer 0x00481EB0 (gehört der Sprachausgabe, engine/speech)
+    AudioBuffer* speechBuffer = nullptr;
+    // Protokoll von Ton-Aufrufen ohne Wirkung im Port (Eigenschaften ohne 3D-Hardware …)
     std::function<void(const std::string&)> audioTrace;
-    // Ton-Cues einer Animation (AUDIO.md); bis zum Audio-Port nur ein Haken
-    std::function<void(AnimLayer&, const AnimCue&)> runCue;
 };
 
 }  // namespace rah

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "engine/event.hpp"
 
+#include "engine/audio.hpp"
 #include "engine/globals.hpp"
 
 #include <algorithm>
@@ -65,6 +66,7 @@ void setEventTimer(EngineGlobals& g, Event& e, std::uint32_t ms, unsigned flags)
 }
 
 void pollTimers(EngineGlobals& g) {
+    if (g.audio) g.audio->poll();  // Blend-Takt und Puffer-Timer (AUDIO.md)
     const std::vector<Event*> snapshot = g.runningTimers;  // Handler dürfen Timer ändern
     for (Event* e : snapshot) {
         if (std::find(g.runningTimers.begin(), g.runningTimers.end(), e) == g.runningTimers.end()) continue;
