@@ -254,3 +254,27 @@ TEST(tween_color_redecodes_and_zeroes_other_channels_at_end) {
     CHECK(r.L->colorR == 20 && r.L->colorG == 0);  // Eigenheit: Grün am Ende 0
     CHECK(r.L->planes().rgb[0][0] == 30 && r.L->planes().rgb[1][0] == 0);
 }
+
+TEST(anim_lipsync_follows_audio_position_and_ends) {
+    Rig r(6);
+    struct PosProbe final : AudioBuffer {
+        int ms = 0;
+        int getPos() override { return ms; }
+    } audio;
+    const std::vector<std::uint16_t> lip{2, 4, 1, 0xFFFF};  // Rate 10: 100 ms je Eintrag
+    r.L->playEndEvent(1, 7);
+    r.L->setLipSync(&lip, 10, &audio, 0);
+    CHECK(r.L->running && r.L->endEvent && !r.L->endEvent->enabled);  // Ende-Ereignis abgehängt
+    r.tick();  // erstes Next nach dem Laden
+    audio.ms = 150;  // Index 1 → Bild 4
+    r.tick();
+    CHECK(r.L->frame == 4 && r.shown() == 4);
+    audio.ms = 299;  // Index 2 → Bild 1 (Sprünge rückwärts möglich)
+    r.tick();
+    CHECK(r.L->frame == 1 && r.shown() == 1);
+    audio.ms = 300;  // 0xFFFF → Ende
+    r.tick();
+    CHECK(!r.L->running);
+    r.L->stop(0);
+    CHECK(r.L->lipData == nullptr && r.L->lipAudio == nullptr);
+}

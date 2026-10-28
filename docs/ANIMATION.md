@@ -32,7 +32,7 @@ Bildformat und `Next`/`Seek`/`Rewind` des A16-Bilds: `formats/tcc.md`.
 | `+0x2E0` | rückwärts | 0 |
 | `+0x2E4` | Ende ausstehend | 0 |
 | `+0x2E8` | nächster Bildzeitpunkt (timeGetTime) | – |
-| `+0x484` | Lippensync-Modus (`CAnimLayer_SetLipSync`) – noch offen | – |
+| `+0x484`…`+0x494` | Lippensync: Daten, Rate, Index, Bildoffset, Audio (formats/ger.md) | – |
 | `+0x498` | 100 Ton-Cues à 0x2C Bytes (AUDIO.md) | leer |
 
 ## Update (`0x00442AA0`, vtable +0x18)

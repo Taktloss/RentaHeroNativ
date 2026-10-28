@@ -87,8 +87,16 @@ Kategorie an). Ohne DirectSound (`+0x04 = 0`) scheitert jedes `Open` still.
   `CGame_PlayMusic` für die alte Musik. Eigenheit: bei Lautstärke < 20 ist der Schritt 0 –
   die alte Musik blendet nie aus und spielt weiter.
 - `0x004375E0(ev)`: `+0x130 = ev` und Ereignis aktivieren (`ev = 0`: nichts).
-- `0x00437560`/`0x004375B0`: Eigenschaften über `+0x158` (`IKsPropertySet`, nur mit 3D
-  vorhanden; vermutlich EAX-Hall) – ohne Hardware-3D wirkungslos.
+- `0x00437560(umgebung, lautstärke, nachhall, dämpfung)`: **EAX 1.0** über `+0x158`
+  (`IKsPropertySet`, nur bei 3D-Puffern per `QueryInterface` geholt): Eigenschaftssatz
+  `DSPROPSETID_EAX_ReverbProperties` (`4a4e6fc1-c341-11d1-b73a-444553540000`), Eigenschaft 0
+  (`DSPROPERTY_EAX_ALL`), 16 Bytes. Loc40 setzt exakt die EAX-Vorgaben FOREST
+  (15; 0.111, 3.145 s, 0.472) und CITY (16; 0.111, 2.767 s, 0.224).
+- `0x004375B0(anteil)`: `DSPROPSETID_EAXBUFFER_ReverbProperties` (`…6fc0…`), Eigenschaft 1
+  (`REVERBMIX`), float – Loc40 setzt 0.1f an der Musik.
+- Einen `IDirectSound3DListener` holt das Spiel nie: Listener bleibt im Ursprung (Blick +z,
+  oben +y), alle 3D-Puffer mit Standardwerten (Mindestabstand 1, Abfall 1). Positionen
+  `× 7.0`: Musik (0, 0, −0.7), Sprache (−1.4…1.4, 0, 0.7) nach X-Mitte des Sprechers.
 - Dtor `0x00436D00`: `Stop` (markiert das Ende-Ereignis!), Timer weg, Slot austragen.
 
 ## Stream `CAudioStream` (0x1A4 Bytes, vtable `0x0046B750`; Musik, `CGame_Say`)
@@ -120,7 +128,20 @@ Primärpuffer, Sättigung; Mono ohne Panorama auf beide Kanäle; Lautstärke `10
 Frequenz über lineare Interpolation (UNVERIFIED gegenüber der DirectSound-Software-Mischung).
 Streams spielen die Datei am Stück; Ring und Lesestand werden für die Ende-Erkennung
 nachgebildet. Alle Audio-Timer (Blend-Takt, Ende, Nachladen, Wiederholen) prüft
-`pollTimers` im Hauptthread. **3D und Eigenschaften:** Der Port verhält sich wie ein System
-ohne Hardware-3D (heute der Normalfall, auch unter Wine) – Positionen werden nur gespeichert.
-Offene Frage an den Nutzer: optionale 3D-Nachbildung (wie mit 3D-Soundkarte 1999)?
-Programm: `--mute`, `--music-vol/--sfx-vol/--speech-vol`, `--audio-dump <wav>`.
+`pollTimers` im Hauptthread.
+
+**3D (Entscheidung Nutzer 2026-10-28: als Option).** Standard wie ein System ohne Hardware-3D
+(heute der Normalfall, auch unter Wine): Positionen werden nur gespeichert, EAX wirkt nicht.
+`--audio3d` verhält sich wie eine Karte mit freien Hardware-3D-Puffern und EAX 1.0
+(`+0x74 = 1`, `DSBCAPS_CTRL3D`, Eigenschaften verfügbar). Nachbildung (UNVERIFIED – die
+Hardware-Algorithmen von 1999 sind nicht bekannt): Dämpfung `1/Abstand` ab Abstand 1,
+Panorama nach Azimut `p = x / √(x² + z²)` (Gegenkanal `√(1 − |p|)`, vorne/hinten gleich),
+Hall als Schroeder-Netz (4 Kamm-, 2 Allpassfilter je Kanal) mit Nachhall −60 dB nach der
+EAX-Zeit, Dämpfung als Tiefpass im Rückweg, Pegel = EAX-Lautstärke; Hallanteil je Puffer
+fest (`REVERBMIX`) oder bei −1 (EAX-Vorgabe „nach Abstand“) `1 − Dämpfung`. Vorgabe der
+Karte bis zum ersten Setzen: GENERIC (0.5, 1.493 s, 0.5).
+Programm: `--mute`, `--audio3d`, `--music-vol/--sfx-vol/--speech-vol`, `--audio-dump <wav>`.
+
+`GetPos` (vtable `+0x18`): Puffer `_ftol(Abspielzeiger / (nAvgBytesPerSec · 0.001))`
+(`0x0046B748` = 0.001, beide als 64-Bit-Ganzzahl geladen), ohne Puffer `now − +0x15C`;
+Stream (`0x00437710`) **immer** `now − +0x15C`. Port: Abspielzeiger = Mischerposition.

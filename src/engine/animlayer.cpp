@@ -143,8 +143,22 @@ bool AnimLayer::update(EngineGlobals& g) {
 }
 
 bool AnimLayer::nextFrame() {
-    // Lippensync (+0x484) folgt mit der Sprachausgabe
-    if (!reverse) {
+    if (lipData) {
+        // Bild = Tabelle[Audioposition · Rate / 1000]
+        if (lipAudio) lipIndex = lipAudio->getPos() * lipRate / 1000;
+        // Original liest über den Puffer hinaus (Datei + 100 Bytes 0xFF) – Port: dahinter 0xFFFF
+        const std::uint16_t v = lipIndex >= 0 && static_cast<std::size_t>(lipIndex) < lipData->size()
+                                    ? (*lipData)[static_cast<std::size_t>(lipIndex)]
+                                    : std::uint16_t{0xFFFF};
+        if (v == 0xFFFF) {
+            onEnd();
+        } else {
+            const int n = lipOffset + v;
+            imageSeek(n);
+            frame = n;
+            if (!imageNext()) onEnd();
+        }
+    } else if (!reverse) {
         ++frame;
         if (!imageNext()) onEnd();
     } else {
@@ -304,7 +318,28 @@ void AnimLayer::stop(int x) {
     running = false;
     ended = true;
     reverse = false;
+    lipData = nullptr;  // +0x484
+    lipAudio = nullptr; // +0x494
     if (endEvent) endEvent->mark(g_, 1);
+}
+
+void AnimLayer::setLipSync(const std::vector<std::uint16_t>* data, int rate, AudioBuffer* audio, int offset) {
+    lipRate = rate;
+    lipAudio = audio;
+    lipOffset = offset;
+    lipData = data;
+    lipIndex = 0;
+    rangeFrom = (data && !data->empty() ? (*data)[0] : 0xFFFF) + offset;
+    rangeTo = -1;
+    if (rangeFrom == 0) frame = -1;
+    else seekFrame(rangeFrom);
+    reverse = false;
+    if (endEvent) {
+        endEvent->setHandler(0);
+        endEvent->enabled = false;
+        endEvent->pending = false;
+    }
+    start(0x0B);
 }
 
 void AnimLayer::addCue(const AnimCue& c) {

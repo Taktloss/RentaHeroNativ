@@ -219,6 +219,11 @@
   Software-Mischer (22 050 Hz/16 Bit/Stereo), `engine/audio`, SDL3-Ausgabe; Sprache mit
   echten Puffern; Loc40 mit Musik, Effekten und allen 101 Cues (per
   `re/scripts/CallArgsResolved.java` aus dem Binary). `--audio-dump` zur Prüfung. 79 Tests.
-  Offen: 3D-Nachbildung (Frage an den Nutzer), Lippensync, `GetPos`-Formel.
+- 2026-10-28: 3D-Ton als Option `--audio3d` (Entscheidung Nutzer; wie Hardware-3D + EAX 1.0:
+  Position, Dämpfung, Panorama, Hall FOREST/CITY – Algorithmen UNVERIFIED), EAX-Aufrufe in
+  Loc40 korrekt (Hallanteil 0.1f statt 0xCD). Lippensync (`CAnimLayer_SetLipSync`, ACS-Leser,
+  Auswertung in `NextFrame`, Rücksetzen in `Stop(0)`), Sprecher-Parameter `0x00446660` und
+  Sprechende (Modus 10/11/12), `GetPos` (Puffer: Abspielzeiger, Stream: Zeit). 84 Tests.
+  Offen: Figur-Variante der Sprache (CActor).
 - Nächste Schritte: Figuren (`CActor`), Wartestellen, dann Loc35/Loc37/Loc1 für den Anschluss
   nach dem Intro.

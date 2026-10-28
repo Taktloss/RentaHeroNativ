@@ -52,6 +52,7 @@ struct Options {
     int gameLoc = -1, gameScene = 0;  // Spielmodus: Schauplatz/Szene starten (Intro: 40 114)
     bool subtitles = false;           // rah.ini [MODES] SubTitles
     bool mute = false;                // ohne Tonausgabe
+    bool audio3d = false;             // 3D-Ton wie mit Hardware-3D und EAX 1.0 (AUDIO.md „3D“)
     int musicVol = 100, sfxVol = 100, speechVol = 100;  // rah.ini [SOUNDS]
     std::string audioDump;            // Mischer-Ausgabe als WAV mitschneiden (Prüfung)
 };
@@ -65,7 +66,7 @@ void usage() {
                  "          [--items <id,id,…>] [--hint <HLP-Name, z. B. 04_006_A>]\n"
                  "          [--game <Schauplatz> <Szene> (Intro: --game 40 114)] [--subtitles]\n"
                  "          [--mute] [--music-vol <0-100>] [--sfx-vol <0-100>] [--speech-vol <0-100>]\n"
-                 "          [--audio-dump <datei.wav>]\n");
+                 "          [--audio3d] [--audio-dump <datei.wav>]\n");
 }
 
 bool parse(int argc, char** argv, Options& o) {
@@ -75,6 +76,10 @@ bool parse(int argc, char** argv, Options& o) {
         const char* v = nullptr;
         if (a == "--hidden") {
             o.hidden = true;
+            continue;
+        }
+        if (a == "--audio3d") {
+            o.audio3d = true;
             continue;
         }
         if (a == "--mute") {
@@ -300,7 +305,7 @@ int main(int argc, char** argv) {
     // CSzene+0x5C4 = g_Audio; ohne Ausgabegerät kein Manager (Sprache dann über den Timer-Weg)
     std::unique_ptr<AudioManager> audio;
     if (audioOut) {
-        audio = std::make_unique<AudioManager>(g, &mixer);
+        audio = std::make_unique<AudioManager>(g, &mixer, opt.audio3d);
         audio->setMusicVolume(opt.musicVol);
         audio->setSfxVolume(opt.sfxVol);
         audio->setSpeechVolume(opt.speechVol);

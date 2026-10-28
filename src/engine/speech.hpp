@@ -27,6 +27,11 @@ private:
     std::string text_;  // 0x400 Bytes
 };
 
+// orig: Rent-A-Hero.exe 0x00446660 – Sprecher für die nächste Sprache (Modus −1 = Figur)
+void speechSetSpeaker(EngineGlobals& g, AnimLayer* layer, int mode, int from, int to);
+// ACS-Datei (docs/formats/ger.md): Datei + 100 Bytes 0xFF als u16; Kopf 0xFFFF → Offset, Rate
+bool parseLipSync(const Bytes& file, std::vector<std::uint16_t>& out, int& rate);
+
 // orig: Rent-A-Hero.exe 0x00446560 – Ende (Handler von g_ClickEvent): Untertitel weg,
 // Ereignis „Sprache fertig“ mit Typ 0x1F sofort auslösen
 void speechEnd(EngineGlobals& g);

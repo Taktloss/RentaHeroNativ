@@ -65,6 +65,15 @@ struct EngineGlobals {
     AudioManager* audio = nullptr;
     // Sprach-Puffer 0x00481EB0 (gehört der Sprachausgabe, engine/speech)
     AudioBuffer* speechBuffer = nullptr;
+    // Sprecher (0x00446660): Ebene 0x00481EA0, Modus 0x00481EE4, Bereich 0x00481EA4/0x00481EAC,
+    // Figur-Variante 0x00481F0C (Modus −1, CActor – folgt)
+    AnimLayer* speaker = nullptr;
+    int speakerMode = 0, speakerFrom = -1, speakerTo = -1;
+    bool speakerActor = false;
+    // Lippensync g_LipSyncData 0x00481EA8 (Datei + 100 Bytes 0xFF), g_LipSyncRate 0x00481EDC
+    std::vector<std::uint16_t> lipSyncData;
+    bool lipSyncLoaded = false;
+    int lipSyncRate = 20;
     // Protokoll von Ton-Aufrufen ohne Wirkung im Port (Eigenschaften ohne 3D-Hardware …)
     std::function<void(const std::string&)> audioTrace;
 };

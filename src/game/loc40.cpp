@@ -223,8 +223,8 @@ void Loc40::start() {
     if (sceneNr_ == 114) {
         if (music_) {
             music_->play();
-            music_->setProperty(0xF, f32(0x3DE353F8), f32(0x404947AE), f32(0x3EF1A9FC));
-            music_->setProperty2(0xCD);
+            music_->setReverb(0xF, f32(0x3DE353F8), f32(0x404947AE), f32(0x3EF1A9FC));
+            music_->setReverbMix(f32(0x3DCCCCCD));
         }
         setEventProc(&Loc40::onEvent114);
         scene_.setClickEvent(kDoneEvent);
@@ -239,8 +239,8 @@ void Loc40::start() {
     } else if (sceneNr_ == 115) {
         if (music_) {
             music_->play();
-            music_->setProperty(0xF, f32(0x3DE353F8), f32(0x404947AE), f32(0x3EF1A9FC));
-            music_->setProperty2(0xCD);
+            music_->setReverb(0xF, f32(0x3DE353F8), f32(0x404947AE), f32(0x3EF1A9FC));
+            music_->setReverbMix(f32(0x3DCCCCCD));
         }
         setEventProc(&Loc40::onEvent115);
         scene_.setClickEvent(kDoneEvent);
@@ -255,8 +255,8 @@ void Loc40::start() {
     } else if (sceneNr_ == 116) {
         if (music_) {
             music_->fadeIn(80, 2000);  // CMusic_FadeIn 0x00437FC0
-            music_->setProperty(0x10, f32(0x3DE353F8), f32(0x40311687), f32(0x3E656042));
-            music_->setProperty2(0xCD);
+            music_->setReverb(0x10, f32(0x3DE353F8), f32(0x40311687), f32(0x3E656042));
+            music_->setReverbMix(f32(0x3DCCCCCD));
         }
         setEventProc(&Loc40::onEvent116);
         scene_.setClickEvent(kDoneEvent);
@@ -277,8 +277,8 @@ void Loc40::onEvent114(Event& e, int) {
         case 0x96:
             say("Loc40", "016_SPR_02");
             if (music_) {
-                music_->setProperty(0x10, f32(0x3DE353F8), f32(0x40311687), f32(0x3E656042));
-                music_->setProperty2(0xCD);
+                music_->setReverb(0x10, f32(0x3DE353F8), f32(0x40311687), f32(0x3E656042));
+                music_->setReverbMix(f32(0x3DCCCCCD));
             }
             next = 0x212;
             break;
@@ -288,16 +288,16 @@ void Loc40::onEvent114(Event& e, int) {
         case 0x3C0:
             say("Loc40", "023_SPR_01");
             if (music_) {
-                music_->setProperty(0xF, f32(0x3DE353F8), f32(0x404947AE), f32(0x3EF1A9FC));
-                music_->setProperty2(0xCD);
+                music_->setReverb(0xF, f32(0x3DE353F8), f32(0x404947AE), f32(0x3EF1A9FC));
+                music_->setReverbMix(f32(0x3DCCCCCD));
             }
             next = 0x435;
             break;
         case 0x435:
             playMusic("Loc09_SmashvilleAttack");
             if (music_) {
-                music_->setProperty(0x10, f32(0x3DE353F8), f32(0x40311687), f32(0x3E656042));
-                music_->setProperty2(0xCD);
+                music_->setReverb(0x10, f32(0x3DE353F8), f32(0x40311687), f32(0x3E656042));
+                music_->setReverbMix(f32(0x3DCCCCCD));
                 music_->play();
             }
             next = 0x4E0;
@@ -330,7 +330,7 @@ void Loc40::onEvent116(Event& e, int) {
             playMusic("Loc35_RodrigoOnGlider");
             if (music_) {
                 music_->fadeIn(100, 2000);  // 0x00437FD0
-                music_->setProperty2(0xCD);
+                music_->setReverbMix(f32(0x3DCCCCCD));
             }
             if (AudioBuffer* glider = obj(0xD0)) {
                 glider->fadeVolume(1, 5000);

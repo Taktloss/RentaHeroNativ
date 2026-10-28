@@ -63,12 +63,20 @@ bool Game::say(std::string_view ger, std::string_view name) {
     return true;
 }
 
-bool Game::speak(std::string_view ger, std::string_view name, int doneEvent) {
+bool Game::speak(std::string_view ger, std::string_view name, AnimLayer* speaker, int mode, int from, int to,
+                 int doneEvent) {
     stopSpeech();
     const auto file = scene_.paths().findFile(ger, "GER");  // 0x004405D0
     speech_ = std::make_unique<Speech>(g_);
     speech_->load(scene_.paths(), file, name, false);
-    // Figur 0 == Held (+0x1C, ohne Figuren 0) → Bereich −1; 0x00446660 folgt mit CActor
+    // Port: 0x004405D0 liefert nur bei Speichermangel 0 (dann Ereignis-Rückruf (0, 0))
+    if (speaker == hero_) {
+        mode = -1;
+        from = -1;
+        to = -1;
+        speaker = hero_;
+    }
+    speechSetSpeaker(g_, speaker, mode, from, to);  // 0x00446660
     speech_->play(doneEvent);
     return true;
 }

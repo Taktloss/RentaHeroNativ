@@ -183,3 +183,54 @@ TEST(audio_fade_out_quirk_low_volume_never_deleted) {
     m->fadeVolume(0, 2000);  // (0 − 15) / 20 = 0 → keine Blende, bleibt bestehen (Original)
     CHECK(m->volumeStep == 0);
 }
+
+TEST(audio_getpos_from_play_cursor) {
+    Rig r;
+    auto f = r.put("A.WAV", wav8(22050 * 2));
+    AudioBuffer b;
+    REQUIRE(b.open(&f, r.mgr.get(), kAudioSpeech));
+    b.play();
+    std::vector<std::int16_t> out(2 * 11025);
+    r.mixer.mix(out.data(), 11025);  // 0,5 s gespielt
+    CHECK(b.getPos() == 500);        // Bytes / (22050 · 0.001)
+    AudioStream s;
+    REQUIRE(s.open(&f, r.mgr.get(), kAudioSpeech));
+    s.play();
+    r.advance(300);
+    CHECK(s.getPos() == 300);  // Stream: Zeit seit Play
+}
+
+TEST(audio_3d_option_pans_and_attenuates) {
+    for (bool hw : {false, true}) {
+        Rig r;
+        r.mgr = std::make_unique<AudioManager>(r.g, &r.mixer, hw);
+        r.g.audio = r.mgr.get();
+        auto f = r.put("A.WAV", wav8(22050));
+        AudioBuffer b;
+        REQUIRE(b.open(&f, r.mgr.get(), kAudioSfx));
+        b.setPos3D(0.4f, 0.0f, 0.0f);  // × 7 → x = 2.8: rechts, Abstand > 1
+        b.play();
+        std::vector<std::int16_t> out(2 * 64);
+        r.mixer.mix(out.data(), 64);
+        const int l = out[20], rr = out[21];
+        if (!hw) CHECK(l == rr && rr > 15000);       // ohne 3D: mitte, voll
+        else CHECK(l == 0 && rr > 0 && rr < 15000);  // ganz rechts, 1/2.8
+    }
+}
+
+TEST(audio_3d_reverb_tail) {
+    Rig r;
+    r.mgr = std::make_unique<AudioManager>(r.g, &r.mixer, true);
+    r.g.audio = r.mgr.get();
+    auto f = r.put("A.WAV", wav8(2205));  // 0,1 s
+    AudioBuffer b;
+    REQUIRE(b.open(&f, r.mgr.get(), kAudioMusic));
+    b.setReverb(15, 0.111f, 3.145f, 0.472f);  // EAX-Vorgabe FOREST
+    b.setReverbMix(0.1f);
+    b.play();
+    std::vector<std::int16_t> out(2 * 22050);
+    r.mixer.mix(out.data(), 22050);
+    int tail = 0;
+    for (std::size_t i = 2 * 4410; i < out.size(); ++i) tail = std::max(tail, std::abs(int{out[i]}));
+    CHECK(tail > 0);  // Nachhall nach dem Ende der Daten
+}

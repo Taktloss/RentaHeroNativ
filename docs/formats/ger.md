@@ -61,3 +61,9 @@ Bytes / (`nAvgBytesPerSec` · 0.001), per `__ftol` abgeschnitten; ohne Puffer
 `timeGetTime() − Startzeit`. Das Datenende wird durch die `0xFF`-Füllung erkannt;
 liegt `idx` mehr als 50 Einträge hinter dem Ende, liest das Original über den Puffer
 hinaus – Port: außerhalb als `0xFFFF` behandeln.
+
+`CAnimLayer_SetLipSync(daten, rate, audio, offset)` `0x00442EF0`: Felder setzen, Index 0,
+Bereich `+0x2D8 = daten[0] + offset` (0 → Bild −1, sonst `SeekFrame`), `+0x2DC = −1`, vorwärts,
+Ende-Ereignis abhängen (Handler 0, deaktiviert), `Start(0x0B)`. `CAnimLayer_Stop(0)` löscht
+`+0x484` und `+0x494`. Die Bildnummer springt mit der Tabelle (auch rückwärts); das Datenende
+(`0xFFFF`) beendet die Animation (`OnEnd`). Port: `AnimLayer::setLipSync`, `parseLipSync`.

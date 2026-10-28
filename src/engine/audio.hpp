@@ -46,7 +46,8 @@ class AudioManager {
 public:
     static constexpr int kSlots = 100;
     // orig: Rent-A-Hero.exe 0x00436530 CAudio_ctor (Blend-Takt 100 ms) + 0x00436670 (DirectSound)
-    AudioManager(EngineGlobals& g, Mixer* mixer);
+    // hw3d: Port-Option „3D-Ton“ – verhält sich wie freie Hardware-3D-Puffer mit EAX 1.0 (+0x74)
+    AudioManager(EngineGlobals& g, Mixer* mixer, bool hw3d = false);
     ~AudioManager();
     AudioManager(const AudioManager&) = delete;
     AudioManager& operator=(const AudioManager&) = delete;
@@ -59,6 +60,7 @@ public:
     int musicVolume() const { return music_; }
     int speechVolume() const { return speech_; }
     Mixer* mixer() const { return mixer_; }
+    bool hw3d() const { return hw3d_; }
     EngineGlobals& globals() { return g_; }
 
     // orig: Rent-A-Hero.exe 0x00436AC0 CAudio_AddBuffer / 0x00436AF0 CAudio_RemoveBuffer
@@ -75,6 +77,7 @@ private:
     void apply(int kind);
     EngineGlobals& g_;
     Mixer* mixer_;                                // +0x04 IDirectSound (nullptr = keins)
+    bool hw3d_ = false;                           // +0x74
     int sfx_ = 100, music_ = 100, speech_ = 100;  // +0x68, +0x6C, +0x70 (rah.ini, Vorgabe 100)
     std::array<AudioBuffer*, kSlots> slots_{};    // +0x84
     AudioTimer tick_;                             // +0x214
@@ -100,6 +103,9 @@ public:
     virtual void playLoop();
     // vtable +0x14 – orig: Rent-A-Hero.exe 0x00437270 (Ende-Ereignis Typ 0x1F markieren)
     virtual void stop();
+    // vtable +0x18 – orig: Rent-A-Hero.exe 0x00437640 CAudioBuffer_GetPos: Abspielposition in ms
+    // = _ftol(Bytes / (nAvgBytesPerSec · 0.001)); ohne Puffer timeGetTime() − +0x15C
+    virtual int getPos();
     // vtable +0x1C – orig: Rent-A-Hero.exe 0x004370D0 (auf Anfang, einmal je Play)
     virtual void prepare();
 
@@ -113,9 +119,11 @@ public:
     void setEndEvent(Event* e);
     // orig: Rent-A-Hero.exe 0x00437FD0 (nur wenn still: Lautstärke 0, Blende, vtable +0x10)
     void fadeIn(int v, int ms);
-    // orig: Rent-A-Hero.exe 0x00437560 / 0x004375B0: Eigenschaften (+0x158, nur mit 3D-Hardware)
-    void setProperty(int, float, float, float) {}
-    void setProperty2(int) {}
+    // orig: Rent-A-Hero.exe 0x00437560(umgebung, lautstärke, nachhall s, dämpfung): EAX-1.0-Hall
+    // über +0x158 (IKsPropertySet, nur mit 3D)
+    void setReverb(int environment, float volume, float decay, float damping);
+    // orig: Rent-A-Hero.exe 0x004375B0(anteil): EAX-1.0-Hallanteil dieses Puffers
+    void setReverbMix(float mix);
     // orig: Rent-A-Hero.exe 0x00437350 – Lautstärke anwenden (1/100 dB, −3333…0)
     void applyVolume();
 
@@ -137,6 +145,7 @@ public:
     bool playing = false;         // +0x168
     std::uint32_t dataSize = 0;   // +0x16C
     std::uint32_t durationMs = 0; // +0x174
+    std::uint32_t avgBytesPerSec = 0;  // +0x17C
     bool loop = false;            // +0x178
     float pos3D[3]{};             // nur gespeichert: ohne 3D-Hardware kein IDirectSound3DBuffer
 
@@ -146,6 +155,7 @@ protected:
     std::uint32_t now() const;
     AudioManager* mgr_ = nullptr; // +0x134
     int voice_ = 0;               // +0x13C IDirectSoundBuffer
+    bool has3D_ = false;          // +0x140 IDirectSound3DBuffer / +0x158 IKsPropertySet
     std::shared_ptr<const Wave> wave_;
     AudioTimer endTimer_;         // +0x184
 };
@@ -166,6 +176,8 @@ public:
     void playLoop() override { playRepeat(30); }
     // orig: Rent-A-Hero.exe 0x00437F50
     void stop() override;
+    // orig: Rent-A-Hero.exe 0x00437710 – immer timeGetTime() − +0x15C
+    int getPos() override { return static_cast<int>(now() - startTime); }
     // orig: Rent-A-Hero.exe 0x00437DC0 (Ring ab Dateianfang füllen)
     void prepare() override;
     void pollTimers(std::uint32_t t) override;

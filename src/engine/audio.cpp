@@ -23,8 +23,10 @@ std::shared_ptr<const Wave> loadWave(const FoundFile& file) {
 
 // ---- CAudio ---------------------------------------------------------------
 
-AudioManager::AudioManager(EngineGlobals& g, Mixer* mixer) : g_(g), mixer_(mixer) {
+AudioManager::AudioManager(EngineGlobals& g, Mixer* mixer, bool hw3d) : g_(g), mixer_(mixer), hw3d_(hw3d && mixer) {
     tick_.start(g.now(), 100, true);  // FUN_0044D7B0(timer, 100, 100, this, CAudio_FadeTick)
+    // EAX-1.0-Vorgabe der Karte bis zum ersten Setzen: GENERIC (0.5, 1.493 s, 0.5) – UNVERIFIED
+    if (hw3d_) mixer_->setReverb(0, 0.5f, 1.493f, 0.5f);
 }
 
 AudioManager::~AudioManager() {
@@ -137,14 +139,25 @@ bool AudioBuffer::open(const FoundFile* file, AudioManager* mgr, int k) {
     if (!wave_) return false;
     dataSize = static_cast<std::uint32_t>(wave_->data.size());  // +0x16C
     durationMs = wave_->durationMs;                             // +0x174
-    voice_ = mgr->mixer()->create(wave_);
+    // Flags 0xE2, mit +0x74 zusätzlich DSBCAPS_CTRL3D (DirectSound3D verlangt mono)
+    has3D_ = mgr->hw3d() && wave_->channels == 1;
+    voice_ = mgr->mixer()->create(wave_, has3D_);
     prepare();  // vtable +0x1C; danach Daten in den Puffer (0x00436FE0)
     baseFreq = wave_->rate;  // GetFormat: nSamplesPerSec
+    avgBytesPerSec = wave_->avgBytesPerSec;
     freq = 100;
     volume = 100;
     kind = k;
     applyVolume();
     return true;
+}
+
+int AudioBuffer::getPos() {
+    if (voice_ && mgr_ && mgr_->mixer()) {
+        const double bytes = static_cast<double>(mgr_->mixer()->position(voice_));
+        return static_cast<int>(bytes / (static_cast<double>(avgBytesPerSec) * 0.001));
+    }
+    return static_cast<int>(now() - startTime);
 }
 
 void AudioBuffer::prepare() {
@@ -253,6 +266,15 @@ void AudioBuffer::setPos3D(float x, float y, float z) {
     pos3D[0] = x * 7.0f;
     pos3D[1] = y * 7.0f;
     pos3D[2] = z * 7.0f;
+    if (has3D_ && voice_) mgr_->mixer()->setPosition3D(voice_, pos3D[0], pos3D[1], pos3D[2]);  // 0x00437530
+}
+
+void AudioBuffer::setReverb(int environment, float vol, float decay, float damping) {
+    if (has3D_ && voice_) mgr_->mixer()->setReverb(environment, vol, decay, damping);
+}
+
+void AudioBuffer::setReverbMix(float mix) {
+    if (has3D_ && voice_) mgr_->mixer()->setReverbMix(voice_, mix);
 }
 
 void AudioBuffer::setEndEvent(Event* e) {
@@ -288,8 +310,10 @@ bool AudioStream::open(const FoundFile* file, AudioManager* mgr, int k) {
                                        static_cast<std::uint32_t>(wave_->data.size()));
     dataSize = static_cast<std::uint32_t>(wave_->data.size());
     durationMs = wave_->durationMs;
-    voice_ = mgr->mixer()->create(wave_);
+    has3D_ = mgr->hw3d() && wave_->channels == 1;  // Flags 0xE0 bzw. 0xF0
+    voice_ = mgr->mixer()->create(wave_, has3D_);
     baseFreq = wave_->rate;
+    avgBytesPerSec = wave_->avgBytesPerSec;
     freq = 100;
     volume = 100;
     prepare();

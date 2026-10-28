@@ -69,8 +69,14 @@ protected:
     std::unique_ptr<AnimLayer> loadAnim(std::string_view name) { return scene_.loadAnim(name); }
     // orig: Rent-A-Hero.exe 0x004404C0 CGame_Say(ger, name)
     bool say(std::string_view ger, std::string_view name);
-    // orig: Rent-A-Hero.exe 0x004403E0 → CGame_Speak(ger, name, 0, 0, -1, -1, ereignis) 0x00440430
-    bool speak(std::string_view ger, std::string_view name, int doneEvent);
+    // orig: Rent-A-Hero.exe 0x00440430 CGame_Speak(ger, name, sprecher, modus, von, bis, ereignis):
+    // sprecher == Held (+0x1C) → Figur-Variante (Modus −1)
+    bool speak(std::string_view ger, std::string_view name, AnimLayer* speaker, int mode, int from, int to,
+               int doneEvent);
+    // orig: Rent-A-Hero.exe 0x004403E0 → CGame_Speak(ger, name, 0, 0, −1, −1, ereignis)
+    bool speak(std::string_view ger, std::string_view name, int doneEvent) {
+        return speak(ger, name, nullptr, 0, -1, -1, doneEvent);
+    }
     // orig: Rent-A-Hero.exe 0x004400C0 CGame_PlayMusic – gleiche Musik läuft weiter, sonst die
     // alte ausblenden (2 s, dann löschen) und die neue laden (nicht abspielen)
     AudioStream* playMusic(std::string_view name);
@@ -85,6 +91,7 @@ protected:
     int sceneNr_;             // +0x2C
     int prevScene_;           // +0x30
     AudioStream* music_ = nullptr;  // +0x08 (gehört GameContext::music)
+    AnimLayer* hero_ = nullptr;     // +0x1C Held (CSzene+0x5E0; CActor folgt)
     std::array<int, 5> waits_{};  // +0x34 Warteplätze (SCRIPTING.md)
     std::uint32_t seed_;      // +0x20 timeGetTime()
     std::unique_ptr<Speech> speech_;  // +0x70

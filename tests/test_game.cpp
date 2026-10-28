@@ -141,3 +141,15 @@ TEST(loc40_intro_cues_and_music) {
         r.g.audio = nullptr;
     }
 }
+
+TEST(speech_lipsync_frames_follow_audio_position) {
+    // ACS mit Kopf: Offset 6, Rate 10 → Bilder 3, 4, 5, Ende
+    const Bytes acs{0xFF, 0xFF, 6, 0, 10, 0, 3, 0, 4, 0, 5, 0, 0xFF, 0xFF};
+    std::vector<std::uint16_t> data;
+    int rate = 0;
+    REQUIRE(parseLipSync(acs, data, rate));
+    CHECK(rate == 10 && data[0] == 3 && data[2] == 5 && data[3] == 0xFFFF);
+    const Bytes plain{7, 0, 8, 0};
+    REQUIRE(parseLipSync(plain, data, rate));
+    CHECK(rate == 20 && data[0] == 7 && data.size() == 52);
+}

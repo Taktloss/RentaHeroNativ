@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Animierte Ebene (CAnimLayer : CLayer, 0x15C8 Bytes, vtable 0x0046B8E0) mit A16- oder AVI-Bild.
 // Abspielsteuerung, Bildtakt, Bereich, Ereignisse und Ton-Cues (docs/ANIMATION.md).
-// Videoebenen: docs/VIDEO.md. Lippensync (+0x484) folgt gesondert.
+// Videoebenen: docs/VIDEO.md. Lippensync (+0x484): docs/formats/ger.md.
 #pragma once
 
 #include <array>
@@ -41,6 +41,11 @@ public:
     bool endPending = false;   // +0x2E4
     std::uint32_t nextTime = 0;// +0x2E8
     std::array<AnimCue, kMaxCues> cues{};
+    // Lippensync: Daten +0x484 (gehören der Sprachausgabe, g_LipSyncData), Rate +0x488,
+    // Index +0x48C, Bildoffset +0x490, Audio +0x494
+    const std::vector<std::uint16_t>* lipData = nullptr;
+    int lipRate = 0, lipIndex = 0, lipOffset = 0;
+    AudioBuffer* lipAudio = nullptr;
     A16Anim anim;              // Bild +0x0C (CImageA16)
     std::unique_ptr<AviImage> avi;  // Bild +0x0C (CImageAvi), Typ 3
 
@@ -82,6 +87,8 @@ public:
     void clearCues() { cues.fill({}); }
     // orig: Rent-A-Hero.exe 0x00442D30 CAnimLayer_RunCues
     void runCues(int atFrame);
+    // orig: Rent-A-Hero.exe 0x00442EF0 CAnimLayer_SetLipSync(daten, rate, audio, bildoffset)
+    void setLipSync(const std::vector<std::uint16_t>* data, int rate, AudioBuffer* audio, int offset);
 
 private:
     // Bild-vtable: Slot 4 Next, Slot 7 Seek, Slot 6 Rewind (A16 bzw. AVI)
