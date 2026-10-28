@@ -271,5 +271,14 @@
   `--click-at <bild> <x> <y>` (mehrfach; feuert je einmal, auch in verschachteltem Game_Idle).
   Kette Loc01/S7 → Abflug → Kloster → Loc06/S26 geprüft. 107 Tests.
   Korrektur: Die Haustür in Loc01 führt nach Loc04/Szene 6, nicht Loc06.
-- Nächste Schritte: Loc04 (Rodrigos Haus, Szene 6), dann Loc05 (Büro), Loc12, Loc26, Loc31,
-  Loc47 – die übrigen Ziele aus Loc01; Spielstand laden (`CGame+0x04`).
+- 2026-10-28: Engine: Szene trennt Listen und Besitz (Ebenenliste `+0x04`, Figuren `+0x5E0`,
+  Hintergrund `+0x5C0`, Tiefen-/Wegekarte als Zeiger; Besitz bis `reset()`). Neu
+  `setBackground` (0x00449D10), `setDepth` (0x0044A140), `setHero` (0x0044A6E0),
+  `insertLayer`/`removeLayer` (0x0044AA00/0x0044AA70), `Layer::setPosZ` (0x004474C0).
+  Ebenenschleife ruft für `+0x1BC` `CAnimLayer_Update` direkt (0x0044B6A6) – Figur als freie Ebene.
+- 2026-10-28: Loc04 (Rodrigos Büro, Szene 6) portiert: drei Ansichten (Raum, Nahaufnahme,
+  Ramil-Gespräch) mit Tausch von Hintergrund/Tiefenkarte, Hinsetzen/Aufstehen, Ramil-Besuch
+  (Geldsack → Kiste → Gegenstand 7), Ein-/Ausgang mit Held als freier Ebene. Probelauf: erster
+  Besuch (Eintreten, Begrüßung) und Tür → Loc01/S7. 109 Tests.
+- Nächste Schritte: Loc05 (Büro), Loc12, Loc26, Loc31, Loc47 – die übrigen Ziele aus Loc01;
+  Spielstand laden (`CGame+0x04`); Ramil-Pfad (Sprungziel 1004) im Probelauf prüfen.

@@ -5,6 +5,7 @@
 #include "core/strings.hpp"
 #include "audio/mixer.hpp"
 #include "game/loc01.hpp"
+#include "game/loc04.hpp"
 #include "game/loc06.hpp"
 #include "game/loc35.hpp"
 #include "game/loc37.hpp"
@@ -362,4 +363,22 @@ TEST(loc06_visit_counter_and_entry_flags) {
     CHECK(st.at(0x3EE8) == 2 && st.at(0x3E8C) == 1 && st.at(0x3EEC) == 3);
     { Loc06 e(*r.ctx, 26, 1001); }  // 0 → +1
     CHECK(st.at(0x3EE8) == 1);
+}
+
+TEST(loc04_entry_targets_and_visit_counter) {
+    Rig r(10);
+    auto& st = r.ctx->state;
+    {
+        Loc04 a(*r.ctx, 6, 1004);  // Sprungziel: Ramil kommt, dritter Besuch
+        CHECK(a.location() == 4 && a.sceneNumber() == 6);
+        CHECK(st.at(0x3E84) == 1 && st.at(0x3ED4) == 0 && st.at(0x3ED0) == 3);
+        CHECK(r.g.fnHandlers.count(0x0040CF50) == 1 && !a.atDesk() && a.ramTalkStage() == 0);
+    }
+    CHECK(r.g.fnHandlers.count(0x0040CF50) == 0);
+    { Loc04 b(*r.ctx, 6, 1003); }  // Geldsack in der Kiste; 0x3E84 bleibt
+    CHECK(st.at(0x3ED4) == 1 && st.at(0x3E84) == 1 && st.at(0x3ED0) == 2);
+    { Loc04 c(*r.ctx, 6, 1001); }
+    CHECK(st.at(0x3ED4) == 0 && st.at(0x3E84) == 0 && st.at(0x3ED0) == 0);
+    { Loc04 d(*r.ctx, 6, 7); }  // normaler Zugang ändert nichts im Konstruktor
+    CHECK(st.at(0x3ED0) == 0);
 }

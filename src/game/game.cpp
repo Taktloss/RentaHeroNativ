@@ -56,6 +56,7 @@ void Game::getViewObjects() {
     // Hilfe, Tiefen-/Wegekarte, Bild-Hinweistabelle folgen
     music_ = ctx_.music.get();  // +0x08 = CSzene+0x1A8
     hero_ = scene_.actor(0);    // +0x1C = CSzene+0x5E0
+    second_ = scene_.actor(1);  // +0x58 = CSzene+0x5E4
     scene_.setSceneNumber(sceneNr_);  // CSzene+0x5D4 = +0x2C
 }
 

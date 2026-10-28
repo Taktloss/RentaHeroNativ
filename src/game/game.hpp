@@ -149,6 +149,7 @@ protected:
     int prevScene_;           // +0x30
     AudioStream* music_ = nullptr;  // +0x08 (gehört GameContext::music)
     Actor* hero_ = nullptr;         // +0x1C Held (CSzene+0x5E0)
+    Actor* second_ = nullptr;       // +0x58 zweite Figur (CSzene+0x5E4)
     std::array<int, 5> waits_{};  // +0x34 Warteplätze (SCRIPTING.md)
     int lastWait_ = 0;            // +0x4C
     std::uint32_t seed_;      // +0x20 timeGetTime()
