@@ -94,6 +94,15 @@ bool AnimLayer::renderToSurface() {
     return avi->draw(bmp, Rect{0, 0, avi->width(), avi->height()});  // Slot 3 (0x0043CAB0)
 }
 
+bool AnimLayer::drawImageDirect(Surface565&, const Rect& r) {
+    if (!avi || !g_.screen) return false;
+    // Fensterursprung: im Port 0
+    Rect t = r;
+    t.top += 60;
+    t.bottom += 60;
+    return avi->draw(*g_.screen, t);
+}
+
 void AnimLayer::applyImageColor(int r, int g, int b) {
     if (avi) return;  // CImageAvi: Slot 11 = 0x004388A0 (nur speichern)
     anim.setColor({r, g, b});  // CImageA16 erbt Slot 11 von CImageTcc (0x004384D0)

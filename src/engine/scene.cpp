@@ -100,7 +100,19 @@ void Scene::moveZ(unsigned oldZ, unsigned newZ) {
 void Scene::dispatchEvents() {
     fireEvent(g_, sceneEvent_, sceneEvent_.type);
     if (!editor_ && g_.toggleEvent) fireEvent(g_, *g_.toggleEvent, g_.toggleEvent->type);
-    // Vollbildobjekt +0x5DC und Figuren +0x5E0/+0x5E4 folgen mit deren Port.
+    // 2. Vollbildobjekt: Ende-Ereignis (vorher abmelden, wenn beendet und auszublenden),
+    // dann Bild-Ereignis, solange es noch angemeldet ist
+    if (modal_ && modal_->endEvent) {
+        Event& e = *modal_->endEvent;
+        if (modal_->ended && modal_->hideAtEnd) {
+            modal_->stop(0);
+            modal_ = nullptr;
+            invalidateAll();
+        }
+        fireEvent(g_, e, e.type);
+    }
+    if (modal_ && modal_->frameEvent) fireEvent(g_, *modal_->frameEvent, modal_->frameEvent->type);
+    // Figuren +0x5E0/+0x5E4 folgen mit CActor.
     for (auto& slot : layers_) {
         Layer* L = slot.get();
         if (!L) break;
@@ -152,7 +164,16 @@ void Scene::update(bool realtime) {
         }
     }
 
-    // Vollbildobjekt +0x5DC (verdrängt alle übrigen Updates) folgt mit dessen Port.
+    if (modal_) {
+        // Vollbildobjekt verdrängt alle übrigen Updates (auch Figuren und Ebenen); Update liefert
+        // bei CAnimLayer immer 1, das Löschen bei 0 (danach Nullzeiger-Zugriff) tritt nie ein.
+        if (modal_->dirty || tick[static_cast<std::size_t>(stageOf(modal_->fps))]) {
+            modal_->update(g_);
+            if (modal_->dirty) g_.sceneChanged = true;
+        }
+        if (bar_ && (bar_->needsRedraw() || tick[1])) bar_->tick();  // 0x00441CE0
+        return;
+    }
     if (background_ && background_->isAnim) {
         if (background_->dirty || tick[static_cast<std::size_t>(stageOf(background_->fps))]) {
             background_->update(g_);
@@ -306,6 +327,38 @@ Layer* Scene::getObject(std::string_view name) {
     return nullptr;
 }
 
+std::unique_ptr<AnimLayer> Scene::loadAnim(std::string_view name) {
+    const auto file = paths_.findFile(name, "AVI");
+    auto L = std::make_unique<AnimLayer>(g_);
+    L->direct = true;
+    // UNVERIFIED: ohne Treffer lädt das Original den zuletzt probierten Pfad – scheitert ebenso
+    if (!file || !L->load(*file, colorKey_, nullptr)) return nullptr;
+    L->alpha = true;  // +0x198
+    L->setPos(0, yOffset_);
+    L->name = fileStem(L->path);
+    return L;
+}
+
+AnimLayer* Scene::setModal(AnimLayer* obj) {
+    AnimLayer* old = modal_;
+    modal_ = obj;
+    if (!obj) {
+        if (old) old->stop(0);  // UNVERIFIED: Original ruft Slot 9 ohne Nullprüfung
+        invalidateAll();
+    }
+    return old;
+}
+
+void Scene::setClickEvent(int handler) {
+    sceneEvent_.setHandler(handler);
+    if (handler == 0) {
+        sceneEvent_.enabled = false;
+        sceneEvent_.pending = false;
+    } else {
+        sceneEvent_.enabled = true;
+    }
+}
+
 void Scene::invalidateAll() {
     listB_.addAll();
     listA_.addAll();
@@ -315,7 +368,22 @@ void Scene::invalidateAll() {
 bool Scene::compose(bool force) {
     if (!loaded_) return false;
     if (!g_.sceneChanged && !force) return false;
-    // Vollbildobjekt +0x5DC (Schritt 2) und Figuren (Schritte 4, 8, 11) folgen mit ihren Klassen.
+    // 2. Vollbildobjekt +0x5DC: zeichnen (flag 0 → bei AVI mit +0x30 direkt auf den Bildschirm)
+    // oder, wenn beendet und auszublenden und ohne Ende-Ereignis, Stop(0) und abmelden
+    if (modal_) {
+        if (!(modal_->ended && modal_->hideAtEnd)) {
+            if (modal_->dirty && modal_->active) modal_->draw(surface_, 0, nullptr);  // 0x00447150
+        } else if (!modal_->endEvent) {
+            modal_->stop(0);
+            modal_ = nullptr;
+            invalidateAll();
+        }
+    }
+    if (modal_ && modal_->active) {
+        g_.sceneChanged = false;  // Schritt 12: Rückgabe 0
+        return false;
+    }
+    // Figuren (Schritte 4, 8, 11) folgen mit CActor.
     if (!background_) return false;
     // 5. Bereichstext unter der Maus: Rechteck in A und B (Editor-Vollbild +0x5C8 folgt)
     if (textShown()) {
@@ -478,7 +546,7 @@ void Scene::onClick(int x, int y) {
         return;
     }
     if (!clicksEnabled) return;
-    // +0x518 == 0 und Vollbildobjekt +0x5DC aktiv/läuft → Ende: folgt mit dessen Port.
+    if (!clicksDuringFull && modal_ && modal_->active && modal_->running) return;
     if (globalClick && !editor_ && g_.clickEvent.enabled) {
         markEvent(g_, g_.clickEvent, 0x16);
         return;
@@ -510,8 +578,7 @@ int Scene::onMouseMove(int x, int y) {
     clickX_ = x;
     clickY_ = y;
     int cursor = 0;
-    if (help_ && help_->isOpen()) return cursor;
-    // Vollbildobjekt +0x5DC folgt mit dessen Port.
+    if ((help_ && help_->isOpen()) || (modal_ && modal_->active && modal_->running)) return cursor;
     if (y < 60 || y > 479) {
         if (!g_.textVisible) hideToggle();
         return cursor;

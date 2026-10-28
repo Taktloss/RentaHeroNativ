@@ -98,3 +98,30 @@ Gezeichnet mit `flag = 0` → Weg über die Ebenenoberfläche ohne Farbschlüsse
   nicht belegt.
 - UNVERIFIED: `SetState(STOP)`/`RUN` behält die Stream-Position.
 - Direkter Weg (`+0x30`, Primäroberfläche) und 640×180-Zeilenverdopplung: noch nicht portiert.
+
+## Vollbildobjekt `CSzene+0x5DC` (Intro-Videos, `CGame_PlayAnimWait`)
+Belegt an `CSzene_SetModal` `0x0044A330`, `CGame_LoadAnim` `0x0043FFB0`, `0x0044A360`,
+`CSzene_Update` `0x0044B3C5`, `CSzene_Compose` `0x0044B7D0`, `CSzene_DispatchEvents`
+`0x0044C690`, `CSzene_OnClick`, `CSzene_MouseMove`, `CSzene_Reset` `0x00448930`.
+- `CGame_LoadAnim(name)`: `CSzene_FindFile(name, "AVI")`, neue `CAnimLayer` mit `+0x30 = 1`,
+  Laden mit dem Farbschlüssel der Szene, Slot 3, Alpha `+0x198 = 1`, `SetPos(0, +0x2F0)`,
+  Name = Dateiname. Gehört dem Schauplatz (Loc40-Dtor löscht es).
+- `CSzene_SetModal(obj)`: `+0x5DC = obj`; `obj == 0` → altes Objekt Slot 9 (`Stop(0)`) und
+  `CSzene_InvalidateAll`. `0x0044A360(pfad)` legt dagegen selbst eine `CAnimLayer` an und
+  **löscht** das vorherige Objekt (auch eines, das einem Schauplatz gehört).
+- Update: ist `+0x5DC` gesetzt, wird **nur** es aktualisiert (dirty oder Tick seiner Stufe),
+  keine Figuren, kein Hintergrund, keine Ebenen; die Inventarleiste schon. Liefert das Update 0,
+  wird gelöscht und danach `+0x5DC` gelesen (Nullzeiger) – kommt bei `CAnimLayer` nie vor.
+- Compose Schritt 2 (noch vor „kein Hintergrund“): nicht (beendet und ausblenden) → bei dirty
+  und aktiv `Draw(Szenenoberfläche, flag 0)` – AVI mit `+0x30` geht damit direkt auf die
+  Primäroberfläche (Rechteck + (0, 60)). Beendet und ausblenden **ohne** Ende-Ereignis →
+  `Stop(0)`, abmelden, `InvalidateAll`. Ist das Objekt danach aktiv → `g_SceneChanged = 0`,
+  Rückgabe 0 (keine Ausgabeliste).
+- DispatchEvents nach dem Szenen- und Umschalt-Ereignis: hat das Objekt ein Ende-Ereignis,
+  bei „beendet und ausblenden“ erst `Stop(0)`, abmelden, `InvalidateAll`; dann Ende-Ereignis
+  auslösen. Danach Bild-Ereignis `+0x1CC`, falls noch angemeldet.
+- OnClick: `+0x518 == 0` und Objekt aktiv und läuft → Klick verworfen. MouseMove: Objekt
+  aktiv und läuft → nichts (Zeiger 0).
+- `CSzene_Reset` (`0x00448930`, aus `CGame_dtor`) setzt `+0x5DC = 0` ohne zu löschen.
+- Eine fehlende SZN (Loc40 lädt `xxx`) ergibt eine leere, aber geladene Szene (`+0x00 = 1`).
+Port: `Scene::setModal/loadAnim`, `AnimLayer::drawImageDirect` (`g.screen`).

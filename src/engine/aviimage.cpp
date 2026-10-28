@@ -19,13 +19,13 @@ bool AviImage::load(std::unique_ptr<VideoDecoder> dec) {
     return true;
 }
 
-void AviImage::createSample(Image565& target, const Rect& rect) {
-    sampleTarget_ = &target;
+void AviImage::createSample(const Target& target, const Rect& rect) {
+    sampleTarget_ = target;
     sampleRect_ = rect;
     sample_ = true;  // CreateSample + SetState(RUN)
 }
 
-bool AviImage::draw(Image565& target, const Rect& rect) {
+bool AviImage::draw(const Target& target, const Rect& rect) {
     ++counter_;
     if (!loaded_) return false;
     if (!sample_) {
@@ -34,7 +34,7 @@ bool AviImage::draw(Image565& target, const Rect& rect) {
     }
     if (!(rect == sampleRect_)) {
         // SetRect, wenn das Ziel die Oberfläche des Samples ist, sonst neues Sample
-        if (sampleTarget_ == &target) sampleRect_ = rect;
+        if (sampleTarget_.id == target.id) sampleRect_ = rect;
         else createSample(target, rect);
     }
     switch (dec_->next(frame_)) {
@@ -44,7 +44,7 @@ bool AviImage::draw(Image565& target, const Rect& rect) {
     }
     // Sample schreibt das Bild in sein Rechteck der Oberfläche.
     // UNVERIFIED: Rechteck abweichender Größe (DirectDraw würde strecken) – hier abgeschnitten.
-    Image565& t = *sampleTarget_;
+    const Target& t = sampleTarget_;
     const int w = std::min(dec_->width(), sampleRect_.width()), h = std::min(dec_->height(), sampleRect_.height());
     for (int y = 0; y < h; ++y) {
         const int ty = sampleRect_.top + y;
@@ -63,7 +63,7 @@ void AviImage::endSample() {
     if (loaded_ && sample_) {
         // CompletionStatus(COMPSTAT_WAIT), SetState(STOP), Sample freigeben
         sample_ = false;
-        sampleTarget_ = nullptr;
+        sampleTarget_ = {};
     }
     want_ = false;
 }

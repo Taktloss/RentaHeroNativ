@@ -92,6 +92,21 @@ public:
     // Inventarleiste +0x5B4 (nur ohne Editor) und „Leiste aktiv“ +0x5BC (Game_SwitchLocation:
     // = g_CurGame, CGame_dtor: 0)
     InventoryBar* inventory() { return bar_.get(); }
+    // orig: Rent-A-Hero.exe 0x0044A330 CSzene_SetModal – Vollbildobjekt +0x5DC (gehört dem
+    // Aufrufer); nullptr → altes Objekt Slot 9 (CAnimLayer_Stop(0)) und CSzene_InvalidateAll.
+    // Liefert das alte Objekt.
+    AnimLayer* setModal(AnimLayer* obj);
+    AnimLayer* modal() { return modal_; }
+    // orig: Rent-A-Hero.exe 0x0043FFB0 CGame_LoadAnim(name) – nutzt nur Felder der Szene:
+    // "<name>.AVI" suchen, CAnimLayer mit +0x30 = 1 (Direktweg), Alpha, Position (0, +0x2F0)
+    std::unique_ptr<AnimLayer> loadAnim(std::string_view name);
+    // orig: Rent-A-Hero.exe 0x0044C880 CSzene_SetClickEvent – Ereignis +0x2C4 (Typ 0x16)
+    void setClickEvent(int handler);
+    // orig: Rent-A-Hero.exe 0x0044B190 CSzene_ClearFlag510
+    void clearFlag510() { globalClick = false; }
+    // orig: Rent-A-Hero.exe 0x0044B160 / 0x0044B170 CSzene_EnableInput / DisableInput
+    void enableInput() { clicksEnabled = true; }
+    void disableInput() { clicksEnabled = false; }
     // Hilfe-Objekt +0x9F8 (WinMain setzt es nach dem Laden des Symbols)
     void setHelp(HelpOverlay* h) { help_ = h; }
     void setBarShown(bool on) { barShown_ = on; }
@@ -130,6 +145,7 @@ private:
     bool barShown_ = false;                                     // +0x5BC
     std::unique_ptr<InventoryBar> bar_;                         // +0x5B4
     HelpOverlay* help_ = nullptr;                               // +0x9F8
+    AnimLayer* modal_ = nullptr;                                // +0x5DC (Vollbildobjekt)
     Event sceneEvent_;                                          // +0x2C4 (Klick ins Leere, Typ 0x16)
     bool editor_ = false;                                       // +0xAC8
     std::uint32_t windowStart_ = 0;                             // +0x2DC

@@ -8,6 +8,7 @@
 #include <vector>
 
 #include "core/rect.hpp"
+#include "render/surface.hpp"
 #include "formats/bmp.hpp"
 
 namespace rah {
@@ -32,7 +33,13 @@ public:
     bool load(std::unique_ptr<VideoDecoder> dec);
     // orig: Rent-A-Hero.exe 0x0043CB10 CImageAvi_Draw(surface, rect) – Ziel ist ein Bild,
     // das Sample merkt es sich (gleiches Rechteck, anderes Ziel → schreibt weiter ins alte)
-    bool draw(Image565& target, const Rect& rect);
+    bool draw(Image565& target, const Rect& rect) {
+        return draw(Target{&target, target.width, target.height, target.pixels.data()}, rect);
+    }
+    // Primäroberfläche (Direktweg, +0x38C)
+    bool draw(Surface565& target, const Rect& rect) {
+        return draw(Target{&target, target.width, target.height, target.pixels.data()}, rect);
+    }
     // orig: Rent-A-Hero.exe 0x0043CA80 CImageAvi_Next
     bool next();
     // orig: Rent-A-Hero.exe 0x0043C9E0 CImageAvi_Seek
@@ -49,7 +56,14 @@ public:
 private:
     // orig: Rent-A-Hero.exe 0x0043CD60 – Sample abschließen, Stream anhalten
     void endSample();
-    void createSample(Image565& target, const Rect& rect);
+    // DirectDraw-Oberfläche als Ziel eines Samples
+    struct Target {
+        const void* id = nullptr;
+        int width = 0, height = 0;
+        std::uint16_t* pixels = nullptr;
+    };
+    bool draw(const Target& target, const Rect& rect);
+    void createSample(const Target& target, const Rect& rect);
 
     std::unique_ptr<VideoDecoder> dec_;
     int width_ = 0, height_ = 0;
@@ -59,7 +73,7 @@ private:
     bool loaded_ = false;      // +0x3DC
     bool sample_ = false;      // +0x3E0
     bool want_ = false;        // +0x3E4
-    Image565* sampleTarget_ = nullptr;  // Oberfläche des Samples +0x3F4
+    Target sampleTarget_;  // Oberfläche des Samples +0x3F4
     Rect sampleRect_{};        // +0x464
     std::vector<std::uint16_t> frame_;
 };

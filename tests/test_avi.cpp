@@ -151,3 +151,50 @@ TEST(avi_layer_in_scene_loops_all_frames) {
     REQUIRE(seen.size() >= 11);
     for (std::size_t k = 0; k < 11; ++k) CHECK(seen[k] == FakeVideo::value(static_cast<int>(k % 5)));
 }
+
+TEST(avi_modal_direct_to_screen_and_click_skip) {
+    MemFs fs;
+    DataPaths paths{&fs, nullptr};
+    EngineGlobals g;
+    std::uint32_t clock = 1000;
+    g.now = [&] { return clock; };
+    g.openVideo = [](const FoundFile&, std::string*) -> std::unique_ptr<VideoDecoder> {
+        return std::make_unique<FakeVideo>(3);
+    };
+    std::vector<std::pair<int, int>> fired;
+    g.eventProc = [&](Event& e, int t) { fired.emplace_back(e.handlerId, t); };
+    Surface565 surf{640, 420}, screen{640, 480};
+    g.screen = &screen;
+    Scene scene{paths, g, surf};
+    fs.put("GAME/MENU/INTRO.AVI", "x");
+    REQUIRE(scene.load("xxx", 0xFFFF));  // fehlende SZN: leere, geladene Szene
+    auto anim = scene.loadAnim("Intro");
+    REQUIRE(anim && anim->direct && anim->alpha && anim->name == "Intro");
+    scene.setClickEvent(2);
+    scene.clearFlag510();
+    CHECK(scene.setModal(anim.get()) == nullptr);
+    anim->playEndEvent(10, 2);
+    clock += 200;
+    scene.update(true);
+    CHECK(!scene.compose(false));  // Vollbildobjekt aktiv: keine Ausgabeliste
+    CHECK(screen.row(60)[0] == FakeVideo::value(0) && surf.row(0)[0] == 0);  // direkt, y + 60
+    // Klick während das Video läuft: +0x518 = 0 → gesperrt; mit +0x518 = 1 → Szenen-Ereignis 0x16
+    scene.onClick(100, 200);
+    scene.dispatchEvents();
+    CHECK(fired.empty());
+    scene.clicksDuringFull = true;
+    scene.onClick(100, 200);
+    scene.dispatchEvents();
+    REQUIRE(!fired.empty());
+    CHECK(fired.back() == (std::pair<int, int>{2, 0x16}));
+    // bis zum Ende abspielen: Modus 10 blendet aus → abgemeldet, Ende-Ereignis Typ 1
+    fired.clear();
+    for (int i = 0; i < 20 && scene.modal(); ++i) {
+        clock += 200;
+        scene.update(true);
+        scene.compose(false);
+        scene.dispatchEvents();
+    }
+    CHECK(scene.modal() == nullptr);
+    CHECK(!fired.empty() && fired.back() == (std::pair<int, int>{2, 1}));
+}

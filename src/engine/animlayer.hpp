@@ -52,6 +52,8 @@ public:
     void applyImageColor(int r, int g, int b) override;
     // orig: Rent-A-Hero.exe 0x00446C90 (AVI: Bild-Slot 3 → CImageAvi_Draw in die Ebenenoberfläche)
     bool renderToSurface() override;
+    // Slot 1 → CImageAvi_Draw mit +0x38C: Primäroberfläche (g.screen), Rechteck + (0, 60)
+    bool drawImageDirect(Surface565& s, const Rect& r) override;
 
     // orig: Rent-A-Hero.exe 0x00442730 CAnimLayer_NextFrame
     bool nextFrame();
