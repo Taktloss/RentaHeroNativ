@@ -84,6 +84,8 @@ public:
     // orig: Rent-A-Hero.exe 0x00446C90 – Bild in die Ebenenoberfläche +0x08 zeichnen (bei Bedarf
     // anlegen); BMP: Oberfläche besteht schon
     virtual bool renderToSurface() { return loaded; }
+    // orig: Rent-A-Hero.exe 0x00446DE0(force) – Bild +0x0C freigeben, wenn ohne Alpha oder force
+    void releaseImage(bool force);
     // orig: Rent-A-Hero.exe 0x00446E20(1) – Ebenenoberfläche freigeben
     void releaseSurface() { hasSurface = false; }
     // Videobild in die Szene zeichnen (Alpha-Weg einer AVI-Ebene, Bild-Slot 1)

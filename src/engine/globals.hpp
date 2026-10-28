@@ -49,6 +49,10 @@ struct EngineGlobals {
     std::function<void(const Rect& sceneRect)> outputSceneRect;
     // Plattform: Statustext direkt auf den Bildschirm (DrawTextA, Arial 12, weiß, zentriert)
     std::function<void(const Rect& screenRect, const std::string& cp1252)> drawStatusText;
+    // Ausgabeoberfläche des Renderers (+0x14, 640×480 Bildschirm); Hilfe-Symbol zeichnet direkt hinein
+    Surface565* screen = nullptr;
+    // Plattform: Hilfetext in die Szenenoberfläche (DrawTextA 0x15, Arial 15 normal, weiß; HINTS.md)
+    std::function<void(Surface565&, const Rect&, const std::string& cp1252)> drawHelpText;
     // Ton-Cues einer Animation (AUDIO.md); bis zum Audio-Port nur ein Haken
     std::function<void(AnimLayer&, const AnimCue&)> runCue;
 };

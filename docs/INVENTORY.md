@@ -116,7 +116,8 @@ Schlüssel → `[TEXT%03d]`. Statustext löschen, dann `0x0043E600((40, 424, 600
   Leer → Rechteck `+0x200` um −60 verschoben über Slot 0 aus der Szenenoberfläche neu
   ausgeben. Sonst mit `GetDC` der Ausgabeoberfläche (`+0x14`) direkt auf den Bildschirm:
   Schrift `+0x4C` (Arial 12, RENDERER.md), Hintergrund transparent, Weiß,
-  `DrawTextA(DT_CENTER | DT_VCENTER | DT_SINGLELINE)` im Rechteck. (Vollbildmodus:
+  `DrawTextA(…, 0x15)` = `DT_CENTER | DT_VCENTER | DT_WORDBREAK` im Rechteck – ohne
+  `DT_SINGLELINE` wirkt `DT_VCENTER` nicht: Text oben, je Zeile zentriert, umgebrochen. (Vollbildmodus:
   `ClientToScreen`-Versatz.)
 - `0x0043E7C0`: Text = leer (`0x0047D770`), Rechteck `+0x200` (−60) neu ausgeben.
 - `0x0043E830`: Text nicht leer → `0x0043E600(+0x200, +0x210)`.

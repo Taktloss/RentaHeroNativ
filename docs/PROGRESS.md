@@ -195,4 +195,13 @@
   (`0x0043E600/0x0043E7C0/0x0043E830`) über Plattform-Haken; `Font::ascent`,
   `drawTextCentered`. Szene: HitTest-Streifen, OnClick/MouseMove/Update/DispatchEvents.
   Betrachter: `--items 1,2,3`. 64 Tests grün.
-- Nächste Schritte: Hilfe-Symbol, Figuren, Loc40 (Intro; braucht CGame_LoadAnim/Direktweg).
+- 2026-10-28: Hilfe-Objekt `CHelp` (`docs/HINTS.md`, `engine/help`): Symbol direkt auf den
+  Bildschirm (an/aus/neu), Laden von `HelpIcon.tcc`/`Helpmask(r).tcc`, `CHelp_Show` (HLP
+  entschlüsseln, Maske + Text in die Szenenoberfläche, Ausgabe 640×420), Schließen per Klick.
+  Szene: Klick oben rechts (`x ≥ 581`, auch ohne sichtbares Symbol), MouseMove bei offener
+  Hilfe. Korrektur: `DrawTextA`-Flag 0x15 = `DT_CENTER|DT_VCENTER|DT_WORDBREAK` – VCENTER
+  wirkt ohne SINGLELINE nicht (Statustext und Hilfe oben, umgebrochen): `drawTextWordBreak`.
+  TCC-Ebenen ohne Alpha füllen jetzt ihre Ebenenoberfläche (Bild-Slot 3). Betrachter:
+  `--hint <HLP>`, `--click x y`. 68 Tests grün.
+  Offen: Hinweis-Countdown/`Hints_Select` (gehören zu `CGame`), Tastatur `0x0044CE50`.
+- Nächste Schritte: Figuren, Loc40 (Intro; braucht CGame_LoadAnim/Direktweg).

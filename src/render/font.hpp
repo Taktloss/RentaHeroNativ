@@ -8,6 +8,7 @@
 #include <memory>
 #include <string>
 #include <string_view>
+#include <vector>
 
 #include "core/rect.hpp"
 #include "render/surface.hpp"
@@ -37,7 +38,8 @@ public:
     // Vorschubbreite des Textes (GetTextExtentPoint32A-Breite, ohne Unterschneidung)
     int textWidth(std::string_view cp1252) const;
     // TextOutA mit TA_BASELINE und transparentem Hintergrund; Text in Codepage 1252
-    void textOut(Surface565& s, int x, int y, std::string_view cp1252, TextAlign align, std::uint16_t color) const;
+    void textOut(Surface565& s, int x, int y, std::string_view cp1252, TextAlign align, std::uint16_t color,
+                 const Rect* clip = nullptr) const;
 
     // Schriftdatei suchen: System-Arial (arial*.ttf), sonst Liberation Sans; leer = keine
     static std::string findSystemFont(bool bold, bool italic);
@@ -52,9 +54,13 @@ TextAlign areaTextAlign(std::size_t len, int x);
 // orig: Rent-A-Hero.exe 0x00436230 CArea_DrawText (Schrift: Arial 15, fett, kursiv)
 void drawAreaText(const Font& font, Surface565& s, const Area& a, int x, int y);
 
-// DrawTextA(DT_CENTER | DT_VCENTER | DT_SINGLELINE) ohne DT_NOCLIP, transparenter Hintergrund.
-// UNVERIFIED: Ausschnitt am Rechteck wird nicht nachgebildet (Texte passen in die Daten)
-void drawTextCentered(const Font& font, Surface565& s, const Rect& r, std::string_view cp1252, std::uint16_t color);
+// DrawTextA(…, 0x15 = DT_CENTER | DT_VCENTER | DT_WORDBREAK), transparenter Hintergrund, ohne
+// DT_NOCLIP (am Rechteck abgeschnitten). DT_VCENTER wirkt nur mit DT_SINGLELINE → Text oben.
+// Zeilen an CR/LF/CRLF, Umbruch an Leerzeichen; ein zu langes Wort bleibt ungebrochen.
+// UNVERIFIED: Feinheiten des GDI-Umbruchs (mehrere Leerzeichen, Tabs – in den Daten nicht vorhanden)
+void drawTextWordBreak(const Font& font, Surface565& s, const Rect& r, std::string_view cp1252, std::uint16_t color);
+// Zeilen wie drawTextWordBreak (für Tests)
+std::vector<std::string> wrapText(const Font& font, std::string_view cp1252, int width);
 
 // Codepage 1252 → Unicode (ANSI-Codepage des deutschen Windows)
 char32_t cp1252ToUnicode(unsigned char c);

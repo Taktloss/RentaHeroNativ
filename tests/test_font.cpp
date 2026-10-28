@@ -55,3 +55,17 @@ TEST(font_draw_area_text_outline) {
     drawAreaText(font, e, none, 5, 5);  // Text und Name leer → nichts
     for (auto p : e.pixels) CHECK(p == 0);
 }
+
+TEST(font_wrap_text_lines) {
+    Font f;
+    const std::string file = Font::findSystemFont(false, false);
+    if (file.empty() || !f.open(file, 15)) throw rahtest::Skip{};
+    const int wA = f.textWidth("aaaa");
+    // Breite für genau zwei Wörter
+    const auto lines = wrapText(f, "aaaa aaaa aaaa\r\n\r\nbb", f.textWidth("aaaa aaaa"));
+    REQUIRE(lines.size() == 4);
+    CHECK(lines[0] == "aaaa aaaa" && lines[1] == "aaaa" && lines[2].empty() && lines[3] == "bb");
+    // zu langes Wort bleibt ungebrochen
+    const auto one = wrapText(f, "aaaaaaaa", wA);
+    CHECK(one.size() == 1 && one[0] == "aaaaaaaa");
+}

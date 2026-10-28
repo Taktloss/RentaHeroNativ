@@ -51,6 +51,15 @@ bool Layer::load(const FoundFile& file, std::uint16_t key, std::string* error) {
         height = static_cast<int>(still.height);
         alpha = still.hasAlpha();
         hasImage = true;
+        if (!alpha) {
+            // 0x00446C90: Ebenenoberfläche anlegen und per Bild-Slot 3 (0x0043B8C0 → CImageTcc_Draw
+            // an (0, 0), flag 0) deckend füllen; gezeichnet wird dann wie bei BMP
+            Surface565 tmp(width, height);
+            tcc.draw(tmp, still, Rect{0, 0, width, height}, 0, nullptr, 0, 100);
+            bmp.width = width;
+            bmp.height = height;
+            bmp.pixels = std::move(tmp.pixels);
+        }
         break;
     }
     default:
@@ -157,6 +166,10 @@ void Layer::refreshArea() {
 
 void Layer::deactivateArea() {
     if (area) area->active = false;
+}
+
+void Layer::releaseImage(bool force) {
+    if (hasImage && (!alpha || force)) hasImage = false;
 }
 
 bool Layer::isTransparentAt(int px, int py) const {

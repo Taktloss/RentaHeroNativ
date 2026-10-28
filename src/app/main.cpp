@@ -16,6 +16,7 @@
 #include <vector>
 
 #include "engine/animlayer.hpp"
+#include "engine/help.hpp"
 #include "engine/scene.hpp"
 #include "formats/pe.hpp"
 #include "render/font.hpp"
@@ -42,7 +43,9 @@ struct Options {
     std::string exe;   // installierte Rent-A-Hero.exe (Zeiger); sonst <Common>/../Rent-A-Hero.exe
     std::string font;  // Schriftdatei für die Bereichstexte (sonst Systemsuche)
     int mouseX = -1, mouseY = -1;  // Mausbewegung nach dem ersten Frame (kopflose Prüfung)
+    int clickX = -1, clickY = -1;  // Klick im zweiten Frame (kopflose Prüfung)
     std::vector<int> items;        // Inventarleiste zeigen und diese Gegenstände hinzufügen
+    std::string hint;              // Hilfe-Symbol zeigen; Klick darauf öffnet diese HLP-Datei
 };
 
 void usage() {
@@ -50,8 +53,8 @@ void usage() {
                  "rentahero --cd <Ordner|.iso|.cue> [--cd …] [--common <Ordner>]\n"
                  "          [--loc <n>] [--scene <Name>] [--mask <n>]\n"
                  "          [--frames <n>] [--frame-ms <n>] [--dump <datei.ppm>] [--hidden]\n"
-                 "          [--exe <Rent-A-Hero.exe>] [--font <datei.ttf>] [--mouse <x> <y>]\n"
-                 "          [--items <id,id,…>]\n");
+                 "          [--exe <Rent-A-Hero.exe>] [--font <datei.ttf>] [--mouse <x> <y>] [--click <x> <y>]\n"
+                 "          [--items <id,id,…>] [--hint <HLP-Name, z. B. 04_006_A>]\n");
 }
 
 bool parse(int argc, char** argv, Options& o) {
@@ -74,6 +77,7 @@ bool parse(int argc, char** argv, Options& o) {
         else if (a == "--dump") o.dump = v;
         else if (a == "--font") o.font = v;
         else if (a == "--exe") o.exe = v;
+        else if (a == "--hint") o.hint = v;
         else if (a == "--items") {
             for (const char* p = v; *p;) {
                 char* end = nullptr;
@@ -81,6 +85,10 @@ bool parse(int argc, char** argv, Options& o) {
                 if (end == p) return false;
                 p = *end == ',' ? end + 1 : end;
             }
+        }
+        else if (a == "--click" && i + 1 < argc) {
+            o.clickX = std::atoi(v);
+            o.clickY = std::atoi(argv[++i]);
         }
         else if (a == "--mouse" && i + 1 < argc) {
             o.mouseX = std::atoi(v);
@@ -224,10 +232,17 @@ int main(int argc, char** argv) {
 
     Surface565 surf(640, 420);  // UNVERIFIED: Größe der Szenenoberfläche (COMPOSITOR.md)
     Surface565 screen(kScreenW, kScreenH);
+    g.screen = &screen;
+    // Hilfetext: Arial 15 normal (0x00440F70)
+    Font helpFont;
+    if (const std::string file = Font::findSystemFont(false, false); !file.empty()) helpFont.open(file, 15);
+    g.drawHelpText = [&helpFont](Surface565& s, const Rect& r, const std::string& t) {
+        if (helpFont.isOpen()) drawTextWordBreak(helpFont, s, r, t, 0xFFFF);
+    };
     // Renderer-Slot 0 (Szenenrechteck → Bildschirm) und Statustext (0x0043E600) direkt auf den Bildschirm
     g.outputSceneRect = [&](const Rect& r) { present(surf, r, screen); };
     g.drawStatusText = [&](const Rect& r, const std::string& t) {
-        if (statusFont.isOpen()) drawTextCentered(statusFont, screen, r, t, 0xFFFF);
+        if (statusFont.isOpen()) drawTextWordBreak(statusFont, screen, r, t, 0xFFFF);
     };
     Scene scene(paths, g, surf);
     scene.setLocationNumber(opt.location);
@@ -285,6 +300,18 @@ int main(int argc, char** argv) {
         SDL_CreateTexture(ren, SDL_PIXELFORMAT_RGB565, SDL_TEXTUREACCESS_STREAMING, kScreenW, kScreenH);
     SDL_SetTextureScaleMode(tex, SDL_SCALEMODE_NEAREST);
 
+    // WinMain: 0x004410C0(…), 0x00441110("HelpIcon.tcc"), CSzene+0x9F8 = Hilfe
+    HelpOverlay help(g);
+    help.setup(&scene, [&help, &opt] {
+        // CGame_ShowHint: Hinweis gesetzt und Countdown abgelaufen (Betrachter: --hint)
+        if (!opt.hint.empty()) help.show(opt.hint);
+    }, true);
+    {
+        const std::string icon = "HelpIcon.tcc";
+        help.load(&icon);
+    }
+    scene.setHelp(&help);
+    if (!opt.hint.empty()) help.iconOn();
     if (!opt.items.empty() && scene.inventory()) {
         scene.setBarShown(true);  // Game_SwitchLocation: +0x5BC = g_CurGame
         for (int id : opt.items)
@@ -314,6 +341,7 @@ int main(int argc, char** argv) {
             }
         }
         if (frame == 1 && opt.mouseX >= 0) mouseMove(opt.mouseX, opt.mouseY);
+        if (frame == 2 && opt.clickX >= 0) scene.onClick(opt.clickX, opt.clickY);
         pollTimers(g);  // Port: Timer im Hauptthread je Schleifendurchlauf (TIMING.md)
         scene.update(true);
         // Game_Idle: Compose, Inventarleiste (0x00441C30), Ausgabe, dann Statustext (0x0043E830)

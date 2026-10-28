@@ -24,6 +24,8 @@
 
 namespace rah {
 
+class HelpOverlay;
+
 class Scene {
 public:
     static constexpr int kMaxLayers = 40;
@@ -90,6 +92,8 @@ public:
     // Inventarleiste +0x5B4 (nur ohne Editor) und „Leiste aktiv“ +0x5BC (Game_SwitchLocation:
     // = g_CurGame, CGame_dtor: 0)
     InventoryBar* inventory() { return bar_.get(); }
+    // Hilfe-Objekt +0x9F8 (WinMain setzt es nach dem Laden des Symbols)
+    void setHelp(HelpOverlay* h) { help_ = h; }
     void setBarShown(bool on) { barShown_ = on; }
     const DataPaths& paths() const { return paths_; }
     Surface565& surface() { return surface_; }
@@ -125,6 +129,7 @@ private:
     int location_ = 0;                                          // +0x5D0
     bool barShown_ = false;                                     // +0x5BC
     std::unique_ptr<InventoryBar> bar_;                         // +0x5B4
+    HelpOverlay* help_ = nullptr;                               // +0x9F8
     Event sceneEvent_;                                          // +0x2C4 (Klick ins Leere, Typ 0x16)
     bool editor_ = false;                                       // +0xAC8
     std::uint32_t windowStart_ = 0;                             // +0x2DC

@@ -14,7 +14,7 @@ verschlüsselt und ergeben danach reinen Text. Puffer = Dateigröße + 100 Nullb
 - Figur fehlt oder steht rechts (`CActor+0x15D0 > 319`): Text **links**, Rechteck
   (20, 20)–(300, 340), Bild `+0x0C` an (0, 0).
 - sonst Text **rechts**, Rechteck (340, 20)–(620, 340), Bild `+0x10` an (320, 0).
-- `DrawTextA(…, DT_CENTER | DT_VCENTER | DT_WORDBREAK)` (0x15), weiße Schrift,
+- `DrawTextA(…, DT_CENTER | DT_VCENTER | DT_WORDBREAK)` (0x15; `DT_VCENTER` wirkt ohne `DT_SINGLELINE` nicht), weiße Schrift,
   transparenter Hintergrund, Schrift `+0x100`. Direkt auf die Oberfläche gezeichnet
   (GetDC an Slot `+0x44`), dann Bildschirm aktualisiert.
 - Port: Zeilenumbruch und Schrift müssen GDI-`DrawText` nachbilden (Schrift wird beim

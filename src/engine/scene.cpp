@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "engine/scene.hpp"
 
+#include "engine/help.hpp"
+
 #include <cmath>
 #include <cstdio>
 
@@ -471,15 +473,21 @@ void Scene::onClick(int x, int y) {
     clickX_ = x;
     clickY_ = y;
     // +0x5BC == 0: Figur läuft zum Klick (0x0044CB60) – folgt mit CActor.
-    // Hilfe +0x9F8 (HINTS.md) folgt.
+    if (help_ && help_->isOpen()) {
+        help_->close();
+        return;
+    }
     if (!clicksEnabled) return;
     // +0x518 == 0 und Vollbildobjekt +0x5DC aktiv/läuft → Ende: folgt mit dessen Port.
     if (globalClick && !editor_ && g_.clickEvent.enabled) {
         markEvent(g_, g_.clickEvent, 0x16);
         return;
     }
+    if (y < 60 && help_ && !editor_ && static_cast<unsigned>(x) >= 0x245) {
+        help_->onIconClick();  // 0x004416E0
+        return;
+    }
     if (y < 60 || y >= 480) {
-        // Hinweis-Symbol (x ≥ 581) folgt mit der Hilfe.
         if (!g_.textVisible) hideToggle();
         return;
     }
@@ -502,7 +510,8 @@ int Scene::onMouseMove(int x, int y) {
     clickX_ = x;
     clickY_ = y;
     int cursor = 0;
-    // Hilfe +0x9F8 und Vollbildobjekt +0x5DC folgen mit deren Port.
+    if (help_ && help_->isOpen()) return cursor;
+    // Vollbildobjekt +0x5DC folgt mit dessen Port.
     if (y < 60 || y > 479) {
         if (!g_.textVisible) hideToggle();
         return cursor;

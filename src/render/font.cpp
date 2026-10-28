@@ -78,7 +78,8 @@ int Font::textWidth(std::string_view s) const {
     return w;
 }
 
-void Font::textOut(Surface565& s, int x, int y, std::string_view text, TextAlign align, std::uint16_t color) const {
+void Font::textOut(Surface565& s, int x, int y, std::string_view text, TextAlign align, std::uint16_t color,
+                   const Rect* clip) const {
     if (!isOpen()) return;
     int pen = x;
     // UNVERIFIED: Rundung von TA_CENTER (hier x − Breite/2, abgeschnitten)
@@ -91,11 +92,12 @@ void Font::textOut(Surface565& s, int x, int y, std::string_view text, TextAlign
         const int left = pen + g->bitmap_left, top = y - g->bitmap_top;
         for (unsigned r = 0; r < b.rows; ++r) {
             const int py = top + static_cast<int>(r);
-            if (py < 0 || py >= s.height) continue;
+            if (py < 0 || py >= s.height || (clip && (py < clip->top || py >= clip->bottom))) continue;
             const unsigned char* bits = b.buffer + static_cast<std::ptrdiff_t>(r) * b.pitch;
             for (unsigned col = 0; col < b.width; ++col) {
                 const int px = left + static_cast<int>(col);
-                if (px < 0 || px >= s.width || !(bits[col >> 3] & (0x80 >> (col & 7)))) continue;
+                if (px < 0 || px >= s.width || (clip && (px < clip->left || px >= clip->right))) continue;
+                if (!(bits[col >> 3] & (0x80 >> (col & 7)))) continue;
                 s.row(py)[px] = color;
             }
         }
@@ -157,11 +159,46 @@ void drawAreaText(const Font& font, Surface565& s, const Area& a, int x, int y) 
 
 namespace rah {
 
-void drawTextCentered(const Font& font, Surface565& s, const Rect& r, std::string_view text, std::uint16_t color) {
-    // GDI: x = links + (Breite − Textbreite) / 2, y = oben + (Höhe − tmHeight) / 2
-    const int x = r.left + (r.width() - font.textWidth(text)) / 2;
-    const int y = r.top + (r.height() - font.cellHeight()) / 2;
-    font.textOut(s, x, y + font.ascent(), text, TextAlign::Left, color);
+std::vector<std::string> wrapText(const Font& font, std::string_view text, int width) {
+    std::vector<std::string> lines;
+    std::size_t i = 0;
+    while (true) {
+        // Absatz bis CR, LF oder CRLF
+        std::size_t end = i;
+        while (end < text.size() && text[end] != '\r' && text[end] != '\n') ++end;
+        const std::string_view para = text.substr(i, end - i);
+        std::string line;
+        std::size_t w = 0;
+        while (w <= para.size()) {
+            std::size_t sp = para.find(' ', w);
+            if (sp == std::string_view::npos) sp = para.size();
+            const std::string_view word = para.substr(w, sp - w);
+            std::string cand = line.empty() ? std::string(word) : line + ' ' + std::string(word);
+            if (!line.empty() && font.textWidth(cand) > width) {
+                lines.push_back(line);
+                line = std::string(word);
+            } else {
+                line = std::move(cand);
+            }
+            w = sp + 1;
+        }
+        lines.push_back(line);
+        if (end >= text.size()) break;
+        i = end + ((text[end] == '\r' && end + 1 < text.size() && text[end + 1] == '\n') ? 2 : 1);
+        if (i >= text.size()) break;  // abschließender Umbruch erzeugt keine Leerzeile
+    }
+    return lines;
+}
+
+void drawTextWordBreak(const Font& font, Surface565& s, const Rect& r, std::string_view text, std::uint16_t color) {
+    int y = r.top;
+    for (const std::string& line : wrapText(font, text, r.width())) {
+        if (y >= r.bottom) break;
+        // GDI: x = links + (Breite − Zeilenbreite) / 2
+        const int x = r.left + (r.width() - font.textWidth(line)) / 2;
+        font.textOut(s, x, y + font.ascent(), line, TextAlign::Left, color, &r);
+        y += font.cellHeight();
+    }
 }
 
 }  // namespace rah
