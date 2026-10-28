@@ -115,6 +115,12 @@ bool decodeInto(std::span<const std::uint8_t> data, std::size_t off, TccPlanes& 
 
 }  // namespace
 
+bool tccRedecode(std::span<const std::uint8_t> data, TccPlanes& p, const TccColorAdd& c) {
+    if (!decodeInto(data, 0, p, false, nullptr, nullptr)) return false;
+    c.apply(p);
+    return true;
+}
+
 bool TccImage::load(std::span<const std::uint8_t> data, std::string* error) {
     return decodeInto(data, 0, planes_, true, nullptr, error);
 }
@@ -172,6 +178,18 @@ bool A16Anim::next() {
     if (!decodeAt(np, false)) return false;  // UNVERIFIED: Original prüft den Kopf nicht
     ++counter_;
     return true;
+}
+
+void A16Anim::setColor(const TccColorAdd& c) {
+    color_ = c;
+    if (ptr_ == kNull) return;
+    if (body_ == 0) {
+        decodeAt(ptr_, false);
+        return;
+    }
+    // UNVERIFIED: nach Next am Dateiende liest das Original hinter dem Puffer; hier nichts
+    if (ptr_ < TccHeader::kSize || ptr_ >= data_.size()) return;
+    decodeAt(ptr_ - TccHeader::kSize, false);
 }
 
 void A16Anim::rewind() {

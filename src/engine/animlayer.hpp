@@ -49,6 +49,7 @@ public:
     // orig: Rent-A-Hero.exe 0x00442AA0 CAnimLayer_Update
     bool update(EngineGlobals& g) override;
     const TccPlanes& planes() const override { return anim.planes(); }
+    void applyImageColor(int r, int g, int b) override;
     // orig: Rent-A-Hero.exe 0x00446C90 (AVI: Bild-Slot 3 → CImageAvi_Draw in die Ebenenoberfläche)
     bool renderToSurface() override;
 

@@ -46,6 +46,11 @@ struct TccColorAdd {
     void apply(TccPlanes& p) const;
 };
 
+// Einzelbild erneut über die vorhandenen Ebenen dekodieren und die LUT anwenden, wie
+// CImageTcc_SetColor(…, neu = 1) → CImageTcc_Decode (Größen gesetzt, Zeiger auf den Daten).
+// orig: Rent-A-Hero.exe 0x004384F0 / 0x0043B740
+bool tccRedecode(std::span<const std::uint8_t> data, TccPlanes& p, const TccColorAdd& c);
+
 // Einzelbild (.TCC).
 class TccImage {
 public:
@@ -82,6 +87,10 @@ public:
     bool seek(int n);
 
     void setColorAdd(const TccColorAdd& c) { color_ = c; }
+    // orig: Rent-A-Hero.exe 0x004384F0 CImageTcc_SetColor(r, g, b, 1): LUT setzen und das
+    // aktuelle Bild erneut dekodieren (0x0043B740). Größen 0 (nach Seek) → Kopf am Zeiger
+    // lesen und den Zeiger auf dessen Daten setzen.
+    void setColor(const TccColorAdd& c);
     const TccPlanes& planes() const { return planes_; }
 
 private:

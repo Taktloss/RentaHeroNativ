@@ -75,6 +75,43 @@ Sprungtabelle `0x00443214` = `[0,0,5,5,5,5,5,5,5,5,1,2,3,4]` (Modus 0…13):
 | 2…9, > 13 | `+0x1B4` unverändert |
 War die Ebene beendet: A16 `Seek(0)`, Bild −1 (Art < 2: Bild 0). `beendet` wird immer gelöscht.
 
+## Interpolation (`CLayer`, gilt für alle Ebenen)
+Belegt an `0x004475B0`, `0x004475F0`, `CLayer_Update` `0x00447890`, `CLayer_SetColor`
+`0x004473E0`, `CLayer_UpdateZoomRect` `0x00447060` (FPU-Folgen mit `re/scripts/FpuOps.java`).
+
+**Kein-Ziel-Wert ist 0.0** (Konstante `0x0046B568`), nicht −1: Ein Ziel von 0 lässt den
+Wert unverändert – Bewegung nach x = 0 ist so nicht möglich.
+
+Start `0x004475F0(x, y, z, zoom: double; r, g, b: int; schritte, handler)`
+(`0x004475B0` = `CLayer_MoveTo` ruft es mit r = g = b = 0; 26 Aufrufer):
+- `schritte == 0` → nichts. Sonst `+0x50 = schritte`, Ziele `+0x228` X, `+0x230` Y,
+  `+0x238` Z, `+0x240` Zoom, `+0x248` R, `+0x250` B, `+0x258` G (Farben als double).
+- `handler ≠ 0` → Ereignis `+0x1D4` anlegen/Handler setzen, aktiviert. Bei `handler == 0`
+  bleibt ein vorhandenes Ereignis samt Handler unverändert.
+- Schrittweiten `(Ziel − aktuell) / schritte` (double), bei Ziel 0 → 0:
+  `+0x278` X, `+0x280` Y, `+0x288` Z, `+0x290` Zoom; Farbe: Startwerte `+0x260` R,
+  `+0x268` G, `+0x270` B aus der Ebenenfarbe (`+0x44` R, `+0x4C` G, `+0x48` B),
+  Schritte `+0x298` R, `+0x2A0` B, `+0x2A8` G.
+
+`CLayer_Update` (Slot 6; `CAnimLayer_Update` ruft es zuerst):
+- `+0x50 == 0` → Rückgabe 1, sonst nichts (auch kein dirty).
+- `--(+0x50) == 0` (letzter Schritt): Ziele ≠ 0 direkt übernehmen (Z ohne `+0x38`;
+  CSzene_Update erkennt die Z-Änderung über ftol). Ist **irgendein** Farbziel ≠ 0:
+  `SetColor(ftol R-Ziel, ftol G-Ziel, ftol B-Ziel)` – **Eigenheit:** Kanäle mit Ziel 0
+  werden dabei auf 0 gesetzt, obwohl sie während der Schritte unverändert blieben.
+  Danach Ereignis `+0x1D4` mit Typ 2 markieren (wie Typ 1, Sofort-Flag → sofort).
+- sonst: X/Y/Z/Zoom += Schrittweite; bei einem Farbziel ≠ 0 Laufwerte += Schritt und
+  `SetColor(ftol …)`.
+- Zoom-Ziel ≠ 0 → `0x00447060` (Zoom-Rechteck + Klickbereich), sonst nur Klickbereich
+  (`CLayer_GetRect` der Maske, Raster markieren). Immer `dirty = 1`.
+
+`CLayer_SetColor(r, g, b)`: `+0x44 = r`, `+0x4C = g`, `+0x48 = b`, dann Bild-Slot 11:
+TCC/A16 `0x004384D0` → `CImageTcc_SetColor(r, g, b, 1)`: LUTs neu und **aktuelles Bild
+erneut dekodieren** (`0x0043B740`, vom Lesezeiger; bei Größen 0 – nach Seek – wird der Kopf
+dort gelesen und der Zeiger weitergesetzt, das folgende `Next` überspringt dann dieses Bild).
+Bei A16-Deltabildern kumuliert die Tönung (formats/tcc.md). BMP/AVI `0x004388A0`: Werte
+speichern, Slot 12 ist leer – keine Wirkung.
+
 ## Weitere Aufrufe
 - `PlayEndEvent(modus, ev)` `0x00443030`: ev = 0 → Ende-Ereignis abschalten; sonst Handler
   setzen und aktivieren; dann Start.

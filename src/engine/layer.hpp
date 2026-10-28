@@ -34,6 +34,9 @@ public:
     bool direct = false;         // +0x30: 1 nur bei CGame_LoadAnim/Vollbildobjekt (VIDEO.md)
     double prevZ = -1.0;         // +0x38 altes Z nach einer Z-Änderung (−1.0 = keine), CSzene_Update
     bool zBuffered = true;       // +0x40
+    int colorR = 0;              // +0x44 Farbaddition (CLayer_SetColor)
+    int colorB = 0;              // +0x48
+    int colorG = 0;              // +0x4C
     int tweenSteps = 0;          // +0x50 verbleibende Interpolationsschritte (0x00447890)
     int fps = 10;                // +0x54
     bool alwaysUpdate = false;   // +0x58
@@ -59,9 +62,17 @@ public:
     Rect full;                   // +0x1F0
     Rect zoomed;                 // +0x200
     Rect old;                    // +0x210
+    // Interpolation (0x004475F0 / CLayer_Update, docs/ANIMATION.md); Ziel 0.0 = Wert bleibt
+    double tweenX = 0, tweenY = 0, tweenZ = 0, tweenZoom = 0;  // +0x228, +0x230, +0x238, +0x240
+    double tweenR = 0, tweenB = 0, tweenG = 0;                 // +0x248, +0x250, +0x258
+    double curR = 0, curG = 0, curB = 0;                       // +0x260, +0x268, +0x270
+    double stepX = 0, stepY = 0, stepZ = 0, stepZoom = 0;      // +0x278, +0x280, +0x288, +0x290
+    double stepR = 0, stepB = 0, stepG = 0;                    // +0x298, +0x2A0, +0x2A8
 
     Image565 bmp;           // Oberfläche +0x08 bei Ebenen ohne Alpha
     TccPlanes still;        // Bild +0x0C bei TCC
+    Bytes tccData;          // Dateiinhalt (CImageTcc behält ihn; Neu-Dekodieren bei SetColor)
+    TccColorAdd tccColor;   // CImageTcc +0x340/+0x348/+0x344
     TccSprite tcc;          // Zeichenzustand des Bilds +0x0C
     bool hasImage = false;  // +0x0C != 0 (BMP-Bild wird nach dem Anlegen der Oberfläche freigegeben)
     bool hasSurface = true; // +0x08 != 0 (BMP: immer; AVI: erst beim ersten Zeichnen)
@@ -79,6 +90,9 @@ public:
     virtual bool drawImageDirect(Surface565&, const Rect&) { return false; }
     // Ebenen des aktuellen Bilds für CImageTcc_Draw
     virtual const TccPlanes& planes() const { return still; }
+    // Bild-Slot 11: TCC/A16 (0x004384D0) LUT neu und aktuelles Bild neu dekodieren; BMP/AVI
+    // (0x004388A0) nur speichern, Slot 12 leer
+    virtual void applyImageColor(int r, int g, int b);
     // orig: Rent-A-Hero.exe 0x00446E70 (vtable +0x14 SetPos)
     void setPos(int nx, int ny);
     // orig: Rent-A-Hero.exe 0x00447470 CLayer_Enable
@@ -96,6 +110,17 @@ public:
     bool isTransparentAt(int px, int py) const;
     // orig: Rent-A-Hero.exe 0x00447030 CLayer_SetZoom + 0x00447060
     void setZoom(int zoomVal);
+    // orig: Rent-A-Hero.exe 0x00447060 CLayer_UpdateZoomRect
+    void updateZoomRect();
+    // orig: Rent-A-Hero.exe 0x004473E0 CLayer_SetColor(r, g, b) → Bild-Slot 11
+    void setColor(int r, int g, int b);
+    // orig: Rent-A-Hero.exe 0x004475F0 – Interpolation über `steps` Updates starten (steps 0 → nichts);
+    // Zielwert 0 = Wert bleibt; handler ≠ 0 → Ereignis +0x1D4 (Typ 2 am Ende)
+    void tweenTo(double tx, double ty, double tz, double tzoom, int r, int g, int b, int steps, int handler);
+    // orig: Rent-A-Hero.exe 0x004475B0 CLayer_MoveTo – wie oben ohne Farbe
+    void moveTo(double tx, double ty, double tz, double tzoom, int steps, int handler) {
+        tweenTo(tx, ty, tz, tzoom, 0, 0, 0, steps, handler);
+    }
     // orig: Rent-A-Hero.exe 0x00447B80 CLayer_GetRect
     Rect getRect() const;
     // orig: Rent-A-Hero.exe 0x004471C0 CLayer_Draw(surface, flag, srcRect, zmap)

@@ -44,6 +44,7 @@ bool Layer::load(const FoundFile& file, std::uint16_t key, std::string* error) {
         tcc.dirtyAlpha = true;
         TccImage img;
         if (!img.load(*data, error)) return false;
+        tccData = *data;
         still = std::move(img.planes());
         tcc.afterDecode(still);
         width = static_cast<int>(still.width);
@@ -62,11 +63,82 @@ bool Layer::load(const FoundFile& file, std::uint16_t key, std::string* error) {
     return true;
 }
 
-bool Layer::update(EngineGlobals&) {
+// Zielwert „keiner“: Konstante 0x0046B568 = 0.0
+constexpr double kNoTarget = 0.0;
+
+bool Layer::update(EngineGlobals& g) {
     if (tweenSteps == 0) return true;
-    // Noch nicht portiert: Interpolation von X/Y/Z/Zoom/Farbe und Ereignis Typ 2 (0x00447890);
-    // folgt mit den Setzern der Zielwerte (+0x228…, +0x278…), die +0x50 setzen.
+    if (--tweenSteps == 0) {
+        // letzter Schritt: Zielwerte direkt übernehmen
+        if (tweenX != kNoTarget) x = tweenX;
+        if (tweenY != kNoTarget) y = tweenY;
+        if (tweenZ != kNoTarget) z = tweenZ;  // ohne +0x38; CSzene_Update vergleicht ftol(Z)
+        if (tweenZoom != kNoTarget) zoom = tweenZoom;
+        // Eigenheit: ist nur ein Kanal ≠ 0, werden die übrigen am Ende auf 0 gesetzt
+        if (tweenR != kNoTarget || tweenG != kNoTarget || tweenB != kNoTarget)
+            setColor(ftol(tweenR), ftol(tweenG), ftol(tweenB));
+        if (tweenEvent) tweenEvent->mark(g, 2);
+    } else {
+        x += stepX;
+        y += stepY;
+        z += stepZ;
+        zoom += stepZoom;
+        if (tweenR != kNoTarget || tweenG != kNoTarget || tweenB != kNoTarget) {
+            curR += stepR;
+            curG += stepG;
+            curB += stepB;
+            setColor(ftol(curR), ftol(curG), ftol(curB));
+        }
+    }
+    if (tweenZoom != kNoTarget) updateZoomRect();  // aktualisiert auch den Bereich
+    else refreshArea();
+    dirty = true;
     return true;
+}
+
+void Layer::tweenTo(double tx, double ty, double tz, double tzoom, int r, int g, int b, int steps,
+                    int handler) {
+    if (steps == 0) return;
+    tweenSteps = steps;
+    tweenX = tx;
+    tweenY = ty;
+    tweenZ = tz;
+    tweenZoom = tzoom;
+    tweenR = r;
+    tweenG = g;
+    tweenB = b;
+    if (handler != 0) {
+        // ohne Handler bleibt ein vorhandenes Ereignis unverändert (auch aktiviert)
+        if (!tweenEvent) tweenEvent = std::make_unique<Event>();
+        tweenEvent->setHandler(handler);
+        tweenEvent->enabled = true;
+    }
+    const double n = steps;
+    stepX = tweenX == kNoTarget ? 0 : (tweenX - x) / n;
+    stepY = tweenY == kNoTarget ? 0 : (tweenY - y) / n;
+    stepZ = tweenZ == kNoTarget ? 0 : (tweenZ - z) / n;
+    stepZoom = tweenZoom == kNoTarget ? 0 : (tweenZoom - zoom) / n;
+    curR = colorR;
+    curG = colorG;
+    curB = colorB;
+    stepR = tweenR == kNoTarget ? 0 : (tweenR - colorR) / n;
+    stepG = tweenG == kNoTarget ? 0 : (tweenG - colorG) / n;
+    stepB = tweenB == kNoTarget ? 0 : (tweenB - colorB) / n;
+}
+
+void Layer::setColor(int r, int g, int b) {
+    colorR = r;
+    colorG = g;
+    colorB = b;
+    applyImageColor(r, g, b);
+}
+
+void Layer::applyImageColor(int r, int g, int b) {
+    // UNVERIFIED: BMP gibt das Bild +0x0C nach dem Anlegen der Oberfläche frei; ob der Slot-Aufruf
+    // dann ins Leere geht, ist nicht geprüft (kommt in den Daten bisher nicht vor)
+    if (kind != LayerKind::Tcc || !hasImage) return;
+    tccColor = {r, g, b};
+    if (tccRedecode(tccData, still, tccColor)) tcc.afterDecode(still);
 }
 
 void Layer::setPos(int nx, int ny) {
@@ -116,13 +188,17 @@ void Layer::enable() {
 
 void Layer::setZoom(int zoomVal) {
     zoom = zoomVal;
+    updateZoomRect();
+}
+
+void Layer::updateZoomRect() {
     if (zoom != 100.0) {
         zoomed = full;
         const int zi = ftol(zoom);
         zoomed.right = full.right * zi / 100;
         zoomed.bottom = full.bottom * zi / 100;
     }
-    refreshArea();  // 0x00447060 aktualisiert den Bereich auch bei Zoom 100
+    refreshArea();  // auch bei Zoom 100
 }
 
 Rect Layer::getRect() const {

@@ -183,5 +183,10 @@
   (Zustandsmodell), `video/ffvideo` (`rah_video`, FFmpeg aus dem Speicher), AVI-Hintergrund als
   CAnimLayer. Alle 124 AVIs: Bildanzahl = Länge, Seek konsistent. Betrachter zeigt LOC05/S10,
   LOC25/S105. Neue Ghidra-Skripte `CallArgs.java`, `FieldWrites.java`. 58 Tests grün.
-- Nächste Schritte: CLayer_Update-Interpolation, Inventarleiste (`+0x5B4`, Typ 0x0D in
+- 2026-10-28: Ebenen-Interpolation (`docs/ANIMATION.md`): `0x004475F0`/`CLayer_MoveTo`
+  `0x004475B0` und `CLayer_Update` portiert (`Layer::tweenTo/moveTo/update`), Kein-Ziel-Wert
+  0.0, Farb-Eigenheit am Ende, Ereignis Typ 2. `CLayer_SetColor` mit Neu-Dekodieren
+  (TCC: Dateiinhalt bleibt in der Ebene; A16: `A16Anim::setColor` vom Lesezeiger).
+  Neues Ghidra-Skript `FpuOps.java` (ftol-Operanden zuordnen). 61 Tests grün.
+- Nächste Schritte: Inventarleiste (`+0x5B4`, Typ 0x0D in
   MouseMove), Hilfe-Symbol, Figuren, Loc40 (Intro; braucht CGame_LoadAnim/Direktweg).

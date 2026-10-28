@@ -94,6 +94,12 @@ bool AnimLayer::renderToSurface() {
     return avi->draw(bmp, Rect{0, 0, avi->width(), avi->height()});  // Slot 3 (0x0043CAB0)
 }
 
+void AnimLayer::applyImageColor(int r, int g, int b) {
+    if (avi) return;  // CImageAvi: Slot 11 = 0x004388A0 (nur speichern)
+    anim.setColor({r, g, b});  // CImageA16 erbt Slot 11 von CImageTcc (0x004384D0)
+    afterImageCall();
+}
+
 void AnimLayer::afterImageCall() {
     if (anim.decodes() != seenDecodes_) {
         seenDecodes_ = anim.decodes();

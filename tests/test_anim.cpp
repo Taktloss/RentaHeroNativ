@@ -193,3 +193,51 @@ TEST(event_timer_oneshot_and_periodic) {
     }
     CHECK(g.timerEvents[2] == nullptr && g.runningTimers.size() == 2);  // Dtor meldet ab
 }
+
+TEST(tween_moves_and_fires_type2) {
+    Rig r(3);
+    r.L->x = 10;
+    r.L->y = 20;
+    r.L->moveTo(40, 0, 0, 0, 3, 77);
+    REQUIRE(r.L->tweenEvent != nullptr);
+    CHECK(r.L->tweenEvent->enabled && r.L->tweenEvent->handlerId == 77);
+    r.L->Layer::update(r.g);
+    CHECK(r.L->x == 20 && r.L->y == 20 && r.L->tweenSteps == 2 && r.L->dirty);
+    r.L->Layer::update(r.g);
+    CHECK(r.L->x == 30);
+    CHECK(!r.L->tweenEvent->pending);
+    r.L->Layer::update(r.g);
+    CHECK(r.L->x == 40 && r.L->tweenSteps == 0);
+    CHECK(r.L->tweenEvent->pending && r.L->tweenEvent->type == 2);
+    r.L->dirty = false;
+    r.L->Layer::update(r.g);  // fertig: nichts mehr, dirty bleibt
+    CHECK(r.L->x == 40 && !r.L->dirty);
+}
+
+TEST(tween_zero_target_keeps_value) {
+    Rig r(1);
+    r.L->x = 10;
+    r.L->zoom = 100;
+    r.L->moveTo(0, 0, 0, 50, 2, 0);
+    CHECK(r.L->tweenEvent == nullptr);
+    r.L->Layer::update(r.g);
+    CHECK(r.L->x == 10 && r.L->zoom == 75);
+    CHECK(r.L->zoomed.right == 1 && r.L->zoomed.bottom == 1);  // 2·75/100
+    r.L->Layer::update(r.g);
+    CHECK(r.L->zoom == 50);
+    r.L->moveTo(5, 0, 0, 0, 0, 0);  // 0 Schritte: nichts
+    CHECK(r.L->tweenSteps == 0 && r.L->stepX == 0);
+}
+
+TEST(tween_color_redecodes_and_zeroes_other_channels_at_end) {
+    Rig r(1);
+    r.L->setColor(0, 5, 0);
+    CHECK(r.L->colorG == 5 && r.L->planes().rgb[1][0] == 5);
+    r.L->tweenTo(0, 0, 0, 0, 20, 0, 0, 2, 0);
+    r.L->Layer::update(r.g);
+    CHECK(r.L->colorR == 10 && r.L->colorG == 5);
+    CHECK(r.L->planes().rgb[0][0] == 20 && r.L->planes().rgb[1][0] == 5);  // Bild 0: Rot 10
+    r.L->Layer::update(r.g);
+    CHECK(r.L->colorR == 20 && r.L->colorG == 0);  // Eigenheit: Grün am Ende 0
+    CHECK(r.L->planes().rgb[0][0] == 30 && r.L->planes().rgb[1][0] == 0);
+}
