@@ -9,6 +9,7 @@
 #include <memory>
 #include <string_view>
 
+#include "game/gamestate.hpp"
 #include "engine/animlayer.hpp"
 #include "engine/audio.hpp"
 #include "engine/scene.hpp"
@@ -40,6 +41,8 @@ struct GameContext {
     // Musik CSzene+0x1A8 und ihr Name +0x1AC: bleibt über Schauplatzwechsel bestehen
     std::unique_ptr<AudioStream> music;
     std::string musicName;
+    // Spielzustand CSzene+0x5B8 (CGame+0x78)
+    GameState state;
     // Hauptschleife (WinMain 0x00401E00), re-entrant für CGame_Wait:
     // pumpMessage = PeekMessage(PM_REMOVE) + Übersetzen/Verteilen; Rückgabe kNoMessage,
     // kMessage, kQuit (WM_QUIT 0x12) oder kCommand (WM_COMMAND 0x111, nicht verteilt).
@@ -121,6 +124,11 @@ protected:
     // orig: Rent-A-Hero.exe 0x004402F0 CGame_LoadSfx / 0x004403A0 CGame_LoadSfxVol
     std::unique_ptr<AudioBuffer> loadSfx(std::string_view name);
     std::unique_ptr<AudioBuffer> loadSfxVol(std::string_view name, int vol);
+    // orig: Rent-A-Hero.exe 0x00440690 CGame_Random(von, bis) – +0x20 = +0x20 · 0x7F05 / 0xB2
+    // (vorzeichenbehaftet, 32 Bit), Ergebnis |+0x20| mod (bis − von + 1) + von, höchstens bis
+    int random(int lo, int hi);
+    // orig: Rent-A-Hero.exe 0x00440290 CGame_PlaySfxRandom3D – z, dann x = Zufall(−100…100) · 0.01
+    void playSfxRandom3D(AudioBuffer& b);
 
     GameContext& ctx_;
     EngineGlobals& g_;
@@ -133,6 +141,8 @@ protected:
     std::array<int, 5> waits_{};  // +0x34 Warteplätze (SCRIPTING.md)
     int lastWait_ = 0;            // +0x4C
     std::uint32_t seed_;      // +0x20 timeGetTime()
+    // +0x04: 1, wenn die Figur aus dem Spielstand gesetzt wurde (SCRIPTING.md) – folgt mit dem Laden
+    int restored_ = 0;
     std::unique_ptr<Speech> speech_;  // +0x70
 
 private:

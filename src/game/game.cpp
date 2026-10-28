@@ -237,6 +237,22 @@ std::unique_ptr<AudioBuffer> Game::loadSfxVol(std::string_view name, int vol) {
     return b;
 }
 
+int Game::random(int lo, int hi) {
+    const auto s = static_cast<std::int32_t>(seed_ * 0x7F05u) / 0xB2;
+    seed_ = static_cast<std::uint32_t>(s);
+    const auto a = static_cast<std::int32_t>((static_cast<std::uint32_t>(s) ^ static_cast<std::uint32_t>(s >> 31)) -
+                                             static_cast<std::uint32_t>(s >> 31));  // CDQ/XOR/SUB
+    const int r = a % (hi - lo + 1) + lo;
+    return r > hi ? hi : r;
+}
+
+void Game::playSfxRandom3D(AudioBuffer& b) {
+    const float z = static_cast<float>(random(-100, 100)) * 0.01f;  // 0x0046B740
+    const float x = static_cast<float>(random(-100, 100)) * 0.01f;
+    b.setPos3D(x, 0.0f, z);
+    b.play();
+}
+
 void requestLocation(LocationRequest& r, int location, int scene, int prevScene, bool abort) {
     r.prevLocation = r.nextLocation;
     r.nextLocation = location;

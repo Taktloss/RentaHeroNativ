@@ -2,6 +2,7 @@
 #include "game/loc40.hpp"
 
 #include "game/loc35.hpp"
+#include "game/loc37.hpp"
 
 #include <bit>
 #include <cstdint>
@@ -356,6 +357,7 @@ void Loc40::onEvent116(Event& e, int) {
 std::unique_ptr<Game> createLocation(GameContext& ctx, int location, int scene, int prevScene) {
     switch (location) {
     case 35: return std::make_unique<Loc35>(ctx, scene, prevScene);
+    case 37: return std::make_unique<Loc37>(ctx, scene, prevScene);
     case 40: return std::make_unique<Loc40>(ctx, scene, prevScene);
     default: return nullptr;  // weitere Schauplätze folgen
     }

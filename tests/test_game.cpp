@@ -5,6 +5,7 @@
 #include "core/strings.hpp"
 #include "audio/mixer.hpp"
 #include "game/loc35.hpp"
+#include "game/loc37.hpp"
 #include "game/loc40.hpp"
 #include "test.hpp"
 
@@ -179,6 +180,7 @@ public:
     using Game::changeScene;
     using Game::delay;
     using Game::wait;
+    using Game::random;
 };
 
 }  // namespace
@@ -282,4 +284,32 @@ TEST(loc35_timer_stages_and_item_use) {
     e.mark(r.g, 0x0B);
     fireEvent(r.g, e, 0x0B);
     CHECK(loc.nextAction() == 10);
+}
+
+TEST(game_random_matches_original_lcg) {
+    Rig r(10);
+    WaitLoc w(*r.ctx, 50, 1, 0);  // Startwert = timeGetTime() = 1000
+    // Folge nachgerechnet mit 32-Bit-Überlauf (Schritt 3 läuft über) und IDIV
+    const int lo[8] = {3, 1, -100, 50, 3, 1, -100, 50}, hi[8] = {10, 4, 100, 100, 10, 4, 100, 100};
+    const int expect[8] = {10, 1, 60, 98, 3, 4, 52, 83};
+    for (int i = 0; i < 8; ++i) CHECK(w.random(lo[i], hi[i]) == expect[i]);
+}
+
+TEST(loc37_nag_flag_and_cave_walk_abort) {
+    Rig r(10);
+    r.ctx->current = std::make_unique<Loc37>(*r.ctx, 3, 115);
+    auto& loc = *r.ctx->current;
+    CHECK(loc.location() == 37 && loc.sceneNumber() == 3);
+    CHECK(r.ctx->state.at(0x410C) == 1);
+    // Landung: drei Wartestellen (ohne Ebenen/Figur) per WM_QUIT abbrechen
+    r.pending = {GameContext::kQuit, GameContext::kQuit, GameContext::kQuit};
+    loc.start();
+    CHECK(r.pending.empty());
+    for (int i = 0; i < 301; ++i) r.frame();  // 30 000 ms → 003_ROD_02, Flag 2, Timer 10 000 ms
+    CHECK(r.ctx->state.at(0x410C) == 2);
+    // 10 000 ms → 003_ROD_03, weiter wie Höhle (fehlendes break); Gang abgebrochen → kein Wechsel
+    r.pending = {GameContext::kQuit};
+    for (int i = 0; i < 101; ++i) r.frame();
+    CHECK(r.pending.empty() && !r.ctx->request.pending);
+    CHECK(r.ctx->state.at(0x410C) == 2);  // nie zurückgesetzt
 }

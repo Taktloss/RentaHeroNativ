@@ -19,7 +19,7 @@ Belege: `CGame_ctor` `0x0043F4D0`, `CGame_dtor` `0x0043F580`, `CGame_SetEventPro
 | `+0x34`…`+0x44`, `+0x4C` | Warteplätze, letzter Platz (SCRIPTING.md) |
 | `+0x50` | Szene |
 | `+0x70` | Sprachobjekt (SPEECH.md) |
-| `+0x74` / `+0x78` | Inventarleiste / Hinweistabelle der Szenen |
+| `+0x74` / `+0x78` | Inventarleiste (`CSzene+0x5B4`) / Spielzustand `CGameState` (`CSzene+0x5B8`, formats/gamestate.md; Port: `GameContext::state`) |
 
 ## Lebenszyklus
 - Ctor: Felder 0, `SetEventProc(0)`, `+0x24 = 1`, Startwert. Der LocNN-Ctor setzt

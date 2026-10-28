@@ -255,4 +255,9 @@
   transparenten Videos pixelgenau gegen den Original-Codec; `src/video/iv5mask` (C++-Leser),
   Einbau in `FfmpegVideo` (Maske je Zeitstempel → Schwarz = Farbschlüssel). Loc35 zeigt
   Rodrigo freigestellt. 102 Tests (`RAH_TEST_COMMON` für den Originaldaten-Test).
-- Nächste Schritte: Loc37, dann Loc1.
+- 2026-10-28: Loc37 (Landung vor der Höhle) portiert: `CGame_Random`, `CGame_PlaySfxRandom3D`,
+  Spielzustand `CGameState` (`src/game/gamestate`, Startwerte der 164 Flags), Mahn-Flag
+  `0x410C` mit Original-Durchfall in den Höhlengang. Fehler im Startpfad behoben: `--game`
+  führte den ersten Wechsel vor dem Aufbau der Nachrichtenschleife aus (Wartestellen in Start
+  brachen ab). Probelauf: Landung → Mahnungen → Loc40/S116. 104 Tests.
+- Nächste Schritte: Loc1 (Szene 7, erster echter Schauplatz).

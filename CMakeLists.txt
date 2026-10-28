@@ -45,6 +45,8 @@ add_library(rah_core STATIC
   src/formats/wav.cpp
   src/game/game.cpp
   src/game/loc35.cpp
+  src/game/loc37.cpp
+  src/game/gamestate.cpp
   src/game/loc40.cpp
   src/video/iv5mask.cpp
   src/formats/bmp.cpp
