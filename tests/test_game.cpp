@@ -4,6 +4,7 @@
 
 #include "core/strings.hpp"
 #include "audio/mixer.hpp"
+#include "game/loc01.hpp"
 #include "game/loc35.hpp"
 #include "game/loc37.hpp"
 #include "game/loc40.hpp"
@@ -312,4 +313,32 @@ TEST(loc37_nag_flag_and_cave_walk_abort) {
     for (int i = 0; i < 101; ++i) r.frame();
     CHECK(r.pending.empty() && !r.ctx->request.pending);
     CHECK(r.ctx->state.at(0x410C) == 2);  // nie zurückgesetzt
+}
+
+TEST(loc01_scene_numbers_and_canal_flag) {
+    Rig r(10);
+    {
+        Loc01 a(*r.ctx, 5, 0);  // unbekannte Szene → 7
+        CHECK(a.location() == 1 && a.sceneNumber() == 7);
+        CHECK(r.g.fnHandlers.count(0x00407DC0) == 1);  // Rückruf der Gleiterbewegung
+    }
+    CHECK(r.g.fnHandlers.count(0x00407DC0) == 0);
+    CHECK(r.ctx->state.at(0x3E94) == 1);
+    {
+        Loc01 b(*r.ctx, 46, 47);  // aus dem Kanal (Szene 47): Kanalwesen weg
+        CHECK(b.sceneNumber() == 46);
+    }
+    CHECK(r.ctx->state.at(0x3E94) == 0);
+    Loc01 c(*r.ctx, 1007, 9);
+    CHECK(c.sceneNumber() == 1007);
+}
+
+TEST(loc01_start_scene9_and_ambient_timer) {
+    Rig r(10);
+    r.ctx->current = std::make_unique<Loc01>(*r.ctx, 9, 10);
+    auto& loc = *r.ctx->current;
+    loc.start();  // ohne Wartestellen: Eingabe an, Umgebungstimer 5–15 s
+    CHECK(r.scene->clicksEnabled);
+    for (int i = 0; i < 400; ++i) r.frame();  // Umgebungsklänge ohne Tonsystem: nur Timer
+    CHECK(!r.ctx->request.pending);
 }

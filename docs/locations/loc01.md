@@ -18,7 +18,7 @@ Jede andere Szenennummer wird im Konstruktor zu **7** (`CGame+0x2C = 7`).
 | Flag | Start | Bedeutung (aus dem Code) |
 |---|---|---|
 | `S[0x3E94]` | 1 | Kanalwesen ist da; 0 nach `0x004079E0` (Gegenstand 13 benutzt) |
-| `S[0x3E98]` | 0 | Gesprächsstufe am Kanal: 1 nach Ablegen von Gegenstand 7, 2…5 in `0x00407B80` |
+| `S[0x3E98]` | 1 (`CGameState_Reset` `0x0044DA90`; früher hier fälschlich 0) | Gesprächsstufe am Kanal: 1 nach Ablegen von Gegenstand 7, 2…5 in `0x00407B80` |
 | `S[0x3E9C]` | 0 | Gegenstand 7 abgelegt (`0x00407860`, am Ende der Sequenz) |
 | `S[0x3EC4]` | 0 | Gesprächsstufe 4 erreicht (`0x00407B80`) |
 Hinweis `01_046_A` (HINTS.md) prüft genau `S[0x3E9C] && S[0x3E94] && S[0x3EC4] && !INV(13)`.
@@ -109,3 +109,20 @@ Flag-Änderungen wörtlich übernehmen.
   case 3: Sprache 046_ROD_05 046_KAN_04 | S= 3E98=4 3EC4=1 | ruft FUN_00440400 CGame_Speak
   case 4: Sprache 046_ROD_06 046_KAN_05 046_ROD_07 | S= 3E98=5 | ruft FUN_00440400 CGame_Speak
 ```
+
+## Port (`src/game/loc01.cpp`)
+Alle 15 Funktionen portiert. Ergänzungen aus dem Binary:
+- `CActor_SetPos` (`0x00434AB0`) hat 3 Argumente; Richtungen per `CallArgsResolved`:
+  Haus-Treppe (103, 139, 2), Szene 9 (534, 273, 2) bzw. (152, 241, 0), Szene 1007
+  (292, 204, 5) bzw. (353, 165, 1), Szene 46 (418, 137, 1) bzw. aus dem Kanal (209, 260, 7),
+  Gleiter (188, 170, 0), Lift-Treppe (472, 183, 1).
+- Gleiter schwebt: `CLayer_MoveTo(0, 63, 0, 0, 3)` / `(0, 65, 0, 0, 4)` im Wechsel, Rückruf
+  ist die Funktion `0x00407DC0` selbst (Handler-Wert ≥ `0xFFF`, wie die Warteplätze).
+- Sack: `CLayer_MoveTo(251, 360, 0, 0, 12, 0)`.
+- Original-Fehler: Der Dtor löscht `+0x12C` (`Sfx_Clothes_Scratched`, Szene 46) nicht –
+  nachgebildet (Puffer bleibt angemeldet).
+- Ereignis 42 ohne Kanalwesen: `CGame_Wait` ohne eigenes `BeginWait` → wartet auf den
+  schon freien Platz des Gangs und liefert sofort `true`.
+- `CGame_DescribeItem` `0x00440AD0`: GER „DefInvent“, Schlüssel `INVENT%03d` (Held aktiv:
+  anhalten, nach vorn drehen) bzw. `INVENT%03dH` ohne Figur.
+- Szene 46 ohne Kanalwesen: Hintergrund `back46_ok.BMP` (`0x0043FD90(name, 1)`).

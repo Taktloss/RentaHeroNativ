@@ -260,4 +260,11 @@
   `0x410C` mit Original-Durchfall in den Höhlengang. Fehler im Startpfad behoben: `--game`
   führte den ersten Wechsel vor dem Aufbau der Nachrichtenschleife aus (Wartestellen in Start
   brachen ab). Probelauf: Landung → Mahnungen → Loc40/S116. 104 Tests.
-- Nächste Schritte: Loc1 (Szene 7, erster echter Schauplatz).
+- 2026-10-28: Loc01 (Smashville, Szenen 7/1007/8/9/46) vollständig portiert (15 Funktionen):
+  Kamerafahrten mit Schrittgeräuschen, Lift, Hebel, Abflugmenü, Kanalwesen-Gespräch, Sack und
+  Gegenstand 13. Neu: `CGame_SayActor`, `CGame_FaceAndSay`, `CGame_PlayAnimWait`,
+  `CGame_DescribeItem`, `Scene::replaceBackground`. Korrektur: `CSzene_LoadAll` in Loc37 =
+  Maske 0xFFFF; Startwert `S[0x3E98]` = 1. Probelauf: Intro S116 → Loc01/S7 (Gleiter landet,
+  Gleiter schwebt). 106 Tests.
+- Nächste Schritte: Loc06 (Rodrigos Haus, Ziel der Haustür) bzw. weitere Ziele aus Loc01
+  (Loc05 Büro/10, Loc26, Loc12, Loc31/113, Loc47); Spielstand laden (`CGame+0x04`).

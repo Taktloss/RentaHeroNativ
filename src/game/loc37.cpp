@@ -15,7 +15,7 @@ constexpr std::size_t kNagFlag = 0x410C;  // CGameState, Start 1
 
 Loc37::Loc37(GameContext& ctx, int scene, int prevScene) : Game(ctx, 37, scene, prevScene) {
     getViewObjects();
-    scene_.load("S3", 0);  // CSzene_LoadAll(DAT_00476274)
+    scene_.load("S3", 0xFFFF);  // CSzene_LoadAll(DAT_00476274)
     getViewObjects();
     // UNVERIFIED: das Original prüft weder auf fehlende noch auf statische Ebenen
     landing_ = dynamic_cast<AnimLayer*>(scene_.getObject("S3_Landen"));

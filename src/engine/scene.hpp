@@ -105,6 +105,12 @@ public:
     // Aufrufer); nullptr → altes Objekt Slot 9 (CAnimLayer_Stop(0)) und CSzene_InvalidateAll.
     // Liefert das alte Objekt.
     AnimLayer* setModal(AnimLayer* obj);
+    // orig: Rent-A-Hero.exe 0x0043FD90(name, 1) – "<name>.BMP" suchen, als neuen Hintergrund
+    // anlegen (CSzene_CreateBackground); liefert ihn (CGame+0x60)
+    Layer* replaceBackground(std::string_view name) {
+        createBackground(paths_.findFile(name, "BMP"));
+        return background_.get();
+    }
     AnimLayer* modal() { return modal_; }
     // orig: Rent-A-Hero.exe 0x0043FFB0 CGame_LoadAnim(name) – nutzt nur Felder der Szene:
     // "<name>.AVI" suchen, CAnimLayer mit +0x30 = 1 (Direktweg), Alpha, Position (0, +0x2F0)

@@ -118,6 +118,17 @@ protected:
     bool speak(std::string_view ger, std::string_view name, int doneEvent) {
         return speak(ger, name, nullptr, 0, -1, -1, doneEvent);
     }
+    // orig: Rent-A-Hero.exe 0x00440400 CGame_SayActor → CGame_Speak(ger, name, figur, 0x0C, −1, −1, ereignis)
+    bool sayActor(std::string_view ger, std::string_view name, AnimLayer* speaker, int doneEvent) {
+        return speak(ger, name, speaker, 0x0C, -1, -1, doneEvent);
+    }
+    // orig: Rent-A-Hero.exe 0x004409C0 CGame_FaceAndSay – Held dreht sich nach vorn, dann HeroSayWait
+    void faceAndSay(std::string_view key);
+    // orig: Rent-A-Hero.exe 0x004406E0 CGame_PlayAnimWait – als Vollbildobjekt bis zum Ende abspielen
+    bool playAnimWait(AnimLayer* a);
+    // orig: Rent-A-Hero.exe 0x00440AD0 CGame_DescribeItem – „DefInvent“, Schlüssel INVENT%03d
+    // (Held sichtbar: anhalten, nach vorn drehen, warten) bzw. INVENT%03dH ohne Figur
+    void describeItem(int id);
     // orig: Rent-A-Hero.exe 0x004400C0 CGame_PlayMusic – gleiche Musik läuft weiter, sonst die
     // alte ausblenden (2 s, dann löschen) und die neue laden (nicht abspielen)
     AudioStream* playMusic(std::string_view name);

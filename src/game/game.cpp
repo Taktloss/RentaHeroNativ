@@ -237,6 +237,36 @@ std::unique_ptr<AudioBuffer> Game::loadSfxVol(std::string_view name, int vol) {
     return b;
 }
 
+void Game::faceAndSay(std::string_view key) {
+    const int cb = beginWait();
+    if (hero_) hero_->turn(0, cb);
+    if (wait()) heroSay(key);
+}
+
+bool Game::playAnimWait(AnimLayer* a) {
+    scene_.setModal(a);
+    const int cb = beginWait();
+    if (a) a->playEndEvent(10, cb);
+    return wait();
+}
+
+void Game::describeItem(int id) {
+    char key[16];
+    if (!hero_ || !hero_->active) {
+        std::snprintf(key, sizeof key, "INVENT%03dH", id);
+        speak("DefInvent", key, 0);  // CGame_SayNoActor
+        return;
+    }
+    hero_->stop(0);  // vtable +0x24
+    const int cb = beginWait();
+    hero_->turn(0, cb);
+    if (!wait()) return;
+    std::snprintf(key, sizeof key, "INVENT%03d", id);
+    const int cb2 = beginWait();
+    sayActor("DefInvent", key, hero_, cb2);
+    wait();
+}
+
 int Game::random(int lo, int hi) {
     const auto s = static_cast<std::int32_t>(seed_ * 0x7F05u) / 0xB2;
     seed_ = static_cast<std::uint32_t>(s);
