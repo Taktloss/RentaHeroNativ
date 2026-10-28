@@ -29,8 +29,8 @@ Zeit in **Bildnummern bei fest 10 fps** (`STREAM_TIME` = 100 ns, Faktor 1 000 00
   (Produkt in 32 Bit, überläuft ab n > 2147 – bei 10 fps erst nach 214 s, kein Video so lang).
 
 Folge: Das Abspieltempo bestimmt die Ebenen-`fps` aus der SZN, nicht das AVI; die
-Zuordnung Zähler → Zeit setzt 10 fps voraus (alle Daten erfüllen das). Port: Videos
-bildweise dekodieren, Bild `+0x3CC` anzeigen.
+Zuordnung Zähler → Zeit setzt 10 fps voraus (alle Daten erfüllen das). Port und genaue
+Abläufe: VIDEO.md (`OpenFile` mit `AMMSF_NOCLOCK` → jedes Update = nächstes Bild).
 
 - **Sonderfall 640×180**: Höhe wird als 360 gemeldet, `+0x3D8 = 1` (Zeilenverdopplung).
   Kein solches Video in den Daten.

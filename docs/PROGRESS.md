@@ -176,5 +176,12 @@
   Zeiger der EXE geprüft). Betrachter: Timer je Durchlauf (`pollTimers`), Bereichstext,
   Originalzeiger (`--exe`, `--font`, `--mouse x y`). Neue Abhängigkeit `freetype-devel`.
   54 Tests grün.
-- Nächste Schritte: CLayer_Update-Interpolation, AVI-Ebenen (FFmpeg), Inventarleiste
-  (`+0x5B4`, Typ 0x0D in MouseMove), Hilfe-Symbol, Figuren, Loc40.
+- 2026-10-28: AVI-Ebenen (`docs/VIDEO.md`): CImageAvi analysiert (DirectShow ohne Uhr,
+  Zähler `+0x3CC` je Draw, Sample-Eigenheiten, Ende/Seek/Rewind), CLayer_Draw-Typ-3-Weg,
+  `0x00446C90` nach jedem Update. `layer+0x30` ist kein „FromSzene“: nur CGame_LoadAnim und
+  Vollbildobjekt setzen es (Direktweg auf den Bildschirm, noch offen). Port: `engine/aviimage`
+  (Zustandsmodell), `video/ffvideo` (`rah_video`, FFmpeg aus dem Speicher), AVI-Hintergrund als
+  CAnimLayer. Alle 124 AVIs: Bildanzahl = Länge, Seek konsistent. Betrachter zeigt LOC05/S10,
+  LOC25/S105. Neue Ghidra-Skripte `CallArgs.java`, `FieldWrites.java`. 58 Tests grün.
+- Nächste Schritte: CLayer_Update-Interpolation, Inventarleiste (`+0x5B4`, Typ 0x0D in
+  MouseMove), Hilfe-Symbol, Figuren, Loc40 (Intro; braucht CGame_LoadAnim/Direktweg).

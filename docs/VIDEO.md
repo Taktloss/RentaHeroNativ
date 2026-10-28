@@ -1,0 +1,100 @@
+# Videoebenen (AVI, `CImageAvi`)
+
+Ergänzt `formats/media.md` (Zeitmodell), ANIMATION.md (CAnimLayer), COMPOSITOR.md
+(CLayer_Draw). Port: `src/engine/aviimage.*` (Zustandsmodell), `src/video/ffvideo.*`
+(FFmpeg-Dekoder), `src/engine/layer.cpp` (Zeichenpfad), Tests `tests/test_avi.cpp`.
+Werkzeug: `re/scripts/CallArgs.java` (Push-Argumente je Aufruf), `re/scripts/FieldWrites.java`.
+
+## vtable `0x0046B890` (14 Slots)
+| Slot | Adresse | Funktion |
+|---|---|---|
+| 0 | `0x0043C7C0` | Load |
+| 1 | `0x0043CAF0` | Draw mit Ebenenargumenten → Slot 2 `(surface, rect, flag)` |
+| 2 | `0x0043CB10` | Draw (Sample aktualisieren) |
+| 3 | `0x0043CAB0` | in eigene Oberfläche: Slot 2 mit `(0, 0, +0x338, +0x33C)` |
+| 4 | `0x0043CA80` | Next |
+| 5 | `0x0043CA60` | `return 1` (Nachholschritt: kein Bildwechsel, wie A16) |
+| 6 | `0x0043C9A0` | Rewind |
+| 7 | `0x0043C9E0` | Seek |
+| 13 | `0x0043C6A0` | Destruktor |
+
+## Load `0x0043C7C0`
+`CoCreateInstance(CLSID_AMMultiMediaStream)` → `Initialize(STREAMTYPE_READ, 1 =
+AMMSF_NOGRAPHTHREAD, 0)` → `AddMediaStream(DirectDraw 0x0047E600, MSPID_PrimaryVideo, 0, 0)`
+→ `OpenFile(name, 4 = AMMSF_NOCLOCK)` (Argumente per `CallArgs.java`, `0x0043C81D`–`0x0043C868`).
+**Ohne Uhr**: jedes `Update` liefert das nächste Bild, unabhängig von der Zeit.
+Dann `GetMediaStream` → `IDirectDrawMediaStream` → `GetFormat` (Breite `+0x404`, Höhe `+0x400`),
+Start `+0x3C4 = +0x3CC = GetTime / 1e6`, Länge `+0x3C8 = GetDuration / 1e6` (Einheit 100 ms,
+`__alldiv` schneidet ab), `+0x338/+0x33C` = Breite/Höhe (640×180 → 360, `+0x3D8 = 1`; kommt
+nicht vor), geladen `+0x3DC = 1`, `SetState(RUN)`, Bild angefordert `+0x3E4 = 1`.
+
+## Draw `0x0043CB10(surface, rect)`
+1. `+0x3CC++` – **bei jedem Aufruf**, auch wenn danach nichts gezeichnet wird.
+2. Nicht geladen → 0.
+3. Zielrechteck = `rect`; bei `+0x38C` (Bild einer Ebene mit `+0x30`) stattdessen
+   Primäroberfläche `0x0047E604`, Rechteck + Fensterursprung + (0, 60).
+4. Kein Sample (`+0x3E0 == 0`): ohne Anforderung (`+0x3E4 == 0`) → 1 (nichts). Sonst
+   `CreateSample(ziel, rect, 1)` → `+0x3F4`, `SetState(RUN)`, `+0x3E0 = 1`, Rechteck merken
+   (`+0x464`).
+5. Rechteck geändert: merken; ist das Ziel die Oberfläche des Samples → `SetRect`, sonst
+   Stopp, Sample freigeben, neu anlegen, Lauf. **Gleiches Rechteck, andere Oberfläche → das
+   Sample schreibt weiter in die alte.**
+6. `Update(0)` (synchron; bei `+0x38C` asynchron, wiederholt bei `MS_E_BUSY`):
+   `S_OK`/`MS_S_PENDING` → 1; `MS_S_ENDOFSTREAM` (`0x40003`) → `+0x3CC = Länge + 1`, 1
+   (Ziel unverändert); sonst 0.
+
+## Next `0x0043CA80`, Ende `0x0043CD60`, Seek, Rewind
+- Next: `+0x3CC < Länge` → `+0x3E4 = 1`, 1. Sonst (Sample vorhanden) `0x0043CD60`, 0.
+- `0x0043CD60`: mit Sample: `CompletionStatus(COMPSTAT_WAIT, INFINITE)`, `SetState(STOP)`,
+  Sample freigeben, `+0x3E0 = 0`; immer `+0x3E4 = 0`.
+- Seek(n) `0x0043C9E0`: `+0x3E4 = 1`; nur wenn `n ≠ +0x3CC`: `n ≤ Länge` → `+0x3CC = n`;
+  `IMultiMediaStream::Seek(+0x3CC · 1 000 000)` (Produkt in 32 Bit, vorzeichenerweitert).
+  Liefert immer 1.
+- Rewind `0x0043C9A0`: `+0x3CC = Start`, `Seek(0)` am Stream, `+0x3E4 = 1`, dann Next.
+
+Zähler `+0x3CC` = Anzahl der `Draw`-Aufrufe seit Start/Seek, Stream-Position = Anzahl der
+erfolgreichen `Update`s. Beide laufen auseinander, wenn `Draw` ohne Sample und ohne Anforderung
+aufgerufen wird (nach dem Ende) – dann zählt nur der Zähler.
+
+## Ebenenseite
+- `CAnimLayer_CreateImage` (`0x004425B0`): `image+0x38C = layer+0x30`; Alpha `+0x198 = 1`.
+- `layer+0x30` ist bei SZN-Ebenen **0** (Ctor `0x004466A0`). 1 setzen nur `CGame_LoadAnim`
+  (`0x00440016`) und das Vollbildobjekt `CSzene+0x5DC` (`0x0044A360`, `FieldWrites.java`) –
+  diese Videos gehen direkt auf den Bildschirm und folgen mit den Schauplätzen.
+- `CLayer_Draw` (`0x004471C0`), Typ 3: **direkt** = Zoom 100 und `flag == 0` und `+0x30`.
+  Nicht direkt und Alpha gesetzt → Alpha 0, Oberfläche freigeben (`0x00446E20`). Direkt und
+  Alpha 0 → Alpha 1, Oberfläche freigeben. Alpha 0 → Weg über die Ebenenoberfläche (`+0x08`,
+  fehlt sie: `0x00446C90`), `BltFast` mit Farbschlüssel bei `flag ≠ 0` (wie BMP). Alpha 1 →
+  Slot 1 → Draw mit dem **ungeclippten** Ebenenrechteck.
+- `0x00446C90` („in Ebenenoberfläche zeichnen“): nicht geladen → 0; Alpha und Typ > 0 → 1
+  (A16/TCC, auch AVI vor dem ersten Zeichnen). Aktiv → dirty. Fehlt die Oberfläche: anlegen
+  (Breite/Höhe der Ebene, Systemspeicher, `SetColorKey(DDCKEY_SRCBLT, Ebenen-Farbschlüssel)`).
+  Dann Bild-Slot 3 → für AVI ein `Draw` in die Ebenenoberfläche.
+- Aufrufer von `0x00446C90` u. a.: Ende von `CAnimLayer_Update` (`0x00442B6A`, nach
+  `NextFrame`), `CAnimLayer_ShowFrame`, `CSzene_CreateLayer`, `CSzene_CreateBackground`.
+- `0x00446E20(1)`: Oberfläche `PageUnlock`, freigeben, `+0x08 = 0`.
+- `SeekFrame`/`Start` rufen bei Typ ≥ 2 den Bild-Seek (Slot 7); bei beendeter Ebene `Seek(0)`.
+
+### Ablauf einer SZN-Videoebene
+1. Anlegen: Alpha 1 → `0x00446C90` tut nichts.
+2. Update: `NextFrame` → Next (`+0x3CC < Länge`); `0x00446C90` tut noch nichts (Alpha 1).
+3. Erstes `CLayer_Draw`: nicht direkt → Alpha 0, Oberfläche anlegen, `Draw` → Sample auf
+   der Ebenenoberfläche, Bild 0 dekodiert, `BltFast` in die Szene.
+4. Jedes weitere Update: `NextFrame`, dann `0x00446C90` → `Draw` → nächstes Bild.
+5. Nach dem letzten Bild: Next liefert 0 → `0x0043CD60` → OnEnd (Schleife: Rewind = Stream auf
+   0, nächster `Draw` legt ein neues Sample an und dekodiert Bild 0).
+
+## AVI-Hintergrund (`CSzene_CreateBackground` `0x00449E70`)
+Erst als `CLayer` geladen; setzt `CLayer_Load` `+0x1BC` (AVI), wird die Ebene verworfen und als
+`CAnimLayer` neu geladen. Dann Z = 255, Slot 3, `0x00446C90`, `0x00446DE0`, Position, Rechteck in A.
+Gezeichnet mit `flag = 0` → Weg über die Ebenenoberfläche ohne Farbschlüssel.
+
+## Port
+- Dekodieren mit FFmpeg (Cinepak, Indeo 3/5) bildweise, ohne Uhr, aus dem Speicher (VFS).
+  Zeit in 100 ns: Dauer = Bildanzahl · 10⁷ · fps-Nenner / fps-Zähler, Seek auf
+  `t` → erstes Bild mit Anzeigezeit ≥ `t`.
+- Pixel: FFmpeg → RGB24 → `pack565` (abschneiden). UNVERIFIED: DirectShow wandelt über den
+  Codec bzw. den Farbraumwandler in das 16-Bit-Format der Oberfläche; Rundung/Dithering dort
+  nicht belegt.
+- UNVERIFIED: `SetState(STOP)`/`RUN` behält die Stream-Position.
+- Direkter Weg (`+0x30`, Primäroberfläche) und 640×180-Zeilenverdopplung: noch nicht portiert.

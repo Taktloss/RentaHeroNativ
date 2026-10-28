@@ -22,7 +22,8 @@ RAH_TEST_DATA=<Ordner mit "Rent a Hero CD1.cue"/CD2 und RentAHero/> ./build/rah_
 ```
 Ohne `RAH_TEST_DATA` laufen nur die Tests ohne Originaldaten.
 Abhängigkeiten (Fedora/Nobara): `SDL3-devel ffmpeg-free-devel unshield-devel freetype-devel`
-(FreeType: `rah_font`, Schrift der Bereichstexte; ohne FreeType kein Spiel und keine Schrifttests)
+(FreeType: `rah_font`, Schrift der Bereichstexte; FFmpeg: `rah_video`, Videoebenen; ohne sie
+kein Spiel und keine zugehörigen Tests)
 (ffmpeg-free enthält die nötigen Decoder Cinepak, Indeo 3, Indeo 5).
 
 ## Geprüft

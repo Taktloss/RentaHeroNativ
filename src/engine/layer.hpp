@@ -31,6 +31,7 @@ public:
     double x = 0, y = 0;         // +0x10, +0x18
     double z = 1.0;              // +0x20
     double zoom = 100.0;         // +0x28
+    bool direct = false;         // +0x30: 1 nur bei CGame_LoadAnim/Vollbildobjekt (VIDEO.md)
     double prevZ = -1.0;         // +0x38 altes Z nach einer Z-Änderung (−1.0 = keine), CSzene_Update
     bool zBuffered = true;       // +0x40
     int tweenSteps = 0;          // +0x50 verbleibende Interpolationsschritte (0x00447890)
@@ -63,11 +64,19 @@ public:
     TccPlanes still;        // Bild +0x0C bei TCC
     TccSprite tcc;          // Zeichenzustand des Bilds +0x0C
     bool hasImage = false;  // +0x0C != 0 (BMP-Bild wird nach dem Anlegen der Oberfläche freigegeben)
+    bool hasSurface = true; // +0x08 != 0 (BMP: immer; AVI: erst beim ersten Zeichnen)
 
     // orig: Rent-A-Hero.exe 0x00446940 CLayer_Load + vtable +0x0C (0x00446AC0 CLayer_CreateImage)
     virtual bool load(const FoundFile& file, std::uint16_t colorKey, std::string* error);
     // vtable +0x18 – orig: Rent-A-Hero.exe 0x00447890 CLayer_Update (Interpolation, +0x50)
     virtual bool update(EngineGlobals& g);
+    // orig: Rent-A-Hero.exe 0x00446C90 – Bild in die Ebenenoberfläche +0x08 zeichnen (bei Bedarf
+    // anlegen); BMP: Oberfläche besteht schon
+    virtual bool renderToSurface() { return loaded; }
+    // orig: Rent-A-Hero.exe 0x00446E20(1) – Ebenenoberfläche freigeben
+    void releaseSurface() { hasSurface = false; }
+    // Videobild in die Szene zeichnen (Alpha-Weg einer AVI-Ebene, Bild-Slot 1)
+    virtual bool drawImageDirect(Surface565&, const Rect&) { return false; }
     // Ebenen des aktuellen Bilds für CImageTcc_Draw
     virtual const TccPlanes& planes() const { return still; }
     // orig: Rent-A-Hero.exe 0x00446E70 (vtable +0x14 SetPos)

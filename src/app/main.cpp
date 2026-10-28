@@ -19,6 +19,7 @@
 #include "engine/scene.hpp"
 #include "formats/pe.hpp"
 #include "render/font.hpp"
+#include "video/ffvideo.hpp"
 #include "vfs/dirfs.hpp"
 #include "vfs/vfs.hpp"
 
@@ -183,6 +184,11 @@ int main(int argc, char** argv) {
     // timeGetTime(): Millisekunden als 32-Bit-Zahl (läuft wie das Original nach ~49 Tagen über)
     g.now = [] { return static_cast<std::uint32_t>(SDL_GetTicks()); };
 
+    g.openVideo = [](const FoundFile& f, std::string* err) -> std::unique_ptr<VideoDecoder> {
+        auto data = f.read();
+        if (!data) return nullptr;
+        return openFfmpegVideo(std::move(*data), err);
+    };
     // CArea_DrawText: Arial 15, fett, kursiv (MOUSE.md)
     Font areaFont;
     {
@@ -205,6 +211,7 @@ int main(int argc, char** argv) {
     }
     // Betrachter: alles sichtbar, Animationen in Schleife (Modus 13)
     scene.background()->enable();
+    if (auto* a = dynamic_cast<AnimLayer*>(scene.background())) a->start(13);
     int anims = 0;
     for (int i = 0; scene.layer(i); ++i) {
         scene.layer(i)->enable();

@@ -33,6 +33,7 @@ add_library(rah_core STATIC
   src/engine/event.cpp
   src/engine/area.cpp
   src/engine/animlayer.cpp
+  src/engine/aviimage.cpp
   src/engine/scene.cpp
   src/formats/bmp.cpp
   src/formats/pe.cpp
@@ -48,15 +49,21 @@ if(FREETYPE_FOUND)
   target_link_libraries(rah_font PUBLIC rah_core Freetype::Freetype)
 endif()
 
+# Videoebenen über FFmpeg (docs/VIDEO.md)
+find_package(PkgConfig)
+if(PkgConfig_FOUND)
+  pkg_check_modules(FFMPEG IMPORTED_TARGET libavformat libavcodec libswscale libswresample libavutil)
+endif()
+if(FFMPEG_FOUND)
+  add_library(rah_video STATIC src/video/ffvideo.cpp)
+  target_link_libraries(rah_video PUBLIC rah_core PkgConfig::FFMPEG)
+endif()
+
 if(RAH_BUILD_APP)
   find_package(SDL3 CONFIG)
-  find_package(PkgConfig)
-  if(PkgConfig_FOUND)
-    pkg_check_modules(FFMPEG IMPORTED_TARGET libavformat libavcodec libswscale libswresample libavutil)
-  endif()
   if(SDL3_FOUND AND FFMPEG_FOUND AND FREETYPE_FOUND)
     add_executable(rentahero src/app/main.cpp)
-    target_link_libraries(rentahero PRIVATE rah_core rah_font SDL3::SDL3 PkgConfig::FFMPEG)
+    target_link_libraries(rentahero PRIVATE rah_core rah_font rah_video SDL3::SDL3)
   else()
     message(WARNING "SDL3, FFmpeg oder FreeType nicht gefunden – nur Kern und Tests werden gebaut")
   endif()
@@ -74,8 +81,13 @@ if(RAH_BUILD_TESTS)
     tests/test_scene.cpp
     tests/test_anim.cpp
     tests/test_pe.cpp
+    tests/test_avi.cpp
   )
   target_link_libraries(rah_tests PRIVATE rah_core)
+  if(FFMPEG_FOUND)
+    target_sources(rah_tests PRIVATE tests/test_ffvideo.cpp)
+    target_link_libraries(rah_tests PRIVATE rah_video)
+  endif()
   if(FREETYPE_FOUND)
     target_sources(rah_tests PRIVATE tests/test_font.cpp)
     target_link_libraries(rah_tests PRIVATE rah_font)

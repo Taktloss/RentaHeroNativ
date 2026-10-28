@@ -36,15 +36,34 @@ bool AnimLayer::load(const FoundFile& file, std::uint16_t key, std::string* erro
     loaded = true;
     colorKey = key;
     if (active) dirty = true;
-    if (kind != LayerKind::A16) {
-        // Bildfolgen aus BMP/TCC (Typ < 2) kommen in den Daten nicht vor; AVI folgt gesondert
+    if (kind == LayerKind::Avi) {
+        // orig: Rent-A-Hero.exe 0x00446AC0 CLayer_CreateImage → CImageAvi_Load
+        if (!g_.openVideo) {
+            if (error) *error = "kein Videodekoder: " + path;
+            return false;
+        }
+        auto dec = g_.openVideo(file, error);
+        avi = std::make_unique<AviImage>();
+        if (!dec || !avi->load(std::move(dec))) {
+            avi.reset();
+            return false;
+        }
+        frame = -1;
+        width = avi->width();
+        height = avi->height();
+        // Ebenenoberfläche +0x08 entsteht erst beim ersten Zeichnen (0x00446C90)
+        bmp = Image565{width, height, std::vector<std::uint16_t>(static_cast<std::size_t>(width * height), 0)};
+        hasSurface = false;
+    } else if (kind != LayerKind::A16) {
+        // Bildfolgen aus BMP/TCC (Typ < 2) kommen in den Daten nicht vor
         if (error) *error = "Animationsart noch nicht portiert: " + path;
         return false;
+    } else {
+        frame = -1;
+        if (!anim.load(std::move(*data), error)) return false;
+        width = static_cast<int>(anim.planes().width);
+        height = static_cast<int>(anim.planes().height);
     }
-    frame = -1;
-    if (!anim.load(std::move(*data), error)) return false;
-    width = static_cast<int>(anim.planes().width);
-    height = static_cast<int>(anim.planes().height);
     full = {0, 0, width, height};
     zoomed = full;
     hasImage = true;
@@ -53,6 +72,26 @@ bool AnimLayer::load(const FoundFile& file, std::uint16_t key, std::string* erro
     nextTime = g_.now() + static_cast<std::uint32_t>(period);
     if (active) dirty = true;
     return true;
+}
+
+bool AnimLayer::imageNext() { return avi ? avi->next() : anim.next(); }
+bool AnimLayer::imageSeek(int n) { return avi ? avi->seek(n) : anim.seek(n); }
+void AnimLayer::imageRewind() {
+    if (avi) avi->rewind();
+    else anim.rewind();
+}
+
+bool AnimLayer::renderToSurface() {
+    if (!loaded) return false;
+    if (alpha && kind != LayerKind::Bmp) return true;  // A16/TCC; AVI vor dem ersten Zeichnen
+    if (active) dirty = true;
+    if (!hasSurface) {
+        // Neue Oberfläche, Farbschlüssel = colorKey. UNVERIFIED: Inhalt einer neuen DirectDraw-
+        // Oberfläche (hier: unverändert vom letzten Bild bzw. schwarz)
+        hasSurface = true;
+    }
+    if (!avi) return true;
+    return avi->draw(bmp, Rect{0, 0, avi->width(), avi->height()});  // Slot 3 (0x0043CAB0)
 }
 
 void AnimLayer::afterImageCall() {
@@ -81,6 +120,7 @@ bool AnimLayer::update(EngineGlobals& g) {
             nextTime = static_cast<std::uint32_t>(period) + now;
         }
     }
+    renderToSurface();  // 0x00442B6A
     dirty = true;
     return true;
 }
@@ -89,14 +129,14 @@ bool AnimLayer::nextFrame() {
     // Lippensync (+0x484) folgt mit der Sprachausgabe
     if (!reverse) {
         ++frame;
-        if (!anim.next()) onEnd();
+        if (!imageNext()) onEnd();
     } else {
         --frame;
         if (frame == 0) {
             onEnd();  // Bild 0 wird rückwärts nie gezeigt (Original)
         } else {
-            anim.seek(frame);
-            anim.next();
+            imageSeek(frame);
+            imageNext();
         }
     }
     afterImageCall();
@@ -119,11 +159,11 @@ bool AnimLayer::catchUp() {
 void AnimLayer::onEnd() {
     if (loop || endMode == 2) {
         if (rangeFrom == -1) {
-            anim.rewind();
+            imageRewind();
             frame = 0;
         } else {
-            anim.seek(rangeFrom);
-            anim.next();
+            imageSeek(rangeFrom);
+            imageNext();
             frame = rangeFrom;
         }
         afterImageCall();
@@ -165,7 +205,7 @@ void AnimLayer::start(unsigned mode) {
         }
     }
     if (ended) {
-        anim.seek(0);
+        imageSeek(0);
         frame = -1;
     }
     ended = false;
@@ -212,7 +252,7 @@ void AnimLayer::playRangeNoEvent(unsigned mode, int from, int to) {
 
 bool AnimLayer::seekFrame(int n) {
     if (n == -1) n = 0;
-    if (!anim.seek(n)) return false;
+    if (!imageSeek(n)) return false;
     afterImageCall();
     frame = n < 1 ? -1 : n - 1;
     if (active) dirty = true;
@@ -224,6 +264,7 @@ void AnimLayer::showFrame(int n) {
     rangeTo = rangeFrom = -1;
     if (!seekFrame(n)) return;
     if (!nextFrame()) return;
+    renderToSurface();
     dirty = true;
 }
 

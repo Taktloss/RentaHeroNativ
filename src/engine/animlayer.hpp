@@ -1,12 +1,13 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// Animierte Ebene (CAnimLayer : CLayer, 0x15C8 Bytes, vtable 0x0046B8E0) mit A16-Bild.
+// Animierte Ebene (CAnimLayer : CLayer, 0x15C8 Bytes, vtable 0x0046B8E0) mit A16- oder AVI-Bild.
 // Abspielsteuerung, Bildtakt, Bereich, Ereignisse und Ton-Cues (docs/ANIMATION.md).
-// Videoebenen (AVI) und Lippensync (+0x484) folgen gesondert.
+// Videoebenen: docs/VIDEO.md. Lippensync (+0x484) folgt gesondert.
 #pragma once
 
 #include <array>
 #include <memory>
 
+#include "engine/aviimage.hpp"
 #include "engine/event.hpp"
 #include "engine/layer.hpp"
 #include "formats/tcc.hpp"
@@ -41,12 +42,15 @@ public:
     std::uint32_t nextTime = 0;// +0x2E8
     std::array<AnimCue, kMaxCues> cues{};
     A16Anim anim;              // Bild +0x0C (CImageA16)
+    std::unique_ptr<AviImage> avi;  // Bild +0x0C (CImageAvi), Typ 3
 
     // orig: Rent-A-Hero.exe 0x00442500 (Slot 2) + 0x004425B0 (Slot 3)
     bool load(const FoundFile& file, std::uint16_t colorKey, std::string* error) override;
     // orig: Rent-A-Hero.exe 0x00442AA0 CAnimLayer_Update
     bool update(EngineGlobals& g) override;
     const TccPlanes& planes() const override { return anim.planes(); }
+    // orig: Rent-A-Hero.exe 0x00446C90 (AVI: Bild-Slot 3 → CImageAvi_Draw in die Ebenenoberfläche)
+    bool renderToSurface() override;
 
     // orig: Rent-A-Hero.exe 0x00442730 CAnimLayer_NextFrame
     bool nextFrame();
@@ -77,6 +81,10 @@ public:
     void runCues(int atFrame);
 
 private:
+    // Bild-vtable: Slot 4 Next, Slot 7 Seek, Slot 6 Rewind (A16 bzw. AVI)
+    bool imageNext();
+    bool imageSeek(int n);
+    void imageRewind();
     void afterImageCall();  // Alpha-Rechteck nach jedem Dekodieren (0x0043B8A7)
     EngineGlobals& g_;
     std::uint32_t seenDecodes_ = 0;

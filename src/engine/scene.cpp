@@ -235,10 +235,14 @@ bool Scene::loadSzn(const IniFile& szn, unsigned loadMask) {
 bool Scene::createBackground(const std::optional<FoundFile>& file) {
     background_.reset();
     if (!file) return false;
-    auto bg = std::make_unique<Layer>();
+    // CLayer_Load setzt bei AVI +0x1BC → Ebene verwerfen, als CAnimLayer neu laden (VIDEO.md)
+    std::unique_ptr<Layer> bg;
+    if (layerKindFromName(file->path) == LayerKind::Avi) bg = std::make_unique<AnimLayer>(g_);
+    else bg = std::make_unique<Layer>();
     std::string err;
-    if (!bg->load(*file, colorKey_, &err)) return false;  // AVI-Hintergrund: CAnimLayer, noch offen
+    if (!bg->load(*file, colorKey_, &err)) return false;
     bg->z = 255.0;
+    bg->renderToSurface();  // 0x00449FF0
     bg->setPos(0, yOffset_);
     background_ = std::move(bg);
     loaded_ = true;
@@ -260,9 +264,10 @@ Layer* Scene::createLayer(const std::optional<FoundFile>& file, bool animated) {
     else L = std::make_unique<Layer>();
     std::string err;
     if (!file || !L->load(*file, colorKey_, &err)) {
-        if (animated && file && layerKindFromName(file->path) != LayerKind::A16) ++unsupported_;  // AVI folgt
+        if (animated && file && layerKindFromName(file->path) != LayerKind::A16) ++unsupported_;  // ohne Dekoder
         return nullptr;
     }
+    L->renderToSurface();  // 0x0044AC05 / 0x0044AC17
     L->setPos(0, yOffset_);
     lastLayer_ = slot;
     g_.sceneChanged = true;

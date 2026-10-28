@@ -7,6 +7,7 @@
 #include <array>
 #include <functional>
 #include <memory>
+#include <string>
 #include <vector>
 
 #include "engine/area.hpp"
@@ -18,11 +19,15 @@ struct AnimCue;
 class AnimLayer;
 class Scene;
 class Surface565;
+class VideoDecoder;
+struct FoundFile;
 
 struct EngineGlobals {
     bool sceneChanged = false;  // g_SceneChanged 0x00481F28
     // g_EventProc 0x0047E60C: OnGenericEvent des aktuellen Schauplatzes
     std::function<void(Event&, int type)> eventProc;
+    // AVI öffnen (FFmpeg im Spiel); leer → Videoebenen werden nicht geladen (docs/VIDEO.md)
+    std::function<std::unique_ptr<VideoDecoder>(const FoundFile&, std::string* error)> openVideo;
     HitGrid hitGrid;       // 0x0047D77C
     Event clickEvent;      // 0x00481EE8 (statisch, Typ 0x16; EVENTS.md)
     std::array<Event*, 10> timerEvents{};  // g_TimerEvents 0x0047E614

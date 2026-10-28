@@ -89,5 +89,5 @@ War die Ebene beendet: A16 `Seek(0)`, Bild −1 (Art < 2: Bild 0). `beendet` wir
   läuft 0, beendet 1, rückwärts 0, Ende-Ereignis Typ 1 markieren.
 
 ## Offen
-AVI-Ebenen (Art 3, FFmpeg), Lippensync `+0x484`, Bildfolgen Art < 2 (in den Daten unbenutzt),
+AVI-Ebenen: siehe VIDEO.md (portiert; direkter Weg `+0x30` offen). Lippensync `+0x484`, Bildfolgen Art < 2 (in den Daten unbenutzt),
 Bedeutung von `+0x2C4/+0x2C8`.

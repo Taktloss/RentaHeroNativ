@@ -157,8 +157,23 @@ bool Layer::draw(Surface565& s, int flag, const Rect& src, const ZMap* zmap) {
     }
     if (zmap && zmap->data.empty()) zmap = nullptr;
 
+    if (kind == LayerKind::Avi) {
+        // Typ 3 (0x0044723B): direkt nur bei Zoom 100, flag 0 und +0x30; Wechsel gibt die Oberfläche frei
+        const bool wantDirect = zoom == 100.0 && flag == 0 && direct;
+        if (wantDirect != alpha) {
+            alpha = wantDirect;
+            releaseSurface();
+        }
+        if (alpha) {
+            // Slot 1 → CImageAvi_Draw mit dem ungeclippten Ebenenrechteck
+            if (!drawImageDirect(s, r)) return false;
+            dirty = false;
+            return true;
+        }
+    }
     if (!alpha) {
-        // DirectDraw-Oberfläche der Ebene
+        // DirectDraw-Oberfläche der Ebene (fehlt sie: 0x00446C90)
+        if (!hasSurface && !renderToSurface()) return false;
         if (zoom != 100.0) {
             return false;  // UNVERIFIED: gestrecktes Blt (Verfahren des Treibers) noch nicht nachgebildet
         }
