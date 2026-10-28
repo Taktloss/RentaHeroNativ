@@ -395,9 +395,8 @@ int main(int argc, char** argv) {
     ctx.help = &help;
     if (game) {
         // Spielstart wie „Neues Spiel“: RequestLocation, Ausführung im ersten Game_Idle
+        // (Start darf warten: Nachrichtenschleife muss dafür schon stehen)
         requestLocation(ctx.request, opt.gameLoc, opt.gameScene, 0, false);
-        processLocationChange(ctx);
-        if (!ctx.current) std::fprintf(stderr, "Schauplatz %d/%d nicht verfügbar\n", opt.gameLoc, opt.gameScene);
     }
     if (!opt.hint.empty()) help.iconOn();
     if (!opt.items.empty() && scene.inventory()) {
@@ -464,6 +463,8 @@ int main(int argc, char** argv) {
             const int after = ctx.current ? ctx.current->location() * 1000 + ctx.current->sceneNumber() : -1;
             if (ctx.current && before != after)
                 std::fprintf(stderr, "Schauplatz %d / Szene %d\n", ctx.current->location(), ctx.current->sceneNumber());
+            if (!ctx.current && frame == 0)
+                std::fprintf(stderr, "Schauplatz %d/%d nicht verfügbar\n", opt.gameLoc, opt.gameScene);
         }
         if (opt.frameMs > 0) SDL_Delay(static_cast<Uint32>(opt.frameMs));
         ++frame;
