@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "game/loc40.hpp"
 
+#include "game/loc35.hpp"
+
 #include <bit>
 #include <cstdint>
 
@@ -211,7 +213,9 @@ Loc40::Loc40(GameContext& ctx, int scene, int prevScene) : Game(ctx, 40, scene, 
     }
 }
 
-Loc40::~Loc40() {
+Loc40::~Loc40() { shutdown(); }
+
+void Loc40::destroyLocal() {
     // +0x7C … +0xFC löschen (Animation zuerst), danach CGame_dtor (Szene hält +0x5DC noch)
     anim_.reset();
     for (auto& b : sfx_) b.reset();
@@ -351,6 +355,7 @@ void Loc40::onEvent116(Event& e, int) {
 
 std::unique_ptr<Game> createLocation(GameContext& ctx, int location, int scene, int prevScene) {
     switch (location) {
+    case 35: return std::make_unique<Loc35>(ctx, scene, prevScene);
     case 40: return std::make_unique<Loc40>(ctx, scene, prevScene);
     default: return nullptr;  // weitere Schauplätze folgen
     }

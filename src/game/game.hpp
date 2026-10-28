@@ -60,12 +60,19 @@ public:
     Game(GameContext& ctx, int location, int scene, int prevScene);
     // orig: Rent-A-Hero.exe 0x0043F580 CGame_dtor (Rumpf in shutdown())
     virtual ~Game();
-    // Rumpf des Destruktors; Game_Idle Schritt 7 ruft ihn zum Zeitpunkt des Löschens
+    // Destruktor-Rümpfe: erst der des Schauplatzes (destroyLocal), dann CGame_dtor. Game_Idle
+    // Schritt 7 ruft das zum Zeitpunkt des Löschens; Unterklassen rufen es in ihrem Dtor.
     void shutdown();
     Game(const Game&) = delete;
     Game& operator=(const Game&) = delete;
     // vtable +0x04 (Start), aus Game_SwitchLocation
     virtual void start() {}
+
+protected:
+    // Rumpf des LocNN-Destruktors (vor CGame_dtor)
+    virtual void destroyLocal() {}
+
+public:
 
     int location() const { return location_; }
     int sceneNumber() const { return sceneNr_; }
@@ -83,6 +90,8 @@ protected:
     // orig: Rent-A-Hero.exe 0x0043F780 CGame_Wait – verschachtelte Nachrichtenschleife bis der
     // Platz ≠ 1; false = abgebrochen (bzw. WM_QUIT/WM_COMMAND)
     bool wait();
+    // orig: Rent-A-Hero.exe 0x0043F360 CEvent_SetTimerHandler(ms, flags, handler)
+    void setTimerHandler(Event& e, std::uint32_t ms, unsigned flags, int handler);
     // orig: Rent-A-Hero.exe 0x004409F0 CGame_Delay(ms)
     void delay(std::uint32_t ms);
     // orig: Rent-A-Hero.exe 0x00440890 CGame_WalkAndComment / 0x004408D0 CGame_Comment /

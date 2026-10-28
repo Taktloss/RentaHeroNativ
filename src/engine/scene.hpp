@@ -120,6 +120,10 @@ public:
     // orig: Rent-A-Hero.exe 0x0044B160 / 0x0044B170 CSzene_EnableInput / DisableInput
     void enableInput() { clicksEnabled = true; }
     void disableInput() { clicksEnabled = false; }
+    // orig: Rent-A-Hero.exe 0x0044B0C0 CSzene_DisableAll – Eingabe aus, Hintergrund, Figuren
+    // verbergen, Vollbildobjekt, alle Ebenen bis zur ersten Lücke aus, alle Bereiche inaktiv.
+    // +0x2B0 (nur vom Editor 0x00449D50 belegt) entfällt.
+    void disableAll();
     // Hilfe-Objekt +0x9F8 (WinMain setzt es nach dem Laden des Symbols)
     void setHelp(HelpOverlay* h) { help_ = h; }
     void setBarShown(bool on) { barShown_ = on; }

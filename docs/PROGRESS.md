@@ -238,4 +238,8 @@
   zerlegt und re-entrant; `Game_Idle`-Verschachtelungstiefe `0x0047D754` mit Abbruch-Flag nur
   auf oberster Ebene; `CGame_dtor` mit 3 Nachrichten je belegtem Platz. Funktions-Handler
   (Wert ≥ 0xFFF) in `fireEvent`. 98 Tests.
-- Nächste Schritte: Loc35/Loc37/Loc1 für den Anschluss nach dem Intro.
+- 2026-10-28: Loc35 (Gleiter, Szene 1) wörtlich portiert, `CSzene_DisableAll`,
+  `CEvent_SetTimerHandler` als `Game::setTimerHandler`, Destruktor-Reihenfolge LocNN → CGame
+  (`destroyLocal`). Probelauf bis zum Wechsel nach 40/115. Gefunden: 80 von 136 AVIs nutzen
+  Indeo-5-Transparenz, die FFmpeg ignoriert (graue Kästen; VIDEO.md). 99 Tests.
+- Nächste Schritte: Indeo-5-Transparenz klären (Entscheidung Nutzer), dann Loc37, Loc1.

@@ -814,4 +814,20 @@ int Scene::onMouseMove(int x, int y) {
     return cursor;
 }
 
+void Scene::disableAll() {
+    disableInput();
+    if (background_) background_->disable();
+    for (auto& a : actors_)
+        if (a) a->hide(clicksEnabled);
+    if (modal_) modal_->disable();
+    for (auto& l : layers_) {
+        if (!l) break;
+        l->disable();
+    }
+    for (auto& a : areas_) {
+        if (!a) return;
+        a->active = false;
+    }
+}
+
 }  // namespace rah

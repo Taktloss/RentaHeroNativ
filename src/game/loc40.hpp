@@ -17,6 +17,7 @@ public:
     AnimLayer* anim() { return anim_.get(); }
 
 private:
+    void destroyLocal() override;
     // orig: Rent-A-Hero.exe 0x00432EF0 Loc40_OnEvent114
     void onEvent114(Event& e, int type);
     // orig: Rent-A-Hero.exe 0x004330D0 Loc40_OnEvent115

@@ -125,3 +125,14 @@ Belegt an `CSzene_SetModal` `0x0044A330`, `CGame_LoadAnim` `0x0043FFB0`, `0x0044
 - `CSzene_Reset` (`0x00448930`, aus `CGame_dtor`) setzt `+0x5DC = 0` ohne zu löschen.
 - Eine fehlende SZN (Loc40 lädt `xxx`) ergibt eine leere, aber geladene Szene (`+0x00 = 1`).
 Port: `Scene::setModal/loadAnim`, `AnimLayer::drawImageDirect` (`g.screen`).
+
+## Indeo-5-Transparenz (offen)
+80 von 136 AVIs (u. a. alle Figuren-Videos von Loc35) sind Indeo 5 (`IV50`) mit gesetztem
+Transparenz-Bit im GOP-Kopf (GOP-Flags `0x89`, Bit `0x08`; gelesen mit einem eigenen Skript,
+LE-Bitleser: Startcode 5 Bit, Bildtyp 3, Nummer 8, dann GOP-Flags 8). FFmpegs Dekoder liest das
+Bit, überspringt aber Maske und Füllfarbe → transparente Bereiche erscheinen als graue
+Fläche. Im Original dekodiert Intels `ir50_32.dll` über DirectShow; wie die transparenten
+Pixel dort in der Ebenenoberfläche landen (Farbschlüssel Schwarz? unverändert?), ist nicht
+belegt. Der Codec liegt im Wine-Prefix (`system32/ir50_32.dll`) und auf der CD
+(`INTELINDEO5`).
+

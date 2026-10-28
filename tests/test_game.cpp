@@ -4,6 +4,7 @@
 
 #include "core/strings.hpp"
 #include "audio/mixer.hpp"
+#include "game/loc35.hpp"
 #include "game/loc40.hpp"
 #include "test.hpp"
 
@@ -109,15 +110,13 @@ TEST(loc40_intro_s114_speech_chain_and_click_skip) {
     // Sprache ohne WAV: mindestens 1000 ms, dann Ende
     for (int i = 0; i < 11; ++i) r.frame();
     CHECK(!r.g.speechRunning);
-    // Klick ins Bild → Ereignis 2 → Loc 35 / Szene 1. Fehlt der Schauplatz, nimmt Game_Idle die
-    // vertauschten Werte: zurück nach Loc 40 / Szene 114 (Intro beginnt neu)
+    // Klick ins Bild → Ereignis 2 → Loc 35 / Szene 1 (Loc35 setzt CGame+0x28 = 1)
     r.scene->onClick(300, 200);
     r.frame();
-    auto* again = dynamic_cast<Loc40*>(r.ctx->current.get());
-    REQUIRE(again);
-    CHECK(again->sceneNumber() == 114 && again->prevScene() == 1);
-    CHECK(r.ctx->request.nextLocation == 40 && r.ctx->request.prevLocation == 40);
-    CHECK(r.scene->modal() == again->anim() && again->anim()->frame <= 1);
+    auto* glider = dynamic_cast<Loc35*>(r.ctx->current.get());
+    REQUIRE(glider);
+    CHECK(glider->sceneNumber() == 1 && glider->prevScene() == 114 && glider->location() == 1);
+    CHECK(r.ctx->request.nextLocation == 35 && r.ctx->request.prevLocation == 40);
 }
 
 TEST(loc40_intro_s116_prev_scene_quirk) {
@@ -261,4 +260,26 @@ TEST(game_change_scene_aborts_waits_until_top_level) {
     r.frame();
     CHECK(!r.ctx->request.pending && !r.ctx->request.abort);
     CHECK(!w.wait());
+}
+
+TEST(loc35_timer_stages_and_item_use) {
+    Rig r(10);
+    r.ctx->current = std::make_unique<Loc35>(*r.ctx, 1, 0);
+    auto& loc = static_cast<Loc35&>(*r.ctx->current);
+    CHECK(loc.location() == 1 && loc.sceneNumber() == 1);  // Ctor setzt CGame+0x28 = 1
+    loc.start();
+    CHECK(loc.timeStage() == 1 && loc.nextAction() == 1);
+    for (int i = 0; i < 21; ++i) r.frame();  // 2000 ms → 001_ROD_01, Timer 5000 ms
+    CHECK(loc.timeStage() == 2);
+    for (int i = 0; i < 50; ++i) r.frame();  // 5000 ms → Aktion 2, Timer 20 000 ms
+    CHECK(loc.timeStage() == 3 && loc.nextAction() == 2);
+    for (int i = 0; i < 200; ++i) r.frame();  // 20 000 ms → Aktion 5 (Nahaufnahme), kein Timer
+    CHECK(loc.timeStage() == 4 && loc.nextAction() == 5);
+    // Gegenstand 27 benutzt → Aktion 10 bleibt gegen spätere Zeitstufen bestehen
+    Event e;
+    e.setHandler(3);
+    e.enabled = true;
+    e.mark(r.g, 0x0B);
+    fireEvent(r.g, e, 0x0B);
+    CHECK(loc.nextAction() == 10);
 }

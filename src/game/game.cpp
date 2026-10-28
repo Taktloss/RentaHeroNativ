@@ -28,6 +28,7 @@ Game::~Game() {
 void Game::shutdown() {
     if (shutDown_) return;
     shutDown_ = true;
+    destroyLocal();
     g_.eventVariant = 0;  // SetEventVariant(0)
     // belegte Warteplätze auf 0, je Platz 3 Nachrichten verarbeiten (ohne Game_Idle)
     for (int& w : waits_) {
@@ -122,13 +123,17 @@ bool Game::wait() {
     return r != 3;  // 0x0047D130 = 0 (immer 0)
 }
 
+void Game::setTimerHandler(Event& e, std::uint32_t ms, unsigned flags, int handler) {
+    // 0x0043F280: Handler, nicht ausstehend, aktiv; dann CEvent_SetTimer
+    e.setHandler(handler);
+    e.enabled = true;
+    setEventTimer(g_, e, ms, flags);
+}
+
 void Game::delay(std::uint32_t ms) {
     Event e;
     const int cb = beginWait();
-    // CEvent_SetTimerHandler 0x0043F360: Handler, aktiv, Timer einmalig
-    e.setHandler(cb);
-    e.enabled = true;
-    setEventTimer(g_, e, ms, 0);
+    setTimerHandler(e, ms, 0, cb);
     wait();
 }
 
