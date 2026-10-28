@@ -127,23 +127,29 @@ Belegt an `CSzene_SetModal` `0x0044A330`, `CGame_LoadAnim` `0x0043FFB0`, `0x0044
 Port: `Scene::setModal/loadAnim`, `AnimLayer::drawImageDirect` (`g.screen`).
 
 ## Indeo-5-Transparenz
-80 von 136 AVIs (u. a. alle Figuren-Videos von Loc35) sind Indeo 5 (`IV50`) mit gesetztem
-Transparenz-Bit im GOP-Kopf (GOP-Flags `0x89`, Bit `0x08`; gelesen mit einem eigenen Skript,
-LE-Bitleser: Startcode 5 Bit, Bildtyp 3, Nummer 8, dann GOP-Flags 8). FFmpegs Dekoder liest das
-Bit, überspringt aber Maske und Füllfarbe → transparente Bereiche erscheinen als graue
-Fläche.
+Von 136 AVIs sind 95 Cinepak (`cvid`), 39 Indeo 5 (`IV50`), 2 Indeo 3 (`IV32`). **21** der
+Indeo-5-Videos (u. a. alle Figuren-Videos von Loc35, Credits, Drache, Uhr-Szenen) haben eine
+Transparenzmaske (GOP-Flag `0x08`), die FFmpeg überspringt → ohne Auswertung graue Flächen.
+Alle 21 nutzen dieselbe Form: GOP-Flags `0x89`, eine Kachel, Füllfarbe Schwarz im Bitstrom.
 
 **Messung mit dem Original-Codec** (`tools/iv5ref`, `ir50_32.dll` aus dem Wine-Prefix,
-SHA-256 `e473843f364a447d…`, 733 696 Bytes): Das Messprogramm ruft den VfW-`DriverProc` direkt
-(`DRV_OPEN`, `ICM_DECOMPRESS_BEGIN`/`ICM_DECOMPRESS`, Ausgabe RGB24, Puffer vorher mit 0xA5
-gefüllt). Ergebnis für `S1_RodOnGlider.avi`:
-- Jedes Pixel wird geschrieben (kein 0xA5 übrig) – transparente Pixel werden **gefüllt**.
-- Füllwert **Schwarz (0, 0, 0)** = Farbschlüssel der Ebenen (COMPOSITOR.md) → im Spiel
-  durchsichtig. Bild 0 (440 Bytes, Schlüsselbild) ist vollständig schwarz.
-- Offen: Herkunft des Schwarz (feste Füllung oder die 24-Bit-Füllfarbe des GOP-Kopfs),
-  Kodierung und Granularität der Maske (2×2-Blöcke sind gemischt, aber echte schwarze
-  Bildpixel lassen sich so nicht abgrenzen) → Analyse von `ir50_32.dll` in Ghidra.
+SHA-256 `e473843f364a447d…`): Das Messprogramm ruft den VfW-`DriverProc` direkt
+(`DRV_OPEN`, `ICM_DECOMPRESS_BEGIN`/`ICM_DECOMPRESS`, RGB24, Puffer vorher 0xA5). Jedes Pixel
+wird geschrieben; transparente Pixel werden mit **Schwarz** gefüllt = Farbschlüssel der Ebenen
+(COMPOSITOR.md) → im Spiel durchsichtig.
+
+Format und Herleitung: formats/indeo5-transparenz.md.
+
+**Port** (`src/video/iv5mask`, `src/video/ffvideo.cpp`): Beim Senden jedes Pakets liest
+`Indeo5Mask` die Maske (nur Kopfdaten und Bandlängen, kein Koeffizienten-Dekodieren) und
+merkt sie unter dem Zeitstempel; nach dem Umwandeln nach RGB24 werden Pixel mit Maskenbit 0
+schwarz gesetzt. Nicht nachgebildete Varianten (Kacheln, Schutz, fehlende Bandlängen) bleiben
+deckend (kommen in den Spieldaten bei transparenten Videos nicht vor). Geprüft: alle 21
+Videos (je bis 30 Bilder) pixelgenau gegen den Original-Codec (Prototyp
+`tools/iv5ref/iv5mask.py`); C++-Leser gegen den Prototyp (`tests/test_iv5mask.cpp`,
+`RAH_TEST_COMMON` = installierter `Common`-Ordner).
 
 Werkzeug: `tools/iv5ref/build.sh <ordner>` (clang/lld-link, i686, ohne CRT),
 `python3 -I tools/iv5ref/avi2bin.py <avi> <ordner>/in.bin [bpp] [bilder]`, dann im Ordner
-mit `ir50_32.dll` daneben `wine iv5ref.exe` → `out.bin`.
+mit `ir50_32.dll` daneben `wine iv5ref.exe` → `out.bin`;
+`python3 -I tools/iv5ref/iv5mask.py <avi> <out.bin> <bilder>` vergleicht.

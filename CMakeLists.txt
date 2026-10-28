@@ -45,7 +45,8 @@ add_library(rah_core STATIC
   src/formats/wav.cpp
   src/game/game.cpp
   src/game/loc35.cpp
-    src/game/loc40.cpp
+  src/game/loc40.cpp
+  src/video/iv5mask.cpp
   src/formats/bmp.cpp
   src/formats/pe.cpp
   src/render/tccsprite.cpp
@@ -98,6 +99,7 @@ if(RAH_BUILD_TESTS)
     tests/test_game.cpp
     tests/test_audio.cpp
     tests/test_actor.cpp
+    tests/test_iv5mask.cpp
   )
   target_link_libraries(rah_tests PRIVATE rah_core)
   if(FFMPEG_FOUND)

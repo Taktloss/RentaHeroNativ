@@ -240,8 +240,8 @@
   (Wert ≥ 0xFFF) in `fireEvent`. 98 Tests.
 - 2026-10-28: Loc35 (Gleiter, Szene 1) wörtlich portiert, `CSzene_DisableAll`,
   `CEvent_SetTimerHandler` als `Game::setTimerHandler`, Destruktor-Reihenfolge LocNN → CGame
-  (`destroyLocal`). Probelauf bis zum Wechsel nach 40/115. Gefunden: 80 von 136 AVIs nutzen
-  Indeo-5-Transparenz, die FFmpeg ignoriert (graue Kästen; VIDEO.md). 99 Tests.
+  (`destroyLocal`). Probelauf bis zum Wechsel nach 40/115. Gefunden: Indeo-5-Transparenz, die FFmpeg
+  ignoriert (graue Kästen; VIDEO.md – 21 Videos, frühere Zahl 80 war falsch gezählt). 99 Tests.
 - 2026-10-28: Indeo-5-Transparenz – Entscheidung: selbst dekodieren (CLAUDE.md). Messprogramm
   `tools/iv5ref` (Win32 ohne CRT, VfW-DriverProc direkt) unter Wine: Original-Codec füllt
   transparente Pixel mit Schwarz (= Farbschlüssel). VIDEO.md.
@@ -251,5 +251,8 @@
 - 2026-10-28: Maske vollständig für die Loc35-Videos: Lage (GOP-/Bildkopf, Bandlängen),
   Kachelkopf, Huffman, Lauflängen, XOR, Polarität (0 = transparent). Prototyp
   `tools/iv5ref/iv5mask.py` stimmt pixelgenau mit dem Original-Codec (5 Videos, alle Bilder).
-- Nächste Schritte: vollständiger GOP-Kopf (Videos ohne Längenfeld, Kacheln, Schutz-Bit),
-  dann C++-Leser im Port (Maske → Farbschlüssel Schwarz wie im Original); danach Loc37, Loc1.
+- 2026-10-28: Indeo-5-Transparenz im Port: vollständiger GOP-Kopf belegt, alle 21
+  transparenten Videos pixelgenau gegen den Original-Codec; `src/video/iv5mask` (C++-Leser),
+  Einbau in `FfmpegVideo` (Maske je Zeitstempel → Schwarz = Farbschlüssel). Loc35 zeigt
+  Rodrigo freigestellt. 102 Tests (`RAH_TEST_COMMON` für den Originaldaten-Test).
+- Nächste Schritte: Loc37, dann Loc1.

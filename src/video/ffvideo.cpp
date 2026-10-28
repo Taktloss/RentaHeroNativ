@@ -10,8 +10,10 @@ extern "C" {
 
 #include <algorithm>
 #include <cstring>
+#include <map>
 
 #include "render/surface.hpp"
+#include "video/iv5mask.hpp"
 
 namespace rah {
 
@@ -55,6 +57,7 @@ public:
         codec_ = avcodec_alloc_context3(c);
         if (avcodec_parameters_to_context(codec_, st->codecpar) < 0 || avcodec_open2(codec_, c, nullptr) < 0)
             return fail("Codec nicht geöffnet");
+        indeo5_ = st->codecpar->codec_id == AV_CODEC_ID_INDEO5;
         width_ = st->codecpar->width;
         height_ = st->codecpar->height;
         tb_ = st->time_base;
@@ -80,6 +83,7 @@ public:
         const std::int64_t target = av_rescale_q(std::max<std::int64_t>(t, 0), k100ns, tb_);
         av_seek_frame(fmt_, stream_, target, AVSEEK_FLAG_BACKWARD);
         avcodec_flush_buffers(codec_);
+        masks_.clear();
         eof_ = drained_ = false;
         look_ = haveCur_ = false;
         nextPts_ = target;
@@ -117,6 +121,7 @@ private:
             if (r == 0) {
                 lookPts_ = frame_->best_effort_timestamp != AV_NOPTS_VALUE ? frame_->best_effort_timestamp : nextPts_;
                 convert(lookRgb_);
+                applyMask(frame_->pts, lookRgb_);
                 return 1;
             }
             if (r == AVERROR_EOF) return 0;
@@ -132,9 +137,32 @@ private:
                 eof_ = true;
                 continue;
             }
-            if (pkt_->stream_index == stream_) avcodec_send_packet(codec_, pkt_);
+            if (pkt_->stream_index == stream_) {
+                readMask();
+                avcodec_send_packet(codec_, pkt_);
+            }
             av_packet_unref(pkt_);
         }
+    }
+
+    // Indeo 5: Transparenzmaske, die FFmpeg überspringt (formats/indeo5-transparenz.md). Der
+    // Original-Codec füllt transparente Pixel mit Schwarz (= Farbschlüssel der Ebenen).
+    void readMask() {
+        if (!indeo5_ || pkt_->size <= 0) return;
+        const auto r = iv5_.decode(pkt_->data, static_cast<std::size_t>(pkt_->size));
+        if (r == Indeo5Mask::Result::Mask && iv5_.width() == width_ && iv5_.height() == height_)
+            masks_[pkt_->pts] = iv5_.mask();
+        // UNVERIFIED: nicht nachgebildete Varianten (Kacheln, Schutz) bleiben deckend
+    }
+    void applyMask(std::int64_t pts, std::vector<std::uint8_t>& rgb) {
+        if (masks_.empty()) return;
+        const auto it = masks_.find(pts);
+        if (it != masks_.end()) {
+            const auto& m = it->second;
+            for (std::size_t i = 0; i < m.size(); ++i)
+                if (!m[i]) rgb[3 * i] = rgb[3 * i + 1] = rgb[3 * i + 2] = 0;
+        }
+        masks_.erase(masks_.begin(), masks_.upper_bound(pts));
     }
 
     void convert(std::vector<std::uint8_t>& rgb) {
@@ -184,6 +212,9 @@ private:
     std::int64_t lookPts_ = 0;    // pts des vorausgelesenen Bilds
     bool look_ = false, haveCur_ = false, eof_ = false, drained_ = false;
     std::vector<std::uint8_t> cur_, lookRgb_;  // RGB24: aktuelles und vorausgelesenes Bild
+    bool indeo5_ = false;
+    Indeo5Mask iv5_;
+    std::map<std::int64_t, std::vector<std::uint8_t>> masks_;  // pts → Maske
 };
 
 }  // namespace

@@ -39,8 +39,13 @@ LE-Bitleser über das ganze Bild:
    2 Bit Kachelgröße `64 << v` (sonst eine Kachel = Bild), 3 Bit Ebenenaufteilung `c`
    (`c ∈ {0, 1, 2, 6}`; Luma-Bänder `(c & 3)·3 + 1`, je Chroma-Ebene `(c >> 2)·3 + 1`),
    4 Bit Bildgröße (15 → 26 Bit: Breite = obere 13, Höhe = untere 13; sonst Tabellen
-   `0x10087C90`/`0x10087CD0`), Bandbeschreibungen, dann bei `&8` Transparenz: 4 Bit, untere
-   3 Bit müssen 0 sein, Bit 3 → 24 Bit Füllfarbe (R, G, B → `ctx+0x150…0x152`).
+   `0x10087C90` = 640, 320, 160, 704, 352, 352, 176, 240, 640, 704, 80, 88 und `0x10087CD0` =
+   480, 240, 120, 480, 240, 288, 144, 180, 240, 240, 60, 72), dann je Luma-Band und je
+   Chroma-Band (U und V gemeinsam) 6 Bit; sind Bit 3–5 nicht alle 0, folgen 2 Bit, die 0
+   sein müssen (sonst `INT3`, `0x10023CE2`). Dann bei `&8` Transparenz: 4 Bit, untere 3 Bit
+   müssen 0 sein, Bit 3 → 24 Bit Füllfarbe (R, G, B → `ctx+0x150…0x152`). Auf Byte
+   ausrichten, 24 Bit Version (`ctx+0xBF = (v >> 19) & 0xF`; Bit 23 → 16-Bit-Worte, solange
+   deren Bit 15 gesetzt ist), auf Byte ausrichten.
 3. Bildkopf: 8 Bit Flags (`ctx+0xBE`): `&1` → 24 Bit Bildgröße in Bytes (= Chunk-Länge),
    `&0x10` → 16 Bit Prüfsumme, `&0x20` → Erweiterungen (8 Bit Länge + Daten, bis Länge 0),
    `&0x40` → 3 Bit Makroblock-Tabelle (7 → 4 Bit Anzahl + je 4 Bit), dann 3 Bit. Danach auf
@@ -64,8 +69,9 @@ Liegt direkt hinter den Banddaten des Bildes. LE-Bitleser (LSB zuerst), Masken a
 5. Auf Byte ausrichten; dann **Kacheln** (Kachelgröße/-anzahl aus `ctx+0xD0`/`+0xD8`). Je
    Kachel: Bit „gefüllt“ → nächstes Bit ist der Füllwert; sonst Bit „Größe“ → 8 Bit Größe
    (`0xFF` → 24 Bit), Daten ab dem nächsten Byte; ohne Größe Daten ab Byte 1 der Kachel.
-   Belegt für eine Kachel (gefüllt und Lauflängen ohne Größe). UNVERIFIED: mehrere Kacheln,
-   Kachel-Merker `ctx+0xEC` (Zweig „überspringen“).
+   Gefüllt: **Bit 1** ist der Füllwert, die nächste Kachel beginnt zwei Bit weiter.
+   `ctx+0xEC[Kachel]` = Kachel liegt im angeforderten Ausschnitt (`0x100232D0`); bei voller
+   Dekodierung immer 1 (der Zweig für 0 überspringt nur). Belegt für eine Kachel.
 
 ## Lauflängen einer Kachel (`0x1004F3C0`)
 - Leere Kachel: ganz mit `DAT_100980F0[wert]` füllen (Wert = Bit aus dem Kopf).
@@ -84,17 +90,15 @@ Null (letzte Zeile ohne Null), dann `xbits[i]` Bits in umgekehrter Reihenfolge
 UNVERIFIED: Standard-Deskriptor, falls ein Bild keinen eigenen mitbringt.
 
 ## Prüfung
-`tools/iv5ref/iv5mask.py` (Prototyp) gegen den Original-Codec (`tools/iv5ref`): alle Bilder von
-`S1_RodOnGlider`, `S1_RodChecksItems`, `S1_Schild`, `S1_RodDrawsBlaster`, `S1_RodToCloseup`
-(240×328 … 636×248) – jedes Maskenbit 0 ist im Original schwarz, Maske 1 deckt sich mit den
-nicht-schwarzen Pixeln. Über alle 80 transparenten Videos: GOP-Flags `0x89` (21), `0x39`,
-`0xF8…0xFD`, `0xD9`, `0xEC`, `0x59`, `0x5D`, `0x29`, `0x2C`, `0xE9` – Varianten mit Kacheln
-(`0x40`), Schutz (`0x20`) und **ohne** Längenfeld (`&1` fehlt) brauchen den vollständigen
-GOP-Kopf (Bandbeschreibungen, `0x100232D0` Zeilen ab „local_28“).
+`tools/iv5ref/iv5mask.py` (Prototyp mit vollständigem GOP-Kopf; die Kopflänge aus `&1` wird
+gegen die Parser-Position geprüft und stimmt) gegen den Original-Codec (`tools/iv5ref`):
+**alle 21 transparenten Videos** der Spieldaten, je bis 30 Bilder – jedes Maskenbit 0 ist im
+Original schwarz, Maske 1 deckt sich mit den nicht-schwarzen Pixeln. Alle 21: GOP `0x89`,
+eine Kachel, Bitstrom-Füllfarbe (0, 0, 0), Kachelarten „gefüllt“ und „Lauflängen ohne Größe“.
 
 ## Offen
-- Vollständiger GOP-Kopf (Bandbeschreibungen) für Videos ohne Längenfeld; Tabellen der
-  Bildgrößen; mehrere Kacheln; Bilder ohne Bild-Flag `0x80` (Bandlängen fehlen → dann nur
-  durch Dekodieren der Kacheln, deren Längen aber im Kachelkopf stehen).
+- Nicht in den Spieldaten und daher nur beschrieben, nicht geprüft: mehrere Kacheln
+  (Folgeposition nach Kacheln ohne Größe im Dekompilat mehrdeutig), Schutz-Bit, Bilder ohne
+  Bild-Flag `0x80`.
 - Standard-Codebuch, falls das erste Bild keines mitbringt; Füllfarbe aus dem Bitstrom
   (`0xFF000000`-Regel) gegen Messung.
