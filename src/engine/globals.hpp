@@ -6,6 +6,7 @@
 #include <cstdint>
 #include <array>
 #include <functional>
+#include <map>
 #include <memory>
 #include <string>
 #include <vector>
@@ -36,6 +37,15 @@ struct EngineGlobals {
     std::array<Event*, 10> timerEvents{};  // g_TimerEvents 0x0047E614
     std::vector<Event*> runningTimers;     // Port: statt timeSetEvent-Threads
     int eventVariant = 0;  // 0x0047E608 (aus 0x0047D26C gesetzt; Bedeutung offen)
+    // Handler-Werte ≥ 0xFFF sind im Original Funktionszeiger (z. B. CGame_WaitDone0 =
+    // 0x0043F910). Port: Wert → Funktion; owner = Objekt, das den Eintrag gesetzt hat.
+    struct FnHandler {
+        const void* owner = nullptr;
+        std::function<void(Event&, int type)> fn;
+    };
+    std::map<int, FnHandler> fnHandlers;
+    // Verschachtelungstiefe von Game_Idle 0x0047D754 (Wartestellen rufen es re-entrant auf)
+    int idleDepth = 0;
     // Bereichstext unter der Maus (docs/MOUSE.md)
     bool textVisible = false;              // 0x00481F24
     std::unique_ptr<Event> toggleEvent;    // 0x00481F2C, Handler 0x0044C8D0

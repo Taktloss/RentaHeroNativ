@@ -36,10 +36,38 @@ anim->Play(…, cb);            // oder Sprache, Delay, Laufen
 if (!CGame_Wait(this)) return;   // abgebrochen → Handler endet
 ```
 
-**Port:** Diese Verschachtelung 1:1 nachbilden: `wait()` ruft die Hauptschleifen-Funktion
-(`pumpOnce`: ein SDL-Ereignis bzw. ein `Game_Idle`) re-entrant auf, bis der Platz ≠ 1
-ist. Alternativen (Coroutinen) würden die Reihenfolge von Abbrüchen schwer exakt
-treffen. Menübefehle während einer Wartestelle gehen wie im Original verloren.
+Die Rückrufe sind Funktionszeiger, die als Handler-Wert (≥ 0xFFF) im Ereignis stehen;
+`FUN_0043FA10` ist die Identität. `CGame_Wait` liest `+0x4C` **einmal** beim Eintritt: Eine
+innere Wartestelle (z. B. `CGame_Delay` in einem Handler, der aus dem verschachtelten
+`Game_Idle` läuft) setzt den äußeren Platz auf 3, die äußere kehrt danach mit `false` zurück.
+
+`CGame_Delay(ms)` (`0x004409F0`): temporäres `CEvent`, `CEvent_SetTimerHandler`
+(`0x0043F360` = Handler/aktiv setzen `0x0043F280`, dann `CEvent_SetTimer(ms, 0)`), warten,
+Ereignis freigeben. Der Timer-Typ 0x15 ist ≠ 0x2A → Platz 2.
+
+`CGame_HeroSay(key)` (`0x00440960`): `wsprintf("Loc%02d", +0x28)` ist der **GER-Dateiname**,
+Aufruf `0x00440400(ger, key, Held, cb)` = `CGame_Speak(…, Modus 0x0C, −1, −1, cb)`.
+
+**Abbruch-Flag beim Wechsel:** `Game_Idle` zählt `0x0047D754` beim Eintritt hoch und am Ende
+herunter (Verschachtelungstiefe; `GameMenu_Open` öffnet nur bei 0). Schritt 7 löscht das
+Abbruch-Flag `0x0047D74C` nur bei Tiefe 1 (`0x004032D5`): Ein `CGame_ChangeScene` aus einem
+Handler mit belegten Warteplätzen wird erst ausgeführt, wenn alle Wartestellen zurückgekehrt
+sind und die oberste Ebene wieder läuft.
+
+`CGame_dtor` (`0x0043F580`): `SetEventVariant(0)`; jeder belegte Warteplatz → 0 und je
+**3 Nachrichten** verarbeiten (nur `PeekMessage`/Verteilen, kein `Game_Idle`).
+
+**Port** (`src/game/game`, `src/app/main.cpp`): `GameContext::pumpMessage` (eine Nachricht,
+Rückgabe keine/normal/`WM_QUIT`/`WM_COMMAND`) und `GameContext::idle` (= `Game_Idle` mit
+`EngineGlobals::idleDepth`) bilden `WinMain` nach und sind re-entrant; `Game::wait()` ist
+`CGame_Wait` wörtlich. Rückrufe: `EngineGlobals::fnHandlers` bildet die fünf
+Funktionsadressen auf `Game::waitDone(i)` ab (`fireEvent` ruft sie wie einen
+Funktionszeiger). Escape/Fenster schließen = `WM_QUIT`.
+Abweichung: Wird der Schauplatz in einem verschachtelten `Game_Idle` gelöscht, läuft im
+Original die wartende Funktion auf freigegebenem Speicher weiter. Der Port führt den
+Destruktor-Rumpf (`Game::shutdown`) zum selben Zeitpunkt aus, gibt den Speicher aber erst
+auf oberster Ebene frei (`GameContext::retired`). Wegen des Abbruch-Flags kommt das nur vor,
+wenn beim `ChangeScene` kein Platz belegt war.
 
 ## Weitere API (Auswahl, nach Häufigkeit im Spielcode)
 | Adresse | Name | Wirkung |

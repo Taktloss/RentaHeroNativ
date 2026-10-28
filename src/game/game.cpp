@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "game/game.hpp"
 
+#include <cstdio>
+
 #include "core/strings.hpp"
 #include "engine/help.hpp"
 #include "engine/inventory.hpp"
@@ -11,11 +13,29 @@ Game::Game(GameContext& ctx, int location, int scene, int prevScene)
     : ctx_(ctx), g_(ctx.g), scene_(ctx.scene), location_(location), sceneNr_(scene), prevScene_(prevScene),
       seed_(ctx.g.now ? ctx.g.now() : 0) {
     setEventProc(nullptr);
+    for (int i = 0; i < 5; ++i)
+        g_.fnHandlers[kWaitDone[static_cast<std::size_t>(i)]] = {this, [this, i](Event& e, int t) { waitDone(i, e, t); }};
 }
 
 Game::~Game() {
-    // Warteplätze ≠ 0 freigeben (mit je 3 Nachrichten) – Wartestellen folgen
-    waits_.fill(0);
+    shutdown();
+    for (int id : kWaitDone) {
+        const auto it = g_.fnHandlers.find(id);
+        if (it != g_.fnHandlers.end() && it->second.owner == this) g_.fnHandlers.erase(it);
+    }
+}
+
+void Game::shutdown() {
+    if (shutDown_) return;
+    shutDown_ = true;
+    g_.eventVariant = 0;  // SetEventVariant(0)
+    // belegte Warteplätze auf 0, je Platz 3 Nachrichten verarbeiten (ohne Game_Idle)
+    for (int& w : waits_) {
+        if (w == 0) continue;
+        w = 0;
+        for (int k = 0; k < 3; ++k)
+            if (ctx_.pumpMessage) ctx_.pumpMessage();
+    }
     setEventProc(nullptr);
     if (auto* bar = scene_.inventory()) bar->setUseHandler(0);  // 0x0043FA60(0)
     // +0x74 (Leiste): 0x00442280, 0x00441E60(0, 0); +0x60…+0x6C Ton – folgen mit dem Ton
@@ -47,6 +67,101 @@ void Game::changeScene(int scene, int location) {
         }
     }
     requestLocation(ctx_.request, location, scene, sceneNr_, abort);
+}
+
+int Game::beginWait() {
+    int i = 0;
+    for (; i < 5; ++i) {
+        if (waits_[static_cast<std::size_t>(i)] == 0) {
+            waits_[static_cast<std::size_t>(i)] = 1;
+            lastWait_ = i;
+            break;
+        }
+    }
+    if (i == 5) {
+        lastWait_ = 5;
+        return 0;
+    }
+    return kWaitDone[static_cast<std::size_t>(i)];  // FUN_0043FA10: Funktionszeiger als Wert
+}
+
+void Game::waitDone(int i, Event& e, int type) {
+    e.setHandler(0);
+    int& w = waits_[static_cast<std::size_t>(i)];
+    if (w == 1) w = type == 0x2A ? 3 : 2;
+}
+
+bool Game::wait() {
+    const int i = lastWait_;
+    if (i == 5) {
+        if (waits_[0] == 1) waits_[0] = 3;
+        return false;
+    }
+    auto& slot = waits_[static_cast<std::size_t>(i)];
+    while (slot == 1) {
+        int j = 0;
+        while (j < 5 && waits_[static_cast<std::size_t>(j)] != 1) ++j;
+        if (j < i) {
+            // äußere Wartestelle(n) 0…j abbrechen; eigener Platz bleibt 1
+            for (int k = j; k >= 0; --k)
+                if (waits_[static_cast<std::size_t>(k)] == 1) waits_[static_cast<std::size_t>(k)] = 3;
+            slot = 1;
+            continue;
+        }
+        const int m = ctx_.pumpMessage ? ctx_.pumpMessage() : GameContext::kQuit;
+        if (m == GameContext::kNoMessage) {
+            if (ctx_.idle) ctx_.idle();
+        } else if (m == GameContext::kQuit || m == GameContext::kCommand) {
+            // WM_QUIT wird an das Fenster weitergeschickt; WM_COMMAND geht verloren
+            slot = 0;
+            return false;
+        }
+    }
+    const int r = slot;
+    slot = 0;
+    return r != 3;  // 0x0047D130 = 0 (immer 0)
+}
+
+void Game::delay(std::uint32_t ms) {
+    Event e;
+    const int cb = beginWait();
+    // CEvent_SetTimerHandler 0x0043F360: Handler, aktiv, Timer einmalig
+    e.setHandler(cb);
+    e.enabled = true;
+    setEventTimer(g_, e, ms, 0);
+    wait();
+}
+
+void Game::walkAndComment(int x, int y, int dir, std::string_view key) {
+    const int cb = beginWait();
+    if (hero_) hero_->walkTo(x, y, cb, dir);  // UNVERIFIED: Original ohne Prüfung auf Held
+    if (wait()) comment(key);
+}
+
+void Game::comment(std::string_view key) {
+    const int oldDir = hero_ ? hero_->dir : 0;
+    const bool input = scene_.clicksEnabled;
+    scene_.disableInput();
+    delay(300);
+    int cb = beginWait();
+    if (hero_) hero_->turn(0, cb);
+    wait();
+    scene_.enableInput();
+    heroSay(key);
+    scene_.disableInput();
+    delay(300);
+    cb = beginWait();
+    if (hero_) hero_->turn(oldDir, cb);
+    wait();
+    scene_.clicksEnabled = input;
+}
+
+void Game::heroSay(std::string_view key) {
+    char sec[16];
+    std::snprintf(sec, sizeof sec, "Loc%02d", location_);
+    const int cb = beginWait();
+    speak(sec, key, hero_, 0x0C, -1, -1, cb);  // 0x00440400(ger "LocNN", schlüssel, Held, cb): Modus 12
+    wait();
 }
 
 void Game::stopSpeech() {
@@ -147,9 +262,14 @@ bool switchLocation(GameContext& ctx) {
 
 void processLocationChange(GameContext& ctx) {
     LocationRequest& r = ctx.request;
+    // Abbruch-Flag (Warteplätze waren belegt) gilt nur bis zur obersten Game_Idle-Ebene
+    if (r.abort && ctx.g.idleDepth == 1) r.abort = false;
     if (!r.pending || r.abort) return;
     r.pending = false;  // = 0x0047D74C (0)
-    ctx.current.reset();
+    if (ctx.current) {
+        ctx.current->shutdown();  // Löschen des alten CGame (Speicher siehe GameContext::retired)
+        ctx.retired.push_back(std::move(ctx.current));
+    }
     if (switchLocation(ctx)) return;
     // mit vertauschten Zielwerten erneut (zurück zum vorigen Schauplatz)
     const int scene = r.nextScene;

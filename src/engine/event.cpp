@@ -27,6 +27,14 @@ void fireEvent(EngineGlobals& g, Event& e, int type) {
         } else if (e.handlerId < 0xFFF && g.eventProc) {
             e.param = e.handlerId;
             g.eventProc(e, type);
+        } else if (e.handlerId >= 0xFFF) {
+            // Funktionszeiger als Handler-Wert (Wartestellen-Rückrufe)
+            if (g.eventVariant != 0 && e.unk08 != 0) e.param = type;
+            const auto it = g.fnHandlers.find(e.handlerId);
+            if (it != g.fnHandlers.end()) {
+                auto fn = it->second.fn;  // Handler darf die Tabelle ändern
+                fn(e, type);
+            }
         }
     }
     e.pending = false;

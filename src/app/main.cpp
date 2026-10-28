@@ -406,28 +406,38 @@ int main(int argc, char** argv) {
             if (!scene.inventory()->add(id)) std::fprintf(stderr, "Gegenstand %d nicht geladen\n", id);
         scene.inventory()->setDescribe(0, [](int id) { std::fprintf(stderr, "Beschreibung %d\n", id); });
     }
+    // WinMain 0x00401E00: PeekMessage → verteilen, sonst Game_Idle. Beide sind über
+    // GameContext re-entrant aufrufbar (CGame_Wait, SCRIPTING.md).
     bool quit = false;
-    for (int frame = 0; !quit && (opt.frames < 0 || frame < opt.frames); ++frame) {
+    int frame = 0;
+    ctx.pumpMessage = [&]() -> int {
+        if (quit) return GameContext::kQuit;
         SDL_Event ev;
-        while (SDL_PollEvent(&ev)) {
-            if (ev.type == SDL_EVENT_QUIT) quit = true;
-            if (ev.type == SDL_EVENT_KEY_DOWN && ev.key.key == SDLK_ESCAPE) quit = true;
-            // WndProc 0x00402350: WM_LBUTTONDOWN/UP, WM_LBUTTONDBLCLK, WM_RBUTTONDOWN und
-            // WM_RBUTTONDBLCLK → OnMouseButton → CSzene_OnClick (Art wird nicht weitergegeben,
-            // EVENTS.md). Rechte Taste loslassen (0x205) gehört nicht dazu.
-            const bool down = ev.type == SDL_EVENT_MOUSE_BUTTON_DOWN;
-            const bool up = ev.type == SDL_EVENT_MOUSE_BUTTON_UP;
-            if ((down && (ev.button.button == SDL_BUTTON_LEFT || ev.button.button == SDL_BUTTON_RIGHT)) ||
-                (up && ev.button.button == SDL_BUTTON_LEFT)) {
-                SDL_ConvertEventToRenderCoordinates(ren, &ev);
-                scene.onClick(static_cast<int>(ev.button.x), static_cast<int>(ev.button.y));
-            }
-            // WM_MOUSEMOVE → OnMouseMove 0x00402790 → CSzene_MouseMove (MOUSE.md); Zeiger folgen
-            if (ev.type == SDL_EVENT_MOUSE_MOTION) {
-                SDL_ConvertEventToRenderCoordinates(ren, &ev);
-                mouseMove(static_cast<int>(ev.motion.x), static_cast<int>(ev.motion.y));
-            }
+        if (!SDL_PollEvent(&ev)) return GameContext::kNoMessage;
+        if (ev.type == SDL_EVENT_QUIT || (ev.type == SDL_EVENT_KEY_DOWN && ev.key.key == SDLK_ESCAPE)) {
+            quit = true;
+            return GameContext::kQuit;
         }
+        // WndProc 0x00402350: WM_LBUTTONDOWN/UP, WM_LBUTTONDBLCLK, WM_RBUTTONDOWN und
+        // WM_RBUTTONDBLCLK → OnMouseButton → CSzene_OnClick (Art wird nicht weitergegeben,
+        // EVENTS.md). Rechte Taste loslassen (0x205) gehört nicht dazu.
+        const bool down = ev.type == SDL_EVENT_MOUSE_BUTTON_DOWN;
+        const bool up = ev.type == SDL_EVENT_MOUSE_BUTTON_UP;
+        if ((down && (ev.button.button == SDL_BUTTON_LEFT || ev.button.button == SDL_BUTTON_RIGHT)) ||
+            (up && ev.button.button == SDL_BUTTON_LEFT)) {
+            SDL_ConvertEventToRenderCoordinates(ren, &ev);
+            scene.onClick(static_cast<int>(ev.button.x), static_cast<int>(ev.button.y));
+        }
+        // WM_MOUSEMOVE → OnMouseMove 0x00402790 → CSzene_MouseMove (MOUSE.md); Zeiger folgen
+        if (ev.type == SDL_EVENT_MOUSE_MOTION) {
+            SDL_ConvertEventToRenderCoordinates(ren, &ev);
+            mouseMove(static_cast<int>(ev.motion.x), static_cast<int>(ev.motion.y));
+        }
+        return GameContext::kMessage;
+    };
+    // Game_Idle 0x004030C0 (ein Bild); 0x0047D754 = Verschachtelungstiefe
+    ctx.idle = [&]() {
+        ++g.idleDepth;
         if (frame == 1 && opt.mouseX >= 0) mouseMove(opt.mouseX, opt.mouseY);
         if (frame == 2 && opt.clickX >= 0) scene.onClick(opt.clickX, opt.clickY);
         if (frame == 2 && opt.walkX >= 0 && scene.actor(0)) scene.actor(0)->walkTo(opt.walkX, opt.walkY, 0, -1);
@@ -456,9 +466,19 @@ int main(int argc, char** argv) {
                 std::fprintf(stderr, "Schauplatz %d / Szene %d\n", ctx.current->location(), ctx.current->sceneNumber());
         }
         if (opt.frameMs > 0) SDL_Delay(static_cast<Uint32>(opt.frameMs));
+        ++frame;
+        if (opt.frames >= 0 && frame >= opt.frames) quit = true;  // Port: Bildbegrenzung (Prüfläufe)
+        --g.idleDepth;
+    };
+    while (!quit) {
+        if (ctx.pumpMessage() == GameContext::kNoMessage) ctx.idle();
+        ctx.releaseRetired();
     }
     if (!opt.dump.empty()) writePpm(screen, opt.dump);
+    ctx.pumpMessage = nullptr;  // kein Verteilen mehr beim Abbau
+    ctx.idle = nullptr;
     ctx.current.reset();  // vor Hilfe und Szene abbauen (CGame_dtor greift auf beide zu)
+    ctx.retired.clear();
     ctx.music.reset();
     scene.reset();  // Figuren mit ihren Schrittgeräuschen vor dem Mischer abbauen
     if (audioOut) SDL_DestroyAudioStream(audioOut);  // vor dem Mischer

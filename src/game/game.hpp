@@ -4,6 +4,8 @@
 
 #include <array>
 #include <cstdint>
+#include <functional>
+#include <vector>
 #include <memory>
 #include <string_view>
 
@@ -38,14 +40,28 @@ struct GameContext {
     // Musik CSzene+0x1A8 und ihr Name +0x1AC: bleibt über Schauplatzwechsel bestehen
     std::unique_ptr<AudioStream> music;
     std::string musicName;
+    // Hauptschleife (WinMain 0x00401E00), re-entrant für CGame_Wait:
+    // pumpMessage = PeekMessage(PM_REMOVE) + Übersetzen/Verteilen; Rückgabe kNoMessage,
+    // kMessage, kQuit (WM_QUIT 0x12) oder kCommand (WM_COMMAND 0x111, nicht verteilt).
+    // idle = Game_Idle 0x004030C0 (ein Bild).
+    static constexpr int kNoMessage = 0, kMessage = 1, kQuit = 0x12, kCommand = 0x111;
+    std::function<int()> pumpMessage;
+    std::function<void()> idle;
+    // Port: im verschachtelten Game_Idle gelöschte Schauplätze; das Original gibt den
+    // Speicher sofort frei, die wartende Funktion liest danach freigegebenen Speicher.
+    // Freigabe hier erst auf oberster Ebene (Tiefe 0).
+    std::vector<std::unique_ptr<Game>> retired;
+    void releaseRetired() { if (g.idleDepth == 0) retired.clear(); }
 };
 
 class Game {
 public:
     // orig: Rent-A-Hero.exe 0x0043F4D0 CGame_ctor (+ Felder aus den LocNN-Ctoren)
     Game(GameContext& ctx, int location, int scene, int prevScene);
-    // orig: Rent-A-Hero.exe 0x0043F580 CGame_dtor
+    // orig: Rent-A-Hero.exe 0x0043F580 CGame_dtor (Rumpf in shutdown())
     virtual ~Game();
+    // Rumpf des Destruktors; Game_Idle Schritt 7 ruft ihn zum Zeitpunkt des Löschens
+    void shutdown();
     Game(const Game&) = delete;
     Game& operator=(const Game&) = delete;
     // vtable +0x04 (Start), aus Game_SwitchLocation
@@ -61,6 +77,19 @@ protected:
     void setEventProc(Handler h);
     template <class T>
     void setEventProc(void (T::*h)(Event&, int)) { setEventProc(static_cast<Handler>(h)); }
+    // orig: Rent-A-Hero.exe 0x0043F880 CGame_BeginWait – freien Warteplatz belegen; liefert den
+    // Rückruf CGame_WaitDone_i als Handler-Wert (0 und +0x4C = 5, wenn alle belegt)
+    int beginWait();
+    // orig: Rent-A-Hero.exe 0x0043F780 CGame_Wait – verschachtelte Nachrichtenschleife bis der
+    // Platz ≠ 1; false = abgebrochen (bzw. WM_QUIT/WM_COMMAND)
+    bool wait();
+    // orig: Rent-A-Hero.exe 0x004409F0 CGame_Delay(ms)
+    void delay(std::uint32_t ms);
+    // orig: Rent-A-Hero.exe 0x00440890 CGame_WalkAndComment / 0x004408D0 CGame_Comment /
+    // 0x00440960 CGame_HeroSay
+    void walkAndComment(int x, int y, int dir, std::string_view key);
+    void comment(std::string_view key);
+    void heroSay(std::string_view key);
     // orig: Rent-A-Hero.exe 0x0043F6C0 CGame_GetViewObjects (ohne Figuren)
     void getViewObjects();
     // orig: Rent-A-Hero.exe 0x00440A80 CGame_ChangeScene(scene, loc)
@@ -93,11 +122,20 @@ protected:
     AudioStream* music_ = nullptr;  // +0x08 (gehört GameContext::music)
     Actor* hero_ = nullptr;         // +0x1C Held (CSzene+0x5E0)
     std::array<int, 5> waits_{};  // +0x34 Warteplätze (SCRIPTING.md)
+    int lastWait_ = 0;            // +0x4C
     std::uint32_t seed_;      // +0x20 timeGetTime()
     std::unique_ptr<Speech> speech_;  // +0x70
 
 private:
     void stopSpeech();
+    // orig: Rent-A-Hero.exe 0x0043F910 / 0x0043F940 / 0x0043F970 / 0x0043F9B0 / 0x0043F9E0
+    // CGame_WaitDone_i(ereignis, typ)
+    void waitDone(int i, Event& e, int type);
+    bool shutDown_ = false;
+
+public:
+    static constexpr std::array<int, 5> kWaitDone = {0x0043F910, 0x0043F940, 0x0043F970, 0x0043F9B0, 0x0043F9E0};
+    const std::array<int, 5>& waitSlots() const { return waits_; }
 };
 
 // orig: Rent-A-Hero.exe 0x00404B20 RequestLocation(loc, scene, prevScene, abort)

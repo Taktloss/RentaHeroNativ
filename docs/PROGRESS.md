@@ -233,5 +233,9 @@
   Laufen; Sprache mit Figur-Variante; Hilfe-Seite nach Fuß-x. Testlauf LOC04/006 mit
   `--walk`: Rodrigo läuft mit Weg und Schrittbildern. Gefunden: bei `Zpos 0` teilt das
   Laufen durch 0 (Original). 93 Tests.
-- Nächste Schritte: Wartestellen (`CGame_BeginWait/Wait`), dann Loc35/Loc37/Loc1 für den
-  Anschluss nach dem Intro.
+- 2026-10-28: Wartestellen. `CGame_BeginWait/Wait/WaitDone_i`, `CGame_Delay`,
+  `WalkAndComment`/`Comment`/`HeroSay` (SCRIPTING.md). Hauptschleife in `pumpMessage`/`idle`
+  zerlegt und re-entrant; `Game_Idle`-Verschachtelungstiefe `0x0047D754` mit Abbruch-Flag nur
+  auf oberster Ebene; `CGame_dtor` mit 3 Nachrichten je belegtem Platz. Funktions-Handler
+  (Wert ≥ 0xFFF) in `fireEvent`. 98 Tests.
+- Nächste Schritte: Loc35/Loc37/Loc1 für den Anschluss nach dem Intro.

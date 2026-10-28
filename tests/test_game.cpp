@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+#include <functional>
 #include <map>
 
 #include "core/strings.hpp"
@@ -59,17 +60,32 @@ struct Rig {
         g.drawStatusText = [this](const Rect&, const std::string& t) { status.push_back(t); };
         scene = std::make_unique<Scene>(paths, g, surf);
         ctx = std::make_unique<GameContext>(g, paths, *scene);
+        ctx->pumpMessage = [this] { return pending.empty() ? GameContext::kNoMessage : take(); };
+        ctx->idle = [this] { frame(); };
     }
     // ein Game_Idle: Timer, Update, Compose, Ereignisse, Schauplatzwechsel
     void frame(std::uint32_t ms = 100) {
+        ++g.idleDepth;
         clock += ms;
+        ++frames;
+        if (onFrame) onFrame(frames);
         pollTimers(g);
         scene->update(true);
         scene->compose(false);
         scene->clearOutput();
         scene->dispatchEvents();
         processLocationChange(*ctx);
+        --g.idleDepth;
+        ctx->releaseRetired();
     }
+    int take() {
+        const int m = pending.front();
+        pending.erase(pending.begin());
+        return m;
+    }
+    std::vector<int> pending;  // Nachrichten für pumpMessage
+    int frames = 0;
+    std::function<void(int)> onFrame;
 };
 
 }  // namespace
@@ -152,4 +168,97 @@ TEST(speech_lipsync_frames_follow_audio_position) {
     const Bytes plain{7, 0, 8, 0};
     REQUIRE(parseLipSync(plain, data, rate));
     CHECK(rate == 20 && data[0] == 7 && data.size() == 52);
+}
+
+namespace {
+
+// Schauplatz für Tests: macht die Warte-API zugänglich
+class WaitLoc final : public Game {
+public:
+    using Game::Game;
+    using Game::beginWait;
+    using Game::changeScene;
+    using Game::delay;
+    using Game::wait;
+};
+
+}  // namespace
+
+TEST(game_wait_slots_and_done_callback) {
+    Rig r(10);
+    WaitLoc w(*r.ctx, 50, 1, 0);
+    CHECK(w.beginWait() == 0x0043F910 && w.beginWait() == 0x0043F940);
+    CHECK(w.waitSlots()[0] == 1 && w.waitSlots()[1] == 1);
+    // Ereignis mit Warte-Rückruf: 0x29 → Platz fertig (2), 0x2A → abgebrochen (3)
+    Event a, b;
+    a.setHandler(0x0043F910);
+    b.setHandler(0x0043F940);
+    a.enabled = b.enabled = true;
+    a.mark(r.g, 0x29);
+    b.mark(r.g, 0x2A);
+    fireEvent(r.g, a, 0x29);
+    fireEvent(r.g, b, 0x2A);
+    CHECK(w.waitSlots()[0] == 2 && w.waitSlots()[1] == 3);
+    CHECK(a.handlerId == 0 && b.handlerId == 0);  // Rückruf löscht den Handler
+    // Wait liest den zuletzt belegten Platz (1): abgebrochen → false, Platz frei
+    CHECK(!w.wait());
+    CHECK(w.waitSlots()[1] == 0 && w.waitSlots()[0] == 2);
+    // alle fünf belegt → 0, Wait bricht Platz 0 ab, wenn er wartet
+    for (int i = 0; i < 4; ++i) w.beginWait();
+    CHECK(w.beginWait() == 0);
+    CHECK(!w.wait());
+}
+
+TEST(game_delay_runs_nested_idle_until_timer) {
+    Rig r(10);
+    WaitLoc w(*r.ctx, 50, 1, 0);
+    const std::uint32_t t0 = r.clock;
+    int depth = 0;
+    r.onFrame = [&](int) { depth = std::max(depth, r.g.idleDepth); };
+    w.delay(300);
+    CHECK(r.clock - t0 >= 300 && r.clock - t0 < 500);  // Timer fällig, Ereignis in DispatchEvents
+    CHECK(depth == 1);  // Game_Idle aus der Wartestelle (Hauptschleife hier nicht beteiligt)
+    CHECK(w.waitSlots()[0] == 0);
+}
+
+TEST(game_wait_quit_message_aborts) {
+    Rig r(10);
+    WaitLoc w(*r.ctx, 50, 1, 0);
+    r.pending = {GameContext::kMessage, GameContext::kCommand};
+    w.beginWait();
+    CHECK(!w.wait());  // WM_COMMAND während des Wartens: Platz 0, abgebrochen
+    CHECK(w.waitSlots()[0] == 0 && r.frames == 0);
+}
+
+TEST(game_nested_wait_aborts_outer) {
+    Rig r(10);
+    WaitLoc w(*r.ctx, 50, 1, 0);
+    // äußere Wartestelle (Platz 0); im ersten Bild startet eine innere (Delay, Platz 1).
+    // CGame_Wait: ein wartender Platz mit kleinerem Index → auf 3 (abgebrochen).
+    w.beginWait();
+    bool inner = false;
+    r.onFrame = [&](int n) {
+        if (n != 1) return;
+        w.delay(200);
+        inner = true;
+    };
+    CHECK(!w.wait());  // innere Wartestelle hat Platz 0 auf 3 gesetzt
+    CHECK(inner && w.waitSlots()[0] == 0 && w.waitSlots()[1] == 0);
+}
+
+TEST(game_change_scene_aborts_waits_until_top_level) {
+    Rig r(10);
+    WaitLoc w(*r.ctx, 50, 1, 0);
+    w.beginWait();
+    w.changeScene(2, 50);
+    CHECK(w.waitSlots()[0] == 3 && r.ctx->request.pending && r.ctx->request.abort);
+    // verschachteltes Game_Idle (Tiefe 2): Wechsel wartet
+    ++r.g.idleDepth;
+    r.frame();
+    --r.g.idleDepth;
+    CHECK(r.ctx->request.pending && r.ctx->request.abort);
+    // oberste Ebene: Abbruch-Flag gelöscht, Wechsel (Schauplatz 50 fehlt → Szene leer)
+    r.frame();
+    CHECK(!r.ctx->request.pending && !r.ctx->request.abort);
+    CHECK(!w.wait());
 }
