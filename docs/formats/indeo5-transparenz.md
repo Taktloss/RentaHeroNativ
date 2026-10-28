@@ -28,24 +28,48 @@ Bitstrom `+0x150`, Transparenz-Bit des Bildkopfs `+0x128 & 1`.
   gesetzt“) ist, gilt die Farbe aus dem Bitstrom (`0x10034300`). Gemessen: Schwarz.
   UNVERIFIED: Vorgabewert der Einstellung und Inhalt von `+0x150` in den Spieldaten.
 - Maskenbits: 1 Bit pro Pixel, je 32-Bit-Wort MSB zuerst (Byte 0, Bit 7 = erstes Pixel).
-  UNVERIFIED: Polarität (1 = sichtbar?) – per Vergleich mit `tools/iv5ref` prüfen.
+  **0 = transparent, 1 = sichtbar** (Vergleich mit `tools/iv5ref`, pixelgenau).
+
+## Lage im Bild (belegt, Prototyp stimmt pixelgenau)
+LE-Bitleser über das ganze Bild:
+1. 5 Bit Startcode `0x1F`, 3 Bit Bildtyp (0 = Schlüsselbild, ≤ 4), 8 Bit Nummer.
+2. Nur Bildtyp 0: GOP-Kopf (`0x100232D0`). 8 Bit GOP-Flags (`ctx+0xBD`): `&1` → 16 Bit
+   Kopflänge in Bytes (gezählt ab Bit 16; wird vom Codec überlesen, stimmt aber: der
+   Bildkopf beginnt bei `16 + 8·Länge`), `&0x20` → 32 Bit Schlüssel („geschützt“), `&0x40` →
+   2 Bit Kachelgröße `64 << v` (sonst eine Kachel = Bild), 3 Bit Ebenenaufteilung `c`
+   (`c ∈ {0, 1, 2, 6}`; Luma-Bänder `(c & 3)·3 + 1`, je Chroma-Ebene `(c >> 2)·3 + 1`),
+   4 Bit Bildgröße (15 → 26 Bit: Breite = obere 13, Höhe = untere 13; sonst Tabellen
+   `0x10087C90`/`0x10087CD0`), Bandbeschreibungen, dann bei `&8` Transparenz: 4 Bit, untere
+   3 Bit müssen 0 sein, Bit 3 → 24 Bit Füllfarbe (R, G, B → `ctx+0x150…0x152`).
+3. Bildkopf: 8 Bit Flags (`ctx+0xBE`): `&1` → 24 Bit Bildgröße in Bytes (= Chunk-Länge),
+   `&0x10` → 16 Bit Prüfsumme, `&0x20` → Erweiterungen (8 Bit Länge + Daten, bis Länge 0),
+   `&0x40` → 3 Bit Makroblock-Tabelle (7 → 4 Bit Anzahl + je 4 Bit), dann 3 Bit. Danach auf
+   Byte ausrichten.
+4. Bänder: Luma-Bänder, dann U, dann V. Je Band 8 Bit Flags; `&1` = leer (1 Byte), sonst
+   bei Bild-Flags `&0x80` 24 Bit **Bandlänge in Bytes ab Bandbeginn** (`0x1001E020`).
+   Geschützte Videos verschlüsseln Teile des ersten Bandkopfs (`0x1001E020`, nur zur
+   Kenntnis); die Längen stehen davor und werden nur zum Überspringen gebraucht.
+5. Dahinter die Maske.
 
 ## Bitstrom der Maske (`0x1004F840`)
 Liegt direkt hinter den Banddaten des Bildes. LE-Bitleser (LSB zuerst), Masken aus der Tabelle
 `0x1008C550` (`(1 << n) − 1`).
-1. Ist `ctx+0xBE & 1`: 24 Bit überspringen.
-2. 3 Bit `n` = Anzahl Rechtecke; je Rechteck vier 16-Bit-Werte (a, b, c, d). Ergebnis nur als
-   Begrenzungsrahmen in `ctx+0x30` (Bedeutung im Detail offen, für die Maske nicht nötig).
+1. Bild-Flags `&1`: 24 Bit Maskenlänge (gemessen: Rest des Bildes − 5…8).
+2. 3 Bit `n` = Anzahl Rechtecke; je Rechteck vier 16-Bit-Werte (x, y, Breite, Höhe des
+   sichtbaren Bereichs, z. B. (2, 1, 235, 318) bei 240×328). Nur Begrenzungsrahmen
+   (`ctx+0x30`), für die Maske nicht nötig.
 3. 1 Bit `delta` (an `0x1004F3C0` als „XOR mit Vorzeile“ weitergereicht).
 4. 1 Bit `eigenes Codebuch`: dann 4 Bit Zeilenanzahl `k`, `k` × 4 Bit `xbits` → Deskriptor
    `ctx+0x1D110` (Anzahl, Werte). Sonst bleibt der vorige Deskriptor.
-5. Auf Byte ausrichten; dann **Kacheln** (Kachelgröße/-anzahl aus `ctx+0xD0`/`+0xD8`) mit je
-   einem Kachelkopf (Bits „leer“, „Größe vorhanden“; Größe 8 Bit, bei `0xFF` 24 Bit) und
-   den Lauflängen (`0x1004F3C0`).
-   UNVERIFIED: genaue Reihenfolge und Wirkung der Kachelkopf-Bits (Dekompilat unklar).
+5. Auf Byte ausrichten; dann **Kacheln** (Kachelgröße/-anzahl aus `ctx+0xD0`/`+0xD8`). Je
+   Kachel: Bit „gefüllt“ → nächstes Bit ist der Füllwert; sonst Bit „Größe“ → 8 Bit Größe
+   (`0xFF` → 24 Bit), Daten ab dem nächsten Byte; ohne Größe Daten ab Byte 1 der Kachel.
+   Belegt für eine Kachel (gefüllt und Lauflängen ohne Größe). UNVERIFIED: mehrere Kacheln,
+   Kachel-Merker `ctx+0xEC` (Zweig „überspringen“).
 
 ## Lauflängen einer Kachel (`0x1004F3C0`)
 - Leere Kachel: ganz mit `DAT_100980F0[wert]` füllen (Wert = Bit aus dem Kopf).
+- Breite je Zeile = Kachelbreite auf 32 aufgerundet; gezählt werden auch die Füllspalten.
 - Sonst: Startwert aus dem ersten Bit; dann wiederholt ein Huffman-Symbol `s` lesen
   (16-Bit-Schritte, LSB zuerst; Nachschlagetabelle `tab[2]`, Codelänge `tab+0x2010+s`):
   `s` Pixel mit dem aktuellen Wert schreiben, danach Wert wechseln. `s == 0` bedeutet
@@ -59,9 +83,18 @@ Null (letzte Zeile ohne Null), dann `xbits[i]` Bits in umgekehrter Reihenfolge
 (Tabellen `0x100903F0`). Symbole fortlaufend ab 0 über alle Zeilen (höchstens 256).
 UNVERIFIED: Standard-Deskriptor, falls ein Bild keinen eigenen mitbringt.
 
+## Prüfung
+`tools/iv5ref/iv5mask.py` (Prototyp) gegen den Original-Codec (`tools/iv5ref`): alle Bilder von
+`S1_RodOnGlider`, `S1_RodChecksItems`, `S1_Schild`, `S1_RodDrawsBlaster`, `S1_RodToCloseup`
+(240×328 … 636×248) – jedes Maskenbit 0 ist im Original schwarz, Maske 1 deckt sich mit den
+nicht-schwarzen Pixeln. Über alle 80 transparenten Videos: GOP-Flags `0x89` (21), `0x39`,
+`0xF8…0xFD`, `0xD9`, `0xEC`, `0x59`, `0x5D`, `0x29`, `0x2C`, `0xE9` – Varianten mit Kacheln
+(`0x40`), Schutz (`0x20`) und **ohne** Längenfeld (`&1` fehlt) brauchen den vollständigen
+GOP-Kopf (Bandbeschreibungen, `0x100232D0` Zeilen ab „local_28“).
+
 ## Offen
-- Position des Maskenbeginns: `0x1003D5A0` liest je Ebene/Band Kopf (`0x1001E020`) und Daten
-  (`0x100249D0`) und rückt um die jeweils verbrauchte Länge vor; die Maske folgt danach.
-  Zu klären, ob Band-/Kachelgrößen im Kopf ein Überspringen ohne Koeffizienten-Dekodierung
-  erlauben.
-- Kachelkopf, Standard-Codebuch, Polarität, Füllfarbe aus dem Bitstrom.
+- Vollständiger GOP-Kopf (Bandbeschreibungen) für Videos ohne Längenfeld; Tabellen der
+  Bildgrößen; mehrere Kacheln; Bilder ohne Bild-Flag `0x80` (Bandlängen fehlen → dann nur
+  durch Dekodieren der Kacheln, deren Längen aber im Kachelkopf stehen).
+- Standard-Codebuch, falls das erste Bild keines mitbringt; Füllfarbe aus dem Bitstrom
+  (`0xFF000000`-Regel) gegen Messung.

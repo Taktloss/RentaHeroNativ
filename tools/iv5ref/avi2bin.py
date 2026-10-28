@@ -7,6 +7,7 @@ import sys
 
 
 def chunks(d, a, b, out):
+    b = min(b, len(d))
     while a + 8 <= b:
         tag = d[a:a + 4]
         size = struct.unpack_from('<I', d, a + 4)[0]

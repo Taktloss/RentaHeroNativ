@@ -248,5 +248,8 @@
 - 2026-10-28: `ir50_32.dll` in Ghidra (`re/private/iv5/ghidra`, `ghidra.sh` per
   `RAH_GHIDRA_*` umschaltbar). Maskenformat weitgehend belegt (formats/indeo5-transparenz.md):
   1 Bit/Pixel, Lauflängen mit Indeo-Huffman-Codes, Zeilen-XOR, Kacheln, Füllfarbe.
-- Nächste Schritte: Maskenbeginn (Band-/Kachelgrößen), Kachelkopf, Standard-Codebuch,
-  Polarität; dann Leser + Vergleich mit `tools/iv5ref`; danach Loc37, Loc1.
+- 2026-10-28: Maske vollständig für die Loc35-Videos: Lage (GOP-/Bildkopf, Bandlängen),
+  Kachelkopf, Huffman, Lauflängen, XOR, Polarität (0 = transparent). Prototyp
+  `tools/iv5ref/iv5mask.py` stimmt pixelgenau mit dem Original-Codec (5 Videos, alle Bilder).
+- Nächste Schritte: vollständiger GOP-Kopf (Videos ohne Längenfeld, Kacheln, Schutz-Bit),
+  dann C++-Leser im Port (Maske → Farbschlüssel Schwarz wie im Original); danach Loc37, Loc1.
