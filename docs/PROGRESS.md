@@ -245,5 +245,8 @@
 - 2026-10-28: Indeo-5-Transparenz – Entscheidung: selbst dekodieren (CLAUDE.md). Messprogramm
   `tools/iv5ref` (Win32 ohne CRT, VfW-DriverProc direkt) unter Wine: Original-Codec füllt
   transparente Pixel mit Schwarz (= Farbschlüssel). VIDEO.md.
-- Nächste Schritte: `ir50_32.dll` in Ghidra (eigenes Projekt in `re/private/`): Maske und
-  Füllfarbe im Bitstrom, dann eigener Leser zusätzlich zu FFmpeg; danach Loc37, Loc1.
+- 2026-10-28: `ir50_32.dll` in Ghidra (`re/private/iv5/ghidra`, `ghidra.sh` per
+  `RAH_GHIDRA_*` umschaltbar). Maskenformat weitgehend belegt (formats/indeo5-transparenz.md):
+  1 Bit/Pixel, Lauflängen mit Indeo-Huffman-Codes, Zeilen-XOR, Kacheln, Füllfarbe.
+- Nächste Schritte: Maskenbeginn (Band-/Kachelgrößen), Kachelkopf, Standard-Codebuch,
+  Polarität; dann Leser + Vergleich mit `tools/iv5ref`; danach Loc37, Loc1.
