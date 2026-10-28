@@ -31,6 +31,10 @@ public:
     explicit AnimLayer(EngineGlobals& g);
 
     int period = 100;          // +0x2B0 ms je Bild
+    // +0x2B4/+0x2B8: von der Engine nur genullt, Schauplätze speichern dort ihren Zustand
+    // (Loc05: Haltung/letzter Übergang von Loui; auch 0x0040A190, 0x0041CA50)
+    int userState = 0;         // +0x2B4
+    int userState2 = 0;        // +0x2B8
     int frame = 0;             // +0x2C0 aktuelle Bildnummer
     int frameEventFrame = 0;   // +0x2CC
     int stepCount = 0;         // +0x2D0
@@ -70,6 +74,8 @@ public:
     void start(unsigned mode);
     // orig: Rent-A-Hero.exe 0x00443030 CAnimLayer_PlayEndEvent(modus, ev)
     void playEndEvent(unsigned mode, int ev);
+    // orig: Rent-A-Hero.exe 0x004434A0 – nur Ende-Ereignis setzen (läuft weiter); ev 0: nichts
+    void setEndEvent(int ev);
     // orig: Rent-A-Hero.exe 0x00442E70 CAnimLayer_PlayRange(modus, ev, von, bis)
     void playRange(unsigned mode, int ev, int from, int to);
     // orig: Rent-A-Hero.exe 0x00442F90 CAnimLayer_PlayRangeNoEvent(modus, von, bis)

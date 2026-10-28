@@ -247,6 +247,13 @@ void AnimLayer::start(unsigned mode) {
     ended = false;
 }
 
+void AnimLayer::setEndEvent(int ev) {
+    if (ev == 0) return;
+    ensureEvent(endEvent);
+    endEvent->setHandler(ev);
+    endEvent->enabled = true;  // +0x00 = 1
+}
+
 void AnimLayer::playEndEvent(unsigned mode, int ev) {
     if (ev == 0) {
         clearEvent(endEvent);

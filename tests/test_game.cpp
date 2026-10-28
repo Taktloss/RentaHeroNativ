@@ -6,6 +6,7 @@
 #include "audio/mixer.hpp"
 #include "game/loc01.hpp"
 #include "game/loc04.hpp"
+#include "game/loc05.hpp"
 #include "game/loc06.hpp"
 #include "game/loc35.hpp"
 #include "game/loc37.hpp"
@@ -381,4 +382,16 @@ TEST(loc04_entry_targets_and_visit_counter) {
     CHECK(st.at(0x3ED4) == 0 && st.at(0x3E84) == 0 && st.at(0x3ED0) == 0);
     { Loc04 d(*r.ctx, 6, 7); }  // normaler Zugang ändert nichts im Konstruktor
     CHECK(st.at(0x3ED0) == 0);
+}
+
+TEST(loc05_constructs_and_keeps_talk_state) {
+    Rig r(10);
+    auto& st = r.ctx->state;
+    const auto talk = st.at(0x3EDC), flowers = st.at(0x3EE0);
+    {
+        Loc05 a(*r.ctx, 10, 9);
+        CHECK(a.location() == 5 && a.louiTalk() == nullptr);  // ohne Spieldaten keine Ebenen
+    }
+    // Konstruktor und Abbau ändern keine Flags (Gesprächsstufe, Blumen)
+    CHECK(st.at(0x3EDC) == talk && st.at(0x3EE0) == flowers);
 }

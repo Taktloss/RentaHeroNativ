@@ -1,4 +1,4 @@
-# Loc05 (automatische Übersicht)
+# Loc05 – Louis Büro (Szene 10)
 
 Funktionen `0x0040D530`–`0x0040E72F` (10 Stück), Ereignis-Handler `0x0040DB30`.
 Erzeugt mit `tools/gen_loc_docs.py`; Bedeutung der Flags und Abläufe folgt bei der Einzelanalyse (UNVERIFIED bis dahin). In der Fallübersicht ist `== N` ein Zweig einer If-Kette – Ereignis-ID **oder** Wert eines Flags/Zählers.
@@ -38,3 +38,37 @@ Erzeugt mit `tools/gen_loc_docs.py`; Bedeutung der Flags und Abläufe folgt bei 
   case 11: Sprache 010_ROD_10 | ruft CGame_WalkAndComment
   case 20: ruft FUN_0040e2a0
 ```
+
+## Analyse (2026-10-28, Port `src/game/loc05.cpp`)
+Konstruktor `0x0040D530`: `S10` mit Ladebit `0x3EC8 != 0` (dann `S10_LouiWalk` mit zehn
+Klang-Marken: Schritte bei 42/47/54/58/140/146/151, Wasser 93/112, Tock 129). Tür-Klang,
+eigenes Ereignis `+0x88` (Haltungs-Timer), Musik `Loc05_LouisOffice`, Hall (4, 0.208, 0.478, 0),
+Anteil 0.1.
+
+Flags: `0x3ED8` Begrüßung beim Betreten (wird gelöscht), `0x3EDC` Gesprächsstufe, `0x3EE0`
+Blumen (1 → ROD_05 und 2, 2 → ROD_06, sonst nichts), `0x3EE4` Gang durchs Büro gesehen.
+Stufe 3 setzt `0x3E84 = 1` (Ramil besucht Rodrigo, Loc04) und `0x3EA0 = 1`.
+
+### Start `0x0040D890`
+Ohne Spielstand: Loui wendet sich zu, Tür (`S10_DoorOpen` 0–4, Knarren, 5–Ende), Held bei
+(311, 218) Richtung 7; dann entweder `WalkTo2(419, 255, –, 1)` oder (bei `0x3ED8`) vor den
+Tisch (283, 336) und Begrüßung `010_LOU_01`, `010_ROD_01/LOU_02`, `010_ROD_02/LOU_03`.
+Danach Haltungs-Timer und Bereiche (Ereignisse 1–11).
+
+### Haltung von Loui `0x0040E2A0`
+`S10_LouiTalk +0x2B4` = Haltung (0, 1, 2), `+0x2B8` = letzter Übergang. Übergänge (von–bis Bild,
+neue Haltung): 1 (1–15, 2), 2 (15–1, 0), 3 (1–3, 1), 4 (4–1, 0), 5 (15–3, 1), 6 (3–15, 2),
+7 (69–122, 2 – Geste). Modus 1/2: Übergang direkt, 3/4: Zielhaltung aus der Tabelle
+(0→1: 3, 0→2: 1, 1→0: 4, 1→2: 6, 2→0: 2, 2→1: 5); 2/4 warten (laufenden Übergang über
+`0x004434A0` zu Ende, Klickzustand `CSzene+0x514` wird wiederhergestellt). Modus 6: Timer
+1–2 s; Modus 5 (Ereignis 20): läuft noch → 3–6 s; sonst Zufallsübergang (Haltung 0: 1/4 → 1,
+sonst 3; 1: 1/4 → 6, sonst 4; 2: je 1/3 → 2, 5, 7), Timer 5–7 s.
+
+### Gespräch (Ereignis 6)
+Stufen 1–4 fest, 5 zufällig (ROD/LOU_05…07) oder bei `0x3EC8` und nicht `0x3EE4` → 6;
+6 → 7 → 8; 8: mit `0x3E84 == 2` ROD/LOU_11, dann 9: Loui geht mit Rodrigo durchs Büro
+(`S10_LouiWalk` 1–43, 44–60, 61–96, Gespräch 029_*, 124–140, 141–150, 151–174, Rodrigo dreht
+sich mit), danach `0x3EE4 = 1`, Stufe 5.
+
+Abweichung: unbekannte Ereignisse zeigen im Original `MessageBoxA("Unknown_Event____")`; der
+Port schreibt nach stderr.

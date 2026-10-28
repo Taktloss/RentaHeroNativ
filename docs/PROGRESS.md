@@ -280,5 +280,8 @@
   Ramil-Gespräch) mit Tausch von Hintergrund/Tiefenkarte, Hinsetzen/Aufstehen, Ramil-Besuch
   (Geldsack → Kiste → Gegenstand 7), Ein-/Ausgang mit Held als freier Ebene. Probelauf: erster
   Besuch (Eintreten, Begrüßung) und Tür → Loc01/S7. 109 Tests.
-- Nächste Schritte: Loc05 (Büro), Loc12, Loc26, Loc31, Loc47 – die übrigen Ziele aus Loc01;
+- 2026-10-28: Loc05 (Louis Büro, Szene 10) portiert: Haltungsautomat für Loui mit Timer,
+  Gesprächsstufen, Gang durchs Büro mit Klang-Marken. Engine: `AnimLayer::setEndEvent`
+  (0x004434A0), Felder `+0x2B4/+0x2B8`. Probelauf: Eintreten, Gespräch. 110 Tests.
+- Nächste Schritte: Loc12, Loc26, Loc31, Loc47 – die übrigen Ziele aus Loc01;
   Spielstand laden (`CGame+0x04`); Ramil-Pfad (Sprungziel 1004) im Probelauf prüfen.
