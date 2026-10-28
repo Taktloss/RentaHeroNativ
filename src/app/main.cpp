@@ -18,6 +18,7 @@
 #include "engine/animlayer.hpp"
 #include "engine/help.hpp"
 #include "engine/scene.hpp"
+#include "game/game.hpp"
 #include "formats/pe.hpp"
 #include "render/font.hpp"
 #include "video/ffvideo.hpp"
@@ -46,6 +47,8 @@ struct Options {
     int clickX = -1, clickY = -1;  // Klick im zweiten Frame (kopflose Prüfung)
     std::vector<int> items;        // Inventarleiste zeigen und diese Gegenstände hinzufügen
     std::string hint;              // Hilfe-Symbol zeigen; Klick darauf öffnet diese HLP-Datei
+    int gameLoc = -1, gameScene = 0;  // Spielmodus: Schauplatz/Szene starten (Intro: 40 114)
+    bool subtitles = false;           // rah.ini [MODES] SubTitles
 };
 
 void usage() {
@@ -54,7 +57,8 @@ void usage() {
                  "          [--loc <n>] [--scene <Name>] [--mask <n>]\n"
                  "          [--frames <n>] [--frame-ms <n>] [--dump <datei.ppm>] [--hidden]\n"
                  "          [--exe <Rent-A-Hero.exe>] [--font <datei.ttf>] [--mouse <x> <y>] [--click <x> <y>]\n"
-                 "          [--items <id,id,…>] [--hint <HLP-Name, z. B. 04_006_A>]\n");
+                 "          [--items <id,id,…>] [--hint <HLP-Name, z. B. 04_006_A>]\n"
+                 "          [--game <Schauplatz> <Szene> (Intro: --game 40 114)] [--subtitles]\n");
 }
 
 bool parse(int argc, char** argv, Options& o) {
@@ -64,6 +68,10 @@ bool parse(int argc, char** argv, Options& o) {
         const char* v = nullptr;
         if (a == "--hidden") {
             o.hidden = true;
+            continue;
+        }
+        if (a == "--subtitles") {
+            o.subtitles = true;
             continue;
         }
         if (!(v = val())) return false;
@@ -85,6 +93,10 @@ bool parse(int argc, char** argv, Options& o) {
                 if (end == p) return false;
                 p = *end == ',' ? end + 1 : end;
             }
+        }
+        else if (a == "--game" && i + 1 < argc) {
+            o.gameLoc = std::atoi(v);
+            o.gameScene = std::atoi(argv[++i]);
         }
         else if (a == "--click" && i + 1 < argc) {
             o.clickX = std::atoi(v);
@@ -245,14 +257,18 @@ int main(int argc, char** argv) {
         if (statusFont.isOpen()) drawTextWordBreak(statusFont, screen, r, t, 0xFFFF);
     };
     Scene scene(paths, g, surf);
+    const bool game = opt.gameLoc >= 0;
+    g.subtitles = opt.subtitles;
+    g.audioTrace = [](const std::string& t) { std::fprintf(stderr, "Ton: %s\n", t.c_str()); };
+    GameContext ctx{g, paths, scene, nullptr, {}, nullptr};
     scene.setLocationNumber(opt.location);
-    if (!scene.load(opt.scene, opt.loadMask) || !scene.background()) {
+    if (!game && (!scene.load(opt.scene, opt.loadMask) || !scene.background())) {
         std::fprintf(stderr, "Szene %s nicht geladen\n", opt.scene.c_str());
         SDL_Quit();
         return 1;
     }
     // Betrachter: alles sichtbar, Animationen in Schleife (Modus 13)
-    scene.background()->enable();
+    if (!game) scene.background()->enable();
     if (auto* a = dynamic_cast<AnimLayer*>(scene.background())) a->start(13);
     int anims = 0;
     for (int i = 0; scene.layer(i); ++i) {
@@ -264,15 +280,17 @@ int main(int argc, char** argv) {
     }
     // Betrachter: jeder Bereich bekommt Ereignis-ID = Platz + 1; ausgelöste Ereignisse ausgeben
     int areas = 0;
-    for (; areas < Scene::kMaxAreas && scene.area(areas); ++areas) scene.area(areas)->setEvent(areas + 1);
-    g.eventProc = [&scene](Event& e, int type) {
+    for (; !game && areas < Scene::kMaxAreas && scene.area(areas); ++areas) scene.area(areas)->setEvent(areas + 1);
+    if (!game) g.eventProc = [&scene](Event& e, int type) {
         const Area* a = e.param >= 1 && e.param <= Scene::kMaxAreas ? scene.area(e.param - 1) : nullptr;
         std::fprintf(stderr, "Ereignis %d Typ 0x%02X %s %s\n", e.param, type, a ? a->name.c_str() : "",
                      a ? a->text.c_str() : "");
     };
-    scene.sceneEvent().setHandler(1000);
-    scene.sceneEvent().enabled = true;
-    std::fprintf(stderr, "LOC%02d/%s: %d animierte Ebenen, %d nicht unterstützt, %d Bereiche\n",
+    if (!game) {
+        scene.sceneEvent().setHandler(1000);
+        scene.sceneEvent().enabled = true;
+    }
+    if (!game) std::fprintf(stderr, "LOC%02d/%s: %d animierte Ebenen, %d nicht unterstützt, %d Bereiche\n",
                  opt.location, opt.scene.c_str(), anims, scene.unsupportedLayers(), areas);
 
     Cursors cursors;
@@ -311,6 +329,13 @@ int main(int argc, char** argv) {
         help.load(&icon);
     }
     scene.setHelp(&help);
+    ctx.help = &help;
+    if (game) {
+        // Spielstart wie „Neues Spiel“: RequestLocation, Ausführung im ersten Game_Idle
+        requestLocation(ctx.request, opt.gameLoc, opt.gameScene, 0, false);
+        processLocationChange(ctx);
+        if (!ctx.current) std::fprintf(stderr, "Schauplatz %d/%d nicht verfügbar\n", opt.gameLoc, opt.gameScene);
+    }
     if (!opt.hint.empty()) help.iconOn();
     if (!opt.items.empty() && scene.inventory()) {
         scene.setBarShown(true);  // Game_SwitchLocation: +0x5BC = g_CurGame
@@ -359,9 +384,17 @@ int main(int argc, char** argv) {
         SDL_RenderTexture(ren, tex, nullptr, nullptr);
         SDL_RenderPresent(ren);
         scene.dispatchEvents();
+        if (game) {
+            const int before = ctx.current ? ctx.current->location() * 1000 + ctx.current->sceneNumber() : -1;
+            processLocationChange(ctx);  // Game_Idle Schritt 7
+            const int after = ctx.current ? ctx.current->location() * 1000 + ctx.current->sceneNumber() : -1;
+            if (ctx.current && before != after)
+                std::fprintf(stderr, "Schauplatz %d / Szene %d\n", ctx.current->location(), ctx.current->sceneNumber());
+        }
         if (opt.frameMs > 0) SDL_Delay(static_cast<Uint32>(opt.frameMs));
     }
     if (!opt.dump.empty()) writePpm(screen, opt.dump);
+    ctx.current.reset();  // vor Hilfe und Szene abbauen (CGame_dtor greift auf beide zu)
 
     SDL_DestroyTexture(tex);
     SDL_DestroyRenderer(ren);

@@ -43,3 +43,7 @@ Gemeinsames Muster beim Start (`0x00432CA0`):
 
 Ton: S114 lädt 21 Effekte und setzt 78 Animations-Cues (AUDIO.md), S115/S116 weitere;
 Werte stehen im Port-Code, nicht hier.
+
+## Port
+`src/game/loc40.*` (GAME.md). Abweichungen bis zum Audio-Port: keine Musik/Effekte/Sprache
+hörbar; Sprachdauer nach Textlänge (SPEECH.md „Port“).

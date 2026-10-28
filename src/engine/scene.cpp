@@ -327,6 +327,35 @@ Layer* Scene::getObject(std::string_view name) {
     return nullptr;
 }
 
+void Scene::reset() {
+    loaded_ = false;
+    // +0x2B0 und Hintergrund +0x5C0 setzt das Original nur auf 0 (ohne Löschen)
+    background_.reset();
+    for (auto& L : layers_) L.reset();
+    for (auto& a : areas_) a.reset();
+    // Figuren +0x5E0/+0x5E4 löschen – folgen mit CActor
+    g_.hitGrid.clear();
+    lastLayer_ = -1;   // +0x5D8 = 0, +0x2B8 = 0 (Port: kein Platz)
+    depth_.reset();    // +0x2BC = 0 (ohne Löschen)
+    path_.reset();     // +0x2C0 = 0 (ohne Löschen)
+    modal_ = nullptr;  // +0x5DC = 0 ohne Löschen
+    g_.sceneChanged = false;
+    zMax_ = 1;         // +0x2F8 = 1
+    zMin_ = 0xFF;      // +0x2FC; zCount_ +0x300 bleibt stehen (erst CSzene_Clear leert es)
+    // +0xC08 = 1, +0x194…+0x1A4 = 0: Bedeutung offen, im Port nicht vorhanden
+    listB_.clear();
+    listA_.clear();
+    g_.textVisible = false;  // 0x00481F24
+    if (g_.toggleEvent) {    // *g_ToggleEvent = 0, [1] = 0
+        g_.toggleEvent->enabled = false;
+        g_.toggleEvent->pending = false;
+    }
+    lastHit_ = nullptr;
+    disableInput();
+    setFlag510();
+    setClickEvent(0);
+}
+
 std::unique_ptr<AnimLayer> Scene::loadAnim(std::string_view name) {
     const auto file = paths_.findFile(name, "AVI");
     auto L = std::make_unique<AnimLayer>(g_);

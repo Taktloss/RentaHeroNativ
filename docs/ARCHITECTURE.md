@@ -8,6 +8,8 @@ Stand Phase 5 (Gerüst). Grundsatzentscheidungen: CLAUDE.md „Festgelegte Entsc
 | `src/core/` | Byte-/String-Hilfen (Windows-Pfadsemantik) | – |
 | `src/vfs/` | Datenquellen: Ordner ohne Groß-/Kleinschreibung (`DirFileSystem`), ISO 9660 + Joliet aus `.iso` oder BIN/CUE (`IsoFileSystem`, `cue.cpp`), Vereinigung (`Vfs`) | – |
 | `src/formats/` | Dateiformate (TCC/A16; folgen: SZN/INI, ZBF, HLP, GER/ACS, Spielstand) | – |
+| `src/engine/` | Szene, Ebenen, Ereignisse, Timer, Inventar, Hilfe, Sprache | – |
+| `src/game/` | `CGame` und Schauplätze (GAME.md) | engine |
 | `src/app/` | Programmstart, Fenster, Eingabe, Ton, Video | SDL3, FFmpeg |
 
 `rah_core` (statische Bibliothek) enthält alles ohne Plattformbezug und wird von den

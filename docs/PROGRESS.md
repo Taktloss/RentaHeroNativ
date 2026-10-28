@@ -204,4 +204,14 @@
   TCC-Ebenen ohne Alpha füllen jetzt ihre Ebenenoberfläche (Bild-Slot 3). Betrachter:
   `--hint <HLP>`, `--click x y`. 68 Tests grün.
   Offen: Hinweis-Countdown/`Hints_Select` (gehören zu `CGame`), Tastatur `0x0044CE50`.
-- Nächste Schritte: Figuren, Loc40 (Intro; braucht CGame_LoadAnim/Direktweg).
+- 2026-10-28: Intro (Loc40). Vollbildobjekt `CSzene+0x5DC` (`SetModal`, `CGame_LoadAnim`,
+  AVI direkt auf den Bildschirm, VIDEO.md); Sprache/Untertitel (`docs/SPEECH.md`,
+  `engine/speech`: ohne Ton Timer-Weg des Originals, Dauer nach Textlänge); `CGame`-Gerüst
+  und Schauplatzwechsel (`docs/GAME.md`, `src/game/`: `RequestLocation`, `Game_Idle`
+  Schritt 7 mit Rücksprung, `Game_SwitchLocation`, `CSzene_Reset`); `Loc40` mit allen drei
+  Szenen, Bild-Ereignis-Ketten, Klick-Überspringen. Programm: `--game 40 114 [--subtitles]`.
+  71 Tests grün. Ton nur als Protokoll (`g.audioTrace`).
+  Offen: Wartestellen (`CGame_BeginWait/Wait`, verschachtelte Schleife), Figurparameter
+  der Sprache (`0x00446660`), Renderer `0x0043E960`, `CSzene_Clear` exakt.
+- Nächste Schritte: Audio-Port (Musik, Effekte, Sprache, Cues – Intro hörbar), dann Figuren
+  (`CActor`) und Loc35/Loc37/Loc1 für den Anschluss nach dem Intro.

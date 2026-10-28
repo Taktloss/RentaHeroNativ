@@ -53,6 +53,14 @@ struct EngineGlobals {
     Surface565* screen = nullptr;
     // Plattform: Hilfetext in die Szenenoberfläche (DrawTextA 0x15, Arial 15 normal, weiß; HINTS.md)
     std::function<void(Surface565&, const Rect&, const std::string& cp1252)> drawHelpText;
+    // Sprachausgabe (docs/SPEECH.md): Ereignis „Sprache fertig“ 0x00481EB8, läuft 0x00481EE0,
+    // Untertitel g_SubTitles 0x00481F1C (rah.ini, Vorgabe 0), Rechteck 0x00481E90
+    Event speechDone;
+    bool speechRunning = false;
+    bool subtitles = false;
+    Rect subtitleRect{40, 424, 600, 475};
+    // Ton (Musik, Effekte, Sprache, Cues) folgt mit dem Audio-Port; bis dahin nur Protokoll
+    std::function<void(const std::string&)> audioTrace;
     // Ton-Cues einer Animation (AUDIO.md); bis zum Audio-Port nur ein Haken
     std::function<void(AnimLayer&, const AnimCue&)> runCue;
 };

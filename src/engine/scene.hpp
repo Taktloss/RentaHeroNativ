@@ -70,6 +70,9 @@ public:
     bool showTexts = true;       // +0x5CC (Ctor 1)
     // Schauplatznummer +0x5D0 (0 = Menü), für die Bereichstexte aus LocNN.GER
     void setLocationNumber(int n) { location_ = n; }
+    // Szenennummer +0x5D4 (Game_SwitchLocation, CGame_GetViewObjects)
+    void setSceneNumber(int n) { sceneNumber_ = n; }
+    int sceneNumber() const { return sceneNumber_; }
     bool clicksEnabled = true;   // +0x514 (Ctor 1)
     bool clicksDuringFull = false;  // +0x518 (Ctor 0)
     bool globalClick = true;     // +0x510 (Ctor 1)
@@ -104,6 +107,10 @@ public:
     void setClickEvent(int handler);
     // orig: Rent-A-Hero.exe 0x0044B190 CSzene_ClearFlag510
     void clearFlag510() { globalClick = false; }
+    // orig: Rent-A-Hero.exe 0x0044B180
+    void setFlag510() { globalClick = true; }
+    // orig: Rent-A-Hero.exe 0x00448930 CSzene_Reset (aus CGame_dtor; VIDEO.md, GAME.md)
+    void reset();
     // orig: Rent-A-Hero.exe 0x0044B160 / 0x0044B170 CSzene_EnableInput / DisableInput
     void enableInput() { clicksEnabled = true; }
     void disableInput() { clicksEnabled = false; }
@@ -142,6 +149,7 @@ private:
     int clickX_ = 0, clickY_ = 0;                               // +0x500, +0x504
     int textX_ = 0, textY_ = 0;                                 // +0x508, +0x50C
     int location_ = 0;                                          // +0x5D0
+    int sceneNumber_ = 0;                                       // +0x5D4
     bool barShown_ = false;                                     // +0x5BC
     std::unique_ptr<InventoryBar> bar_;                         // +0x5B4
     HelpOverlay* help_ = nullptr;                               // +0x9F8

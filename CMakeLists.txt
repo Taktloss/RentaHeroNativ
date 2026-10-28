@@ -37,6 +37,9 @@ add_library(rah_core STATIC
   src/engine/scene.cpp
   src/engine/inventory.cpp
   src/engine/help.cpp
+  src/engine/speech.cpp
+  src/game/game.cpp
+  src/game/loc40.cpp
   src/formats/bmp.cpp
   src/formats/pe.cpp
   src/render/tccsprite.cpp
@@ -86,6 +89,7 @@ if(RAH_BUILD_TESTS)
     tests/test_anim.cpp
     tests/test_pe.cpp
     tests/test_avi.cpp
+    tests/test_game.cpp
   )
   target_link_libraries(rah_tests PRIVATE rah_core)
   if(FFMPEG_FOUND)
