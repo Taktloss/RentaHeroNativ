@@ -103,8 +103,7 @@ void Scene::dispatchEvents() {
         Event* e = a->walkEvent ? a->walkEvent.get() : a->oldWalkEvent.get();
         if (e) fireEvent(g_, *e, e->type);
     }
-    for (auto& slot : layers_) {
-        Layer* L = slot.get();
+    for (Layer* L : layers_) {
         if (!L) break;
         if (L->ended && L->hideAtEnd) L->disable();  // vor dem Ende-Ereignis
         for (Event* e : {L->endEvent.get(), L->frameEvent.get(), L->countEvent.get(), L->tweenEvent.get()}) {
@@ -187,7 +186,7 @@ void Scene::update(bool realtime) {
 
     // Schleife bricht beim ersten leeren Platz ab (0x0044B544)
     for (auto& slot : layers_) {
-        Layer* L = slot.get();
+        Layer* L = slot;
         if (!L) break;
         if (L->prevZ != -1.0) {
             moveZ(static_cast<unsigned>(ftol(L->prevZ)), static_cast<unsigned>(ftol(L->z)));
@@ -198,7 +197,10 @@ void Scene::update(bool realtime) {
         else run = L->dirty || tick[static_cast<std::size_t>(stageOf(L->fps))];
         if (run) {
             const auto before = static_cast<unsigned>(ftol(L->z));
-            L->update(g_);
+            // +0x1BC: CAnimLayer_Update direkt (0x0044B6A6), sonst vtable +0x18 – eine Figur
+            // in der Ebenenliste läuft so als reine Animation (Loc04: Held als freie Ebene)
+            if (auto* an = L->isAnim ? dynamic_cast<AnimLayer*>(L) : nullptr) an->AnimLayer::update(g_);
+            else L->update(g_);
             const auto after = static_cast<unsigned>(ftol(L->z));
             if (before != after) moveZ(before, after);
         }
@@ -258,11 +260,12 @@ bool Scene::loadSzn(const IniFile& szn, unsigned loadMask) {
         const auto& oc = d.characters[static_cast<std::size_t>(n)];
         if (!oc) continue;
         const SznCharacter& c = *oc;
-        auto& slot = actors_[static_cast<std::size_t>(n)];
+        auto& slot = ownedActors_[static_cast<std::size_t>(n)];
         if (slot && c.type != slot->type) {  // anderer Typ → neu anlegen
             // Abweichung: Original lässt den Bereich mit hängendem Masken-Zeiger stehen
             if (slot->area) slot->area->mask = nullptr;
             slot.reset();
+            actors_[static_cast<std::size_t>(n)] = nullptr;
         }
         const bool fresh = !slot;
         Actor* a = createActor(n, paths_.findPath(c.filename), fresh);
@@ -300,7 +303,7 @@ bool Scene::loadSzn(const IniFile& szn, unsigned loadMask) {
 }
 
 bool Scene::createBackground(const std::optional<FoundFile>& file) {
-    background_.reset();
+    background_ = nullptr;  // UNVERIFIED: ob 0x00449E70 den alten löscht – Port: bleibt im Besitz
     if (!file) return false;
     // CLayer_Load setzt bei AVI +0x1BC → Ebene verwerfen, als CAnimLayer neu laden (VIDEO.md)
     std::unique_ptr<Layer> bg;
@@ -311,7 +314,8 @@ bool Scene::createBackground(const std::optional<FoundFile>& file) {
     bg->z = 255.0;
     bg->renderToSurface();  // 0x00449FF0
     bg->setPos(0, yOffset_);
-    background_ = std::move(bg);
+    ownedBackgrounds_.push_back(std::move(bg));
+    background_ = ownedBackgrounds_.back().get();
     loaded_ = true;
     g_.sceneChanged = true;
     Rect r = background_->getRect();
@@ -341,8 +345,9 @@ Layer* Scene::createLayer(const std::optional<FoundFile>& file, bool animated) {
     lastCreated_ = L.get();
     // Ebenen werden nicht aktiviert (Bedingung „Dateiname == NULL“, 0x0044AC48); das tun die
     // Schauplätze.
-    layers_[static_cast<std::size_t>(slot)] = std::move(L);
-    Layer* layer = layers_[static_cast<std::size_t>(slot)].get();
+    ownedLayers_.push_back(std::move(L));
+    Layer* layer = ownedLayers_.back().get();
+    layers_[static_cast<std::size_t>(slot)] = layer;
     const std::string stem = fileStem(layer->path);
     if (Area* a = addArea(&stem, nullptr, 0)) a->attach(*layer);
     layer->name = stem;
@@ -351,13 +356,14 @@ Layer* Scene::createLayer(const std::optional<FoundFile>& file, bool animated) {
 }
 
 Actor* Scene::createActor(int slotNr, const std::optional<FoundFile>& file, bool fresh) {
-    auto& slot = actors_[static_cast<std::size_t>(slotNr)];
+    auto& slot = ownedActors_[static_cast<std::size_t>(slotNr)];
     if (!fresh) {
         slot->reset();  // 0x00433B70
     } else {
         if (slot) {
             removeArea(slot->area);
             slot.reset();
+            actors_[static_cast<std::size_t>(slotNr)] = nullptr;
         }
         auto a = std::make_unique<Actor>(g_);
         std::string err;
@@ -366,7 +372,8 @@ Actor* Scene::createActor(int slotNr, const std::optional<FoundFile>& file, bool
         slot = std::move(a);
     }
     Actor* a = slot.get();
-    if (path_) a->setPathMap(&*path_);
+    actors_[static_cast<std::size_t>(slotNr)] = a;
+    if (path_) a->setPathMap(path_);
     a->setPos(0, yOffset_);  // vtable +0x14
     g_.sceneChanged = true;
     lastCreated_ = a;
@@ -397,20 +404,23 @@ bool Scene::removeArea(Area* a) {
     return false;
 }
 
-void Scene::loadMap(const std::optional<FoundFile>& file, std::optional<ZMap>& out) {
-    out.reset();
+void Scene::loadMap(const std::optional<FoundFile>& file, ZMap*& out) {
+    out = nullptr;
     if (!file) return;
     const auto data = file->read();
     if (!data) return;
     ZMap m;
     std::string err;
-    if (loadZMap(*data, m, &err)) out = std::move(m);
+    if (loadZMap(*data, m, &err)) {
+        ownedMaps_.push_back(std::make_unique<ZMap>(std::move(m)));
+        out = ownedMaps_.back().get();
+    }
 }
 
 Layer* Scene::getObject(std::string_view name) {
     for (auto& L : layers_) {
         if (!L) return nullptr;
-        if (equalsNoCase(name, L->name)) return L.get();
+        if (equalsNoCase(name, L->name)) return L;
     }
     return nullptr;
 }
@@ -418,15 +428,19 @@ Layer* Scene::getObject(std::string_view name) {
 void Scene::reset() {
     loaded_ = false;
     // +0x2B0 und Hintergrund +0x5C0 setzt das Original nur auf 0 (ohne Löschen)
-    background_.reset();
-    for (auto& L : layers_) L.reset();
+    background_ = nullptr;
+    layers_.fill(nullptr);
+    ownedLayers_.clear();
+    ownedBackgrounds_.clear();
     for (auto& a : areas_) a.reset();
-    for (auto& a : actors_) a.reset();
+    actors_.fill(nullptr);
+    for (auto& a : ownedActors_) a.reset();
     g_.hitGrid.clear();
     lastLayer_ = -1;   // +0x5D8 = 0, +0x2B8 = 0 (Port: kein Platz)
     lastCreated_ = nullptr;
-    depth_.reset();    // +0x2BC = 0 (ohne Löschen)
-    path_.reset();     // +0x2C0 = 0 (ohne Löschen)
+    depth_ = nullptr;  // +0x2BC = 0 (ohne Löschen)
+    path_ = nullptr;   // +0x2C0 = 0 (ohne Löschen)
+    ownedMaps_.clear();
     modal_ = nullptr;  // +0x5DC = 0 ohne Löschen
     g_.sceneChanged = false;
     zMax_ = 1;         // +0x2F8 = 1
@@ -507,7 +521,7 @@ bool Scene::compose(bool force) {
     std::array<int, 2> cls{};
     std::array<unsigned, 2> zc{};
     for (std::size_t i = 0; i < 2; ++i) {
-        Actor* a = actors_[i].get();
+        Actor* a = actors_[i];
         if (!a || (!a->dirty && !a->active)) continue;
         zc[i] = static_cast<unsigned>(ftol(a->z));
         if (zc[i] < static_cast<unsigned>(zMin_)) cls[i] = static_cast<unsigned>(zMax_) < zc[i] ? 1 : 3;
@@ -573,7 +587,7 @@ bool Scene::compose(bool force) {
     }
     // Ausbreitung über Überlappung mit B (Figuren erneut prüfen), danach von vorn
     for (int i = 0; i < kMaxLayers; ++i) {
-        Layer* L = layers_[static_cast<std::size_t>(i)].get();
+        Layer* L = layers_[static_cast<std::size_t>(i)];
         if (!L) break;
         if (L->dirty || !L->active) continue;
         Rect r = L->getRect();
@@ -614,7 +628,7 @@ bool Scene::compose(bool force) {
         if (L->z == 255.0 && L->dirty) L->draw(surface_, 0, nullptr);
     }
     // 11. Z-Stufen von hinten nach vorn; Figuren-Z vorübergehend mitzählen
-    const ZMap* zmap = depth_ ? &*depth_ : nullptr;
+    const ZMap* zmap = depth_;
     const auto zslot = [this](unsigned z) -> short* { return z < 256 ? &zCount_[z] : nullptr; };  // UNVERIFIED: Z > 255
     for (std::size_t i = 0; i < 2; ++i)
         if (short* c = zslot(zc[i])) ++*c;
@@ -705,13 +719,13 @@ Area* Scene::hitTest(int x, int y) {
     for (unsigned z = static_cast<unsigned>(zMin_); z <= static_cast<unsigned>(zMax_); ++z) {
         if (zCount(static_cast<int>(z)) == 0 || z == 0xFF) continue;
         for (auto& slot : layers_) {
-            Layer* L = slot.get();
+            Layer* L = slot;
             if (!L) break;
             if (L->active && static_cast<unsigned>(ftol(L->z)) == z && hits(L->area)) return L->area;
         }
     }
     for (auto& slot : layers_) {
-        Layer* L = slot.get();
+        Layer* L = slot;
         if (!L) break;
         if (L->active && L->z == 255.0 && hits(L->area)) return L->area;
     }
@@ -750,7 +764,7 @@ void Scene::onClick(int x, int y) {
         bar_->leave(false);
         return;
     }
-    Actor* hero = actors_[0].get();
+    Actor* hero = actors_[0];
     if (lastHit_ && (!hero || lastHit_ != hero->area)) return;  // nicht der Bereich der Figur
     if (hero && hero->active) {
         hero->walkToClick(x, y - 60);
@@ -760,7 +774,7 @@ void Scene::onClick(int x, int y) {
 }
 
 void Scene::clickWalk(int x, int y) {
-    Actor* second = actors_[1].get();
+    Actor* second = actors_[1];
     if (lastCreated_ == second) {
         if (second) second->walkToClick(x, y - 60);
     } else if (actors_[0]) {
@@ -828,6 +842,60 @@ void Scene::disableAll() {
         if (!a) return;
         a->active = false;
     }
+}
+
+}  // namespace rah
+
+namespace rah {
+
+Layer* Scene::setBackground(Layer* bg) {
+    Layer* old = background_;
+    background_ = bg;
+    listA_.addAll();  // CRectList_Add(+0x2F4, NULL): ganze Fläche
+    if (background_) background_->enable();
+    return old;
+}
+
+void Scene::setHero(Actor* a) {
+    Actor* old = actors_[0];
+    actors_[0] = a;
+    if (path_ && a) a->setPathMap(path_);
+    if (old && old->area) removeArea(old->area);
+    if (a) {
+        // Original: Name „Girlfriend“ nur wenn a ≠ +0x5E0 – nach der Zuweisung nie
+        const std::string name = "Rodrigo";
+        if (Area* ar = addArea(&name, nullptr, 0)) ar->attach(*a);
+        a->running = true;  // +0x1A8 = 1
+    }
+}
+
+bool Scene::insertLayer(Layer* l) {
+    for (auto& slot : layers_) {
+        if (slot) continue;
+        slot = l;
+        const int z = static_cast<int>(l->z);  // __ftol
+        if (z >= 0 && z < 256) ++zCount_[static_cast<std::size_t>(z)];  // UNVERIFIED: Z außerhalb 0…255
+        if (Area* a = addArea(&l->name, nullptr, 0)) a->attach(*l);
+        return true;
+    }
+    return false;
+}
+
+bool Scene::removeLayer(Layer* l) {
+    for (std::size_t i = 0; i < layers_.size(); ++i) {
+        if (layers_[i] != l) continue;
+        const int z = static_cast<int>(l->z);
+        if (z >= 0 && z < 256) --zCount_[static_cast<std::size_t>(z)];
+        for (std::size_t j = i; j + 1 < layers_.size(); ++j) layers_[j] = layers_[j + 1];
+        layers_.back() = nullptr;
+        if (Area* a = l->area) {
+            removeArea(a);
+            // 0x00436010 + Freigabe: der Bereich wird gelöscht
+            if (!removedAreas_.empty() && removedAreas_.back().get() == a) removedAreas_.pop_back();
+        }
+        return true;
+    }
+    return false;
 }
 
 }  // namespace rah

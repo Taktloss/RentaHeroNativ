@@ -12,7 +12,7 @@ public class Disasm extends GhidraScript {
     protected void run() throws Exception {
         String[] a = getScriptArgs();
         long end = Long.parseLong(a[1], 16);
-        Instruction i = getInstructionAt(toAddr(Long.parseLong(a[0], 16)));
+        Instruction i = getInstructionContaining(toAddr(Long.parseLong(a[0], 16)));
         while (i != null && i.getAddress().getOffset() < end) {
             println("> " + i.getAddress() + " " + i);
             i = i.getNext();

@@ -44,10 +44,28 @@ public:
 
     // orig: Rent-A-Hero.exe 0x0044AF60 CSzene_GetObject – nur Ebenen, Groß-/Kleinschreibung egal
     Layer* getObject(std::string_view name);
-    Layer* background() { return background_.get(); }
-    Layer* layer(int i) { return layers_[static_cast<std::size_t>(i)].get(); }
+    Layer* background() { return background_; }
+    Layer* layer(int i) { return layers_[static_cast<std::size_t>(i)]; }
     // Figuren +0x5E0 (Held, Bereich „Rodrigo“) und +0x5E4 („Girlfriend“)
-    Actor* actor(int i) { return actors_[static_cast<std::size_t>(i)].get(); }
+    Actor* actor(int i) { return actors_[static_cast<std::size_t>(i)]; }
+    // orig: Rent-A-Hero.exe 0x00449D10 CSzene_SetBackground – nur Zeiger +0x5C0 setzen (Liste A
+    // ganz ungültig, neuer Hintergrund aktiv); liefert den alten. Port: alle angelegten Hintergründe
+    // gehören der Szene bis reset() (das Original löscht sie im Schauplatz bzw. nie).
+    Layer* setBackground(Layer* bg);
+    // orig: Rent-A-Hero.exe 0x0044A140 – Tiefenkarte +0x2BC setzen, alte zurück
+    ZMap* setDepth(ZMap* m) {
+        ZMap* old = depth_;
+        depth_ = m;
+        return old;
+    }
+    ZMap* depthMap() { return depth_; }
+    // orig: Rent-A-Hero.exe 0x0044A6E0 – Held +0x5E0 setzen (nullptr: herausnehmen). Port: nur
+    // die beim Laden angelegte Figur 0 kann wieder eingesetzt werden.
+    void setHero(Actor* a);
+    // orig: Rent-A-Hero.exe 0x0044AA00 / 0x0044AA70 – fremde Ebene in die Liste +0x04 aufnehmen
+    // bzw. herausnehmen (ohne die Ebene zu löschen; ihr Bereich wird gelöscht)
+    bool insertLayer(Layer* l);
+    bool removeLayer(Layer* l);
     // orig: Rent-A-Hero.exe 0x0044A770(platz, datei, neu) – Figur anlegen bzw. wiederverwenden
     Actor* createActor(int slot, const std::optional<FoundFile>& file, bool fresh);
     // orig: Rent-A-Hero.exe 0x0044A8F0(figur, links, rechts, alt) – nur mit Audio-Manager
@@ -109,7 +127,7 @@ public:
     // anlegen (CSzene_CreateBackground); liefert ihn (CGame+0x60)
     Layer* replaceBackground(std::string_view name) {
         createBackground(paths_.findFile(name, "BMP"));
-        return background_.get();
+        return background_;
     }
     AnimLayer* modal() { return modal_; }
     // orig: Rent-A-Hero.exe 0x0043FFB0 CGame_LoadAnim(name) – nutzt nur Felder der Szene:
@@ -147,7 +165,7 @@ private:
     // orig: Rent-A-Hero.exe 0x0044AB10 CSzene_CreateLayer
     Layer* createLayer(const std::optional<FoundFile>& file, bool animated);
     // orig: Rent-A-Hero.exe 0x0044A1B0 CSzene_LoadDepth / 0x0044A260 CSzene_LoadPath
-    void loadMap(const std::optional<FoundFile>& file, std::optional<ZMap>& out);
+    void loadMap(const std::optional<FoundFile>& file, ZMap*& out);
 
     const DataPaths& paths_;
     EngineGlobals& g_;
@@ -156,12 +174,17 @@ private:
     int yOffset_;              // +0x2F0
 
     bool loaded_ = false;                                       // +0x00
-    std::array<std::unique_ptr<Layer>, kMaxLayers> layers_{};   // +0x04
-    std::unique_ptr<Layer> background_;                         // +0x5C0
-    std::optional<ZMap> depth_, path_;                          // +0x2BC, +0x2C0
+    std::array<Layer*, kMaxLayers> layers_{};                   // +0x04 (Liste)
+    Layer* background_ = nullptr;                               // +0x5C0
+    ZMap* depth_ = nullptr;                                     // +0x2BC
+    ZMap* path_ = nullptr;                                      // +0x2C0
+    // Port: Besitz der Objekte, auf die die Listen zeigen (bis reset())
+    std::vector<std::unique_ptr<Layer>> ownedLayers_, ownedBackgrounds_;
+    std::vector<std::unique_ptr<ZMap>> ownedMaps_;
+    std::array<std::unique_ptr<Actor>, 2> ownedActors_{};
     int lastLayer_ = -1;                                        // +0x2B8 (40 = Figur)
     Layer* lastCreated_ = nullptr;                              // +0x5D8
-    std::array<std::unique_ptr<Actor>, 2> actors_{};            // +0x5E0, +0x5E4
+    std::array<Actor*, 2> actors_{};                            // +0x5E0, +0x5E4
     std::vector<std::unique_ptr<Area>> removedAreas_;           // 0x0044AD70 löscht nicht
     DirtyRegion listA_;                                         // +0x2F4
     DirtyRegion listB_;                                         // +0xAC4

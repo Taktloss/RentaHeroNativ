@@ -119,6 +119,24 @@ public:
     // orig: Rent-A-Hero.exe 0x004475F0 – Interpolation über `steps` Updates starten (steps 0 → nichts);
     // Zielwert 0 = Wert bleibt; handler ≠ 0 → Ereignis +0x1D4 (Typ 2 am Ende)
     void tweenTo(double tx, double ty, double tz, double tzoom, int r, int g, int b, int steps, int handler);
+    // orig: Rent-A-Hero.exe 0x004474C0 CLayer_SetPosZ(x, y, z, zoom) – 0.0 (0x0046B568) = unverändert;
+    // neues Z merkt das alte in +0x38; mit Zoom: Zoom-Rechteck, sonst Bereichsraster
+    void setPosZ(double nx, double ny, double nz, double nzoom) {
+        if (nx != 0.0) x = nx;
+        if (ny != 0.0) y = ny;
+        if (nz != 0.0 && z != nz) {
+            prevZ = z;
+            z = nz;
+        }
+        if (nzoom != 0.0) {
+            zoom = nzoom;
+            updateZoomRect();
+            dirty = true;
+            return;
+        }
+        refreshArea();
+        dirty = true;
+    }
     // orig: Rent-A-Hero.exe 0x004475B0 CLayer_MoveTo – wie oben ohne Farbe
     void moveTo(double tx, double ty, double tz, double tzoom, int steps, int handler) {
         tweenTo(tx, ty, tz, tzoom, 0, 0, 0, steps, handler);

@@ -419,3 +419,25 @@ TEST(mouse_hover_text_timing_and_cursor) {
     frame();
     CHECK(std::get<2>(drawn.back()) == 400 - 20 - 60);
 }
+
+TEST(scene_list_insert_remove_and_background_swap) {
+    Fixture f;
+    REQUIRE(f.scene.load("T1", 0));
+    Layer* l1 = f.scene.layer(1);
+    Layer* l2 = f.scene.layer(2);
+    REQUIRE(l1 && l2);
+    const int z1 = static_cast<int>(l1->z);
+    const short before = f.scene.zCount(z1);
+    // 0x0044AA70: herausnehmen, Rest rückt nach, Z-Zähler sinkt, Ebene bleibt bestehen
+    CHECK(f.scene.removeLayer(l1));
+    CHECK(f.scene.layer(1) == l2 && f.scene.zCount(z1) == before - 1 && equalsNoCase(l1->name, "green"));
+    CHECK(!f.scene.removeLayer(l1));
+    // 0x0044AA00: am ersten freien Platz wieder einfügen
+    CHECK(f.scene.insertLayer(l1));
+    CHECK(f.scene.layer(2) == l1 && f.scene.zCount(z1) == before);
+    CHECK(f.scene.getObject("green") == l1);
+    // 0x00449D10: Hintergrund tauschen, alten zurück
+    Layer* bg = f.scene.background();
+    CHECK(f.scene.setBackground(nullptr) == bg && f.scene.background() == nullptr);
+    CHECK(f.scene.setBackground(bg) == nullptr && f.scene.background() == bg && bg->active);
+}
