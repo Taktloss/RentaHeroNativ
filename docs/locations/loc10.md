@@ -1,4 +1,4 @@
-# Loc10 (automatische Übersicht)
+# Loc10 – Pilzwald (Szenen 37–44, 66)
 
 Funktionen `0x00413FF0`–`0x004186FF` (7 Stück), Ereignis-Handler `0x00415E60`.
 Erzeugt mit `tools/gen_loc_docs.py`; Bedeutung der Flags und Abläufe folgt bei der Einzelanalyse (UNVERIFIED bis dahin). In der Fallübersicht ist `== N` ein Zweig einer If-Kette – Ereignis-ID **oder** Wert eines Flags/Zählers.
@@ -125,3 +125,27 @@ Erzeugt mit `tools/gen_loc_docs.py`; Bedeutung der Flags und Abläufe folgt bei 
   case 115: Sprache 044_ROD_03 | S= 3F64=3 3F6C=1 | Inv Remove(8) | ruft CActor_WalkTo CSzene_DisableInput CAnimLayer_PlayRange CActor_Hide CAudioBuffer_SetVolume FUN_00442f90 CArea_SetEvent CLayer_Disable CActor_Show FUN_004409c0 CSzene_EnableInput
   case 200: S? 3E80 | ruft CGame_Random
 ```
+
+## Analyse (2026-10-29, Port `src/game/loc10.cpp`)
+Konstruktor `0x00413FF0`, Abbau `0x00414850` (gibt alles frei), Start `0x00414A50`, Handler
+`0x00415E60`, Wege aus Szene 37 `0x00417EB0` und Szene 38 `0x00418380`.
+
+- **Herkunft 113** (Flugkarte Loc31): `0x3F24 = 1` (Gleiter steht in Szene 37), Landung
+  `S37_GliderArrives`. Ereignis 9 = Abflug → Szene 8 (Loc01).
+- **Herkunft 1001:** `0x3E80 = 1` (Nacht), Herkunft wird auf 38 umgeschrieben. Nachts:
+  Hintergrund `S%02d_Back_nd` (`wsprintfA`, Ghidra zeigt das `%` nicht), Musik
+  `Loc10_ForestInDarkness`, Held `CLayer_SetColor(−122, −84, −24)`, Eule/Donner statt Vögeln.
+- **Szene 66:** Verfolgung über dem Wald (`S66_WoodChase`), Absturz → Szene 37 mit Jasmin
+  (`0x3F28 = 1`); dort fallen beide herunter, Jasmin zeigt nach Norden und verweigert jeden
+  anderen Weg (`037_JAS_02`), in Szene 38 nach Nordwesten (`038_JAS_01`, Weg nach 68).
+- **Gleiter schaukelt** (Timer 40 ms, periodisch, Ereignis 10): `y = y0 − (int)(sin(φ)·−2)`,
+  φ += 2π/30 (`0x0046B470`), Umbruch bei 2π (`0x0046B468`); `+0x168` wird nie verändert.
+- **Szene 38:** Mädchen springt Seil (`0x3F30`, Zähl-Bilder 21/31 = Schritt), Gespräch über
+  `0x3F34` (1→2→3→4→5→6; Stufe 6 = Seil klauen, wiederholbar), Teddy (Gegenstand 12) → 10.
+  Die Sprechschlüssel `038_MÄD_xx` sind Latin-1 (`0xC4`); die Dateisuche wandelt sie in UTF-8
+  (`fileNameKey`).
+- **Szene 40:** Jasmin auf dem Baum (`0x3F48`), Rufe alle 10–20 s, Stroh/Feuer-Abfolge
+  `0x3F54` (0 → 1 Wurzel → 2 Stroh liegt → 3 Feuer → 4 gelöscht), Halskette (Gegenstand 16).
+- **Szene 41:** Teddy (`0x3F5C` 1 → 2 → 3, Gegenstand 12). **39:** Pilz (Gegenstand 8).
+  **44:** Pilz an die Schnecke → Explosion, Blatt (Gegenstand 6); der Blatt-Ebene wird bei
+  jedem Nehmen per vtable +0x14 30 Pixel nach rechts verschoben (Original).

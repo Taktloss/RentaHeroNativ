@@ -11,7 +11,7 @@ Ziel ist exakt originalgetreues Verhalten: Logik, Timing, Grafik, Ton und Spiels
 
 **In Arbeit, noch nicht durchspielbar.** Engine (Szenen, Ebenen, Figuren, Wegsuche, Ton,
 Videos inklusive Indeo-5-Transparenz, Inventar, Hilfe) steht. Portiert sind bisher das Intro
-und die Schauplätze 1–6, 31, 35, 37 und 40. Wege zu noch fehlenden Schauplätzen enden
+und die Schauplätze 1–6, 10, 31, 35, 37 und 40. Wege zu noch fehlenden Schauplätzen enden
 mit „nicht verfügbar“. Spielstände können noch nicht geladen werden.
 
 Details: [docs/PROGRESS.md](docs/PROGRESS.md)
@@ -89,6 +89,7 @@ auftaucht. Ohne sie bleibt er in vielen Schauplätzen unsichtbar, wie im Origina
 | `--game 6 26 8` | Ranama im Kloster |
 | `--game 2 13 12` | Sanchos Kneipe, Eingang |
 | `--game 31 113 7` | Flugkarte des Gleiters |
+| `--game 10 37 113` | Pilzwald (Landung mit dem Gleiter) |
 
 ### Bedienung
 

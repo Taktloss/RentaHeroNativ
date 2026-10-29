@@ -7,6 +7,7 @@
 #include "game/loc01.hpp"
 #include "game/loc02.hpp"
 #include "game/loc03.hpp"
+#include "game/loc10.hpp"
 #include "game/loc31.hpp"
 #include "game/loc04.hpp"
 #include "game/loc05.hpp"
@@ -430,4 +431,22 @@ TEST(loc31_scene_number_is_fixed_to_113) {
     Rig r(10);
     Loc31 a(*r.ctx, 0, 7);
     CHECK(a.location() == 31 && a.sceneNumber() == 113);
+}
+
+TEST(loc10_constructor_sets_glider_and_night_flags) {
+    Rig r(10);
+    auto& st = r.ctx->state;
+    st.at(0x3F24) = 0;
+    st.at(0x3E80) = 0;
+    for (int scene : {38, 39, 40, 41, 42, 43, 44}) {
+        Loc10 a(*r.ctx, scene, 37);
+        CHECK(a.location() == 10 && a.sceneNumber() == scene);
+    }
+    CHECK(st.at(0x3F24) == 0 && st.at(0x3E80) == 0);
+    { Loc10 a(*r.ctx, 37, 113); }
+    CHECK(st.at(0x3F24) == 1);
+    { Loc10 a(*r.ctx, 37, 1001); }
+    CHECK(st.at(0x3E80) == 1);
+    st.at(0x3F24) = 0;
+    st.at(0x3E80) = 0;
 }
