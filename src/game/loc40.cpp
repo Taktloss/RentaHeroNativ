@@ -2,6 +2,7 @@
 #include "game/loc40.hpp"
 
 #include "game/loc01.hpp"
+#include "game/loc02.hpp"
 #include "game/loc03.hpp"
 #include "game/loc04.hpp"
 #include "game/loc05.hpp"
@@ -362,6 +363,7 @@ void Loc40::onEvent116(Event& e, int) {
 std::unique_ptr<Game> createLocation(GameContext& ctx, int location, int scene, int prevScene) {
     switch (location) {
     case 1: return std::make_unique<Loc01>(ctx, scene, prevScene);
+    case 2: return std::make_unique<Loc02>(ctx, scene, prevScene);
     case 3: return std::make_unique<Loc03>(ctx, scene, prevScene);
     case 4: return std::make_unique<Loc04>(ctx, scene, prevScene);
     case 5: return std::make_unique<Loc05>(ctx, scene, prevScene);

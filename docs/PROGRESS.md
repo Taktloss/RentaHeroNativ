@@ -295,5 +295,8 @@
   `CSzene_OnClick` aus, Loslassen nicht (vorher: jedes Ereignis doppelt, zweites brach die
   Wartestelle des ersten ab – im Fenster „passiert nichts“). Linker Doppelklick =
   `CActor_SetRun` (Held rennt), sonst `CActor_ClearRun` + Klick. Option `--debug`.
-- Nächste Schritte: Loc02 (Szene 13, von der Brücke), Loc31 (Szene 113, Abflugziel aus Loc01);
+- 2026-10-29: Loc02 (Sanchos Kneipe, Szenen 13/1013/2013/14/15) portiert. Engine:
+  `AnimLayer::setStepCount` (0x00443300), `setCountEvent` (0x00443530). Probelauf: Eingang →
+  Schankraum → Theke (Sancho-Gespräch), Tisch des Fremden. 112 Tests.
+- Nächste Schritte: Loc31 (Szene 113, Abflugziel aus Loc01), weitere Ziele aus Loc02/Loc03;
   Spielstand laden (`CGame+0x04`); Ramil-Pfad (Sprungziel 1004) im Probelauf prüfen.

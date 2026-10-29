@@ -76,6 +76,11 @@ public:
     void playEndEvent(unsigned mode, int ev);
     // orig: Rent-A-Hero.exe 0x004434A0 – nur Ende-Ereignis setzen (läuft weiter); ev 0: nichts
     void setEndEvent(int ev);
+    // orig: Rent-A-Hero.exe 0x00443300 – Schrittzähler +0x2D0 setzen
+    void setStepCount(int n) { stepCount = n; }
+    // orig: Rent-A-Hero.exe 0x00443530 – Zähl-Ereignis +0x1D0 (Typ 4) bei Schritt n (+0x2D4);
+    // ev 0: nichts
+    void setCountEvent(int ev, int n);
     // orig: Rent-A-Hero.exe 0x00442E70 CAnimLayer_PlayRange(modus, ev, von, bis)
     void playRange(unsigned mode, int ev, int from, int to);
     // orig: Rent-A-Hero.exe 0x00442F90 CAnimLayer_PlayRangeNoEvent(modus, von, bis)

@@ -254,6 +254,14 @@ void AnimLayer::setEndEvent(int ev) {
     endEvent->enabled = true;  // +0x00 = 1
 }
 
+void AnimLayer::setCountEvent(int ev, int n) {
+    if (ev == 0) return;
+    ensureEvent(countEvent);
+    countEvent->setHandler(ev);
+    countEvent->enabled = true;
+    stepTarget = n;
+}
+
 void AnimLayer::playEndEvent(unsigned mode, int ev) {
     if (ev == 0) {
         clearEvent(endEvent);

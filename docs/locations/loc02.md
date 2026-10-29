@@ -1,4 +1,4 @@
-# Loc02 (automatische Übersicht)
+# Loc02 – Sanchos Kneipe (Szenen 13, 1013, 2013, 14, 15)
 
 Funktionen `0x00407E50`–`0x0040A4DF` (15 Stück), Ereignis-Handler `0x00408D50`, `0x00408DD0`, `0x00408EB0`, `0x004093A0`, `0x00409420`, `0x00409AE0`.
 Erzeugt mit `tools/gen_loc_docs.py`; Bedeutung der Flags und Abläufe folgt bei der Einzelanalyse (UNVERIFIED bis dahin). In der Fallübersicht ist `== N` ein Zweig einer If-Kette – Ereignis-ID **oder** Wert eines Flags/Zählers.
@@ -85,3 +85,35 @@ Erzeugt mit `tools/gen_loc_docs.py`; Bedeutung der Flags und Abläufe folgt bei 
   case 46: ruft FUN_00443530
   case 47: S? 3EB8 | ruft CSzene_GetArea
 ```
+
+## Analyse (2026-10-29, Port `src/game/loc02.cpp`)
+Fünf Szenen in einem Schauplatz; Konstruktor `0x00407E50` lädt je Szene, Start `0x00408620`
+und Handler `0x00408D50` verzweigen nach `CGame+0x2C`. Musik `Loc02_SanchosPub`, Hall
+(4, 0.208, 0.478, 0), Anteil 0.1.
+
+| Szene | Inhalt | SZN (Maske) | Handler |
+|---|---|---|---|
+| 13 | Eingang | `S0013` (`0x3EA0 != 0`) | `0x00408DD0`: 1 → Brücke (12), 2 → 2013, 3 → 1013 |
+| 1013 | Schankraum, Gäste, Sancho | `S1013` (alles) | `0x00408EB0` |
+| 2013 | Treppe zum Fremden | `S2013` (`0x3EA0`), dann Hintergrund `S2013_Back_mf` | `0x004093A0`: 20 → 15, 21 → 13 |
+| 14 | Theke (Nahaufnahme Sancho) | `S0014` (alles) | `0x00409420` |
+| 15 | Tisch des Fremden | `S0015` (0) | `0x00409AE0` |
+
+Flags: `0x3EA0` Fremder da, `0x3EA4` Gäste-Gespräch, `0x3EA8`/`0x3EAC` Sancho (ohne/mit
+Fremdem), `0x3EB0` Sanchos Ohr, `0x3EB4` Fremder, `0x3EB8` Bier, `0x3EBC` Brust, `0x3EC0`
+Begrüßung an der Theke, `0x3EC4` schaltet Sancho-Stufe 7 frei (UNVERIFIED: Herkunft).
+
+- **1013:** Sancho-Animation per Timer (1–2 s, dann 5–15 s), trinkender Gast mit Zählereignissen
+  (Schluck bei Bild 58, Abstellen 63; `0x00443300` Schrittzähler `+0x2D0`, `0x00443530`
+  Zähl-Ereignis `+0x1D0` mit Ziel `+0x2D4`). Gäste-Gespräch nur nach dem Piratenangriff
+  (`0x3EC8`) in zwei Stufen.
+- **14:** Sancho-Gespräch Stufen 2–8 (Stufe 8 gibt Gegenstand 13, Benutzen → Ereignis 33 gibt ihn
+  zurück), Ohr-Szene mit Klangfolge; Sprecher-Bereiche der Animation `S0014_SanAnim`
+  (Rodrigo 185–193, Sancho 150–158).
+- **15:** Trinkhaltung des Fremden (`0x0040A190`, Übergänge 1 = Bilder 0–50, 2 = 50–70, Timer
+  wie Loc05). Stufe 4 des Gesprächs: Fremder packt aus, Piratenangriff, `0x3EA0 = 0`,
+  `0x3EB4 = 5`, `0x3ECC = 1`, Gegenstand 1, → Brücke mit Herkunft 15 (Loc03).
+
+Original-Fehler (nachgebildet): Abbau `0x004083E0` springt in Szene 1013 an der Freigabe der
+Klänge vorbei; `0x0040A399` ruft Win32 `SetEvent(0x2B)` mit einer Ereignisnummer statt eines
+Handles (ohne Wirkung). Abweichung: „Unknown_Event____“ nach stderr statt MessageBox.

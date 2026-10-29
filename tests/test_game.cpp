@@ -5,6 +5,7 @@
 #include "core/strings.hpp"
 #include "audio/mixer.hpp"
 #include "game/loc01.hpp"
+#include "game/loc02.hpp"
 #include "game/loc03.hpp"
 #include "game/loc04.hpp"
 #include "game/loc05.hpp"
@@ -411,4 +412,15 @@ TEST(loc03_guards_only_until_sabrina_met) {
         CHECK(!b.guardsLoaded());
     }
     CHECK(st.at(0x3EC8) == 0);  // nur der Piratenangriff (von Szene 15) setzt 0x3EC8
+}
+
+TEST(loc02_all_scenes_construct_without_changing_flags) {
+    Rig r(10);
+    auto& st = r.ctx->state;
+    const auto before = st.at(0x3EA8) + st.at(0x3EB4) + st.at(0x3EC0) + st.at(0x3EA0);
+    for (const auto& [scene, prev] : {std::pair{13, 12}, {1013, 13}, {14, 1013}, {2013, 13}, {15, 2013}}) {
+        Loc02 a(*r.ctx, scene, prev);
+        CHECK(a.location() == 2 && a.sceneNumber() == scene);
+    }
+    CHECK(st.at(0x3EA8) + st.at(0x3EB4) + st.at(0x3EC0) + st.at(0x3EA0) == before);
 }
