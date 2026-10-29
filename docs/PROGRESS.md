@@ -302,6 +302,7 @@
   (Flugkarte, Szene 113) portiert; Probelauf Abflug nach Smashville → Loc01 Szene 8/7. 113 Tests.
 - 2026-10-29: Loc10 (Pilzwald, Szenen 37–44 und 66) portiert; Dateisuche findet Latin-1-Namen
   (`038_MÄD_xx`). Probelauf: Flug 113 → 37, 37 → 41 (Teddy) → 37, Nacht (1001), Absturz (66).
-- Nächste Schritte: Ziele aus dem Wald (Loc08 Szene 99, Loc12 Szene 91, Loc15 Szene 57,
+- 2026-10-29: Loc12 (Brunnen vor Cynthias Haus, Szene 91) portiert.
+- Nächste Schritte: Hauptmenü; Ziele aus dem Wald (Loc08 Szene 99, Loc15 Szene 57,
   Loc19 Szenen 68/101), weitere Ziele aus Loc02/Loc03;
   Spielstand laden (`CGame+0x04`); Ramil-Pfad (Sprungziel 1004) im Probelauf prüfen.

@@ -1,4 +1,4 @@
-# Loc12 (automatische Übersicht)
+# Loc12 – Brunnen vor Cynthias Haus (Szene 91)
 
 Funktionen `0x00418700`–`0x0041964F` (5 Stück), Ereignis-Handler `0x00418BF0`.
 Erzeugt mit `tools/gen_loc_docs.py`; Bedeutung der Flags und Abläufe folgt bei der Einzelanalyse (UNVERIFIED bis dahin). In der Fallübersicht ist `== N` ein Zweig einer If-Kette – Ereignis-ID **oder** Wert eines Flags/Zählers.
@@ -26,3 +26,16 @@ Erzeugt mit `tools/gen_loc_docs.py`; Bedeutung der Flags und Abläufe folgt bei 
   case 6: ruft CGame_Random
   case 7: Sprache 091_ROD_08 091_ROD_09 091_ROD_10 | S= 3F74=3 | Inv Remove(7) | ruft CActor_WalkTo CActor_Hide CLayer_Disable CAnimLayer_PlayEndEvent CGame_Delay FUN_004403e0 CActor_Show CLayer_Enable CActor_WalkTo2 CGame_HeroSayWait
 ```
+
+## Analyse (2026-10-29, Port `src/game/loc12.cpp`)
+Konstruktor `0x00418700` (Szene fest 91, `S91` komplett, Herkunft 90 → Hintergrund `S91_Back2`),
+Abbau `0x00418900` gibt alles frei, Start `0x004189E0`, Handler `0x00418BF0`.
+
+- Start: `0x409C == 0` → Brunnen-Stufe `0x3F74 = 4` (UNVERIFIED: Bedeutung von `0x409C`).
+  Herkunft 42 → von links, sonst Kamerafahrt `S91_RodRausCam` aus Cynthias Haus.
+- Ereignisse: 1/2 Türen rütteln, 3 → Cynthias Haus (Szene 90, Loc14; Kamerafahrt nur, wenn man
+  nicht von dort kam), 4 Brunnen, 5 → Wald (Szene 42, setzt `0x3F60 = 1`), 6 Umgebung (Eule,
+  Donner), 7 Geldsack (Gegenstand 7) in den Brunnen → Stufe 3.
+- Brunnen nach `0x3F74`: 1 = zwei Sätze, 2 = Hinweis (ohne Gegenstand 7: `0x3FA0 = 1`),
+  3 = Gespräch `0x3F78` 1→2→3→4 (Stufe 4 setzt `0x3FBC = 1` und zurück auf 3), 4 = ein Satz.
+  Stufe 1 sperrt die Eingabe, die anderen nicht (wie im Original).
