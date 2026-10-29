@@ -26,7 +26,8 @@ void fireEvent(EngineGlobals& g, Event& e, int type) {
             fn(e, type);
         } else if (e.handlerId < 0xFFF && g.eventProc) {
             e.param = e.handlerId;
-            dbg(g, "Ereignis %d (Typ 0x%X)", e.handlerId, type);
+            // periodische Timer (z. B. Loc10: Gleiter schaukelt alle 40 ms) würden die Ausgabe fluten
+            if (!e.timerPeriodic) dbg(g, "Ereignis %d (Typ 0x%X)", e.handlerId, type);
             g.eventProc(e, type);
         } else if (e.handlerId >= 0xFFF) {
             // Funktionszeiger als Handler-Wert (Wartestellen-Rückrufe)
