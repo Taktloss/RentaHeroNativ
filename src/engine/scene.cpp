@@ -744,9 +744,16 @@ void Scene::onClick(int x, int y) {
         help_->close();
         return;
     }
-    if (!clicksEnabled) return;
-    if (!clicksDuringFull && modal_ && modal_->active && modal_->running) return;
+    if (!clicksEnabled) {
+        dbg(g_, "Klick %d,%d ignoriert: Eingabe gesperrt", x, y);
+        return;
+    }
+    if (!clicksDuringFull && modal_ && modal_->active && modal_->running) {
+        dbg(g_, "Klick %d,%d ignoriert: Vollbild-Ebene %s läuft", x, y, modal_->name.c_str());
+        return;
+    }
     if (globalClick && !editor_ && g_.clickEvent.enabled) {
+        dbg(g_, "Klick %d,%d → globales Klick-Ereignis", x, y);
         markEvent(g_, g_.clickEvent, 0x16);
         return;
     }
@@ -759,6 +766,13 @@ void Scene::onClick(int x, int y) {
         return;
     }
     lastHit_ = hitTest(x, y - 60);
+    if (g_.debug) {
+        Actor* h = actors_[0];
+        dbg(g_, "Klick %d,%d (Szene %d,%d) → %s%s | Held %s bei %d,%d", x, y, x, y - 60,
+            lastHit_ ? lastHit_->name.c_str() : "kein Bereich",
+            lastHit_ && !lastHit_->event->hasHandler() ? " (ohne Ereignis)" : "",
+            h ? (h->active ? "sichtbar" : "unsichtbar") : "fehlt", h ? h->footX : 0, h ? h->footY : 0);
+    }
     if (lastHit_) markEvent(g_, *lastHit_->event, 0x0B);
     if (bar_ && lastHit_ == &bar_->area()) {
         bar_->leave(false);

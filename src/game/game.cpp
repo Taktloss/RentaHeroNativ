@@ -115,12 +115,14 @@ bool Game::wait() {
             if (ctx_.idle) ctx_.idle();
         } else if (m == GameContext::kQuit || m == GameContext::kCommand) {
             // WM_QUIT wird an das Fenster weitergeschickt; WM_COMMAND geht verloren
+            dbg(g_, "Wartestelle %d beendet: %s", i, m == GameContext::kQuit ? "Quit" : "Command");
             slot = 0;
             return false;
         }
     }
     const int r = slot;
     slot = 0;
+    if (r == 3) dbg(g_, "Wartestelle %d abgebrochen (Schauplatz %d)", i, location_);
     return r != 3;  // 0x0047D130 = 0 (immer 0)
 }
 

@@ -43,6 +43,7 @@ struct Options {
     int frameMs = 1;  // Pause je Frame (Original: keine, TIMING.md)
     std::string dump; // PPM des Bildschirms am Ende
     bool hidden = false;
+    bool debug = false;  // --debug
     std::string exe;   // installierte Rent-A-Hero.exe (Zeiger); sonst <Common>/../Rent-A-Hero.exe
     std::string font;  // Schriftdatei für die Bereichstexte (sonst Systemsuche)
     int mouseX = -1, mouseY = -1;  // Mausbewegung nach dem ersten Frame (kopflose Prüfung)
@@ -67,7 +68,7 @@ void usage() {
     std::fprintf(stderr,
                  "rentahero --cd <Ordner|.iso|.cue> [--cd …] [--common <Ordner>]\n"
                  "          [--loc <n>] [--scene <Name>] [--mask <n>]\n"
-                 "          [--frames <n>] [--frame-ms <n>] [--dump <datei.ppm>] [--hidden]\n"
+                 "          [--frames <n>] [--frame-ms <n>] [--dump <datei.ppm>] [--hidden] [--debug]\n"
                  "          [--exe <Rent-A-Hero.exe>] [--font <datei.ttf>] [--mouse <x> <y>] [--click <x> <y>] [--click-at <bild> <x> <y>] [--walk <x> <y>]\n"
                  "          [--items <id,id,…>] [--hint <HLP-Name, z. B. 04_006_A>]\n"
                  "          [--game <Schauplatz> <Szene> [<Herkunftsszene>] (Intro: --game 40 114)] [--subtitles]\n"
@@ -80,6 +81,10 @@ bool parse(int argc, char** argv, Options& o) {
         const std::string a = argv[i];
         auto val = [&]() -> const char* { return i + 1 < argc ? argv[++i] : nullptr; };
         const char* v = nullptr;
+        if (a == "--debug") {
+            o.debug = true;
+            continue;
+        }
         if (a == "--hidden") {
             o.hidden = true;
             continue;
@@ -249,6 +254,7 @@ int main(int argc, char** argv) {
         return 1;
     }
     EngineGlobals g;
+    g.debug = opt.debug;
     // timeGetTime(): Millisekunden als 32-Bit-Zahl (läuft wie das Original nach ~49 Tagen über)
     g.now = [] { return static_cast<std::uint32_t>(SDL_GetTicks()); };
 

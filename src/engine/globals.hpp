@@ -3,7 +3,9 @@
 // Ereignisse) teilen.
 #pragma once
 
+#include <cstdarg>
 #include <cstdint>
+#include <cstdio>
 #include <array>
 #include <functional>
 #include <map>
@@ -28,6 +30,7 @@ struct FoundFile;
 
 struct EngineGlobals {
     bool sceneChanged = false;  // g_SceneChanged 0x00481F28
+    bool debug = false;         // Port: --debug (Klicks, Ereignisse, Wartestellen nach stderr)
     // g_EventProc 0x0047E60C: OnGenericEvent des aktuellen Schauplatzes
     std::function<void(Event&, int type)> eventProc;
     // AVI öffnen (FFmpeg im Spiel); leer → Videoebenen werden nicht geladen (docs/VIDEO.md)
@@ -97,5 +100,16 @@ struct EngineGlobals {
     // Protokoll von Ton-Aufrufen ohne Wirkung im Port (Eigenschaften ohne 3D-Hardware …)
     std::function<void(const std::string&)> audioTrace;
 };
+
+// Port: Debug-Ausgabe (nur mit --debug)
+inline void dbg(const EngineGlobals& g, const char* fmt, ...) {
+    if (!g.debug) return;
+    std::fputs("[debug] ", stderr);
+    va_list ap;
+    va_start(ap, fmt);
+    std::vfprintf(stderr, fmt, ap);
+    va_end(ap);
+    std::fputc('\n', stderr);
+}
 
 }  // namespace rah
