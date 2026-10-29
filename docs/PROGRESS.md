@@ -283,5 +283,8 @@
 - 2026-10-28: Loc05 (Louis Büro, Szene 10) portiert: Haltungsautomat für Loui mit Timer,
   Gesprächsstufen, Gang durchs Büro mit Klang-Marken. Engine: `AnimLayer::setEndEvent`
   (0x004434A0), Felder `+0x2B4/+0x2B8`. Probelauf: Eintreten, Gespräch. 110 Tests.
-- Nächste Schritte: Loc12, Loc26, Loc31, Loc47 – die übrigen Ziele aus Loc01;
+- 2026-10-29: Loc03 (Brücke vor Smashville, Szene 12) portiert: Wachen mit Zufallssprüchen,
+  Säbelfrau-Auftritt, Piratenangriff (von Szene 15), Ab-/Anflug. Probelauf: Loc01/S7 → Gleiter
+  → Kneipe → Loc03 → Wachen anklicken → ganze Folge. 111 Tests.
+- Nächste Schritte: Loc02 (Szene 13, von der Brücke), Loc31 (Szene 113, Abflugziel aus Loc01);
   Spielstand laden (`CGame+0x04`); Ramil-Pfad (Sprungziel 1004) im Probelauf prüfen.

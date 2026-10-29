@@ -5,6 +5,7 @@
 #include "core/strings.hpp"
 #include "audio/mixer.hpp"
 #include "game/loc01.hpp"
+#include "game/loc03.hpp"
 #include "game/loc04.hpp"
 #include "game/loc05.hpp"
 #include "game/loc06.hpp"
@@ -394,4 +395,20 @@ TEST(loc05_constructs_and_keeps_talk_state) {
     }
     // Konstruktor und Abbau ändern keine Flags (Gesprächsstufe, Blumen)
     CHECK(st.at(0x3EDC) == talk && st.at(0x3EE0) == flowers);
+}
+
+TEST(loc03_guards_only_until_sabrina_met) {
+    Rig r(10);
+    auto& st = r.ctx->state;
+    CHECK(st.at(0x3ECC) == 0);
+    {
+        Loc03 a(*r.ctx, 12, 8);
+        CHECK(a.location() == 3 && a.guardsLoaded());  // Wachen-Timer +0xB8 angelegt
+    }
+    st.at(0x3ECC) = 1;
+    {
+        Loc03 b(*r.ctx, 12, 13);
+        CHECK(!b.guardsLoaded());
+    }
+    CHECK(st.at(0x3EC8) == 0);  // nur der Piratenangriff (von Szene 15) setzt 0x3EC8
 }
