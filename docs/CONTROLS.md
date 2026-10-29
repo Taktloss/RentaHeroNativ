@@ -11,7 +11,7 @@
 | `WM_ACTIVATEAPP` (0x1C) | wParam 1/2 → `DAT_0047d6a8 = 1`, `FUN_00447e30`; sonst `DAT_0047d6a8 = 0`. Bei 0 ruft die Hauptschleife `WaitMessage()` → **Spiel pausiert ohne Fokus** (unter Wine beobachtet: Bild steht) |
 | `WM_PAINT` (0xF) | nur wenn aktiv; Fenster-/Vollbild-Pfad über Renderer-vtable |
 | `WM_MOUSEMOVE` (0x200) | `FUN_00402790(msg, x, y)` |
-| `WM_LBUTTONDOWN/UP`, `WM_RBUTTONDOWN/UP` (0x201–0x204, 0x206) | `FUN_00402670(msg, x, y)` |
+| `WM_LBUTTONDOWN`, `WM_LBUTTONDBLCLK`, `WM_RBUTTONDOWN`, `WM_RBUTTONDBLCLK` (0x201, 0x203, 0x204, 0x206) | `FUN_00402670(msg, x, y)` |
 | `WM_INITMENUPOPUP` (0x117) | `FUN_00402f80` |
 | `WM_DROPFILES` (0x233) | `FUN_00403030` (Editor-Rest) |
 | `WM_DESTROY` (2) | `PostQuitMessage(0)` |

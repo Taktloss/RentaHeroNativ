@@ -435,14 +435,21 @@ int main(int argc, char** argv) {
             quit = true;
             return GameContext::kQuit;
         }
-        // WndProc 0x00402350: WM_LBUTTONDOWN/UP, WM_LBUTTONDBLCLK, WM_RBUTTONDOWN und
-        // WM_RBUTTONDBLCLK → OnMouseButton → CSzene_OnClick (Art wird nicht weitergegeben,
-        // EVENTS.md). Rechte Taste loslassen (0x205) gehört nicht dazu.
+        // WndProc 0x00402350 (Disassembly 0x004025A7–0x00402632): nur WM_LBUTTONDOWN (0x201),
+        // WM_LBUTTONDBLCLK (0x203), WM_RBUTTONDOWN (0x204) und WM_RBUTTONDBLCLK (0x206) gehen an
+        // OnMouseButton 0x00402670; Loslassen (0x202, 0x205) geht an DefWindowProc (EVENTS.md).
+        // Windows meldet den zweiten Druck eines Doppelklicks als DBLCLK, den dritten wieder als
+        // DOWN usw. – SDL zählt die Klicks mit (clicks gerade = DBLCLK).
         const bool down = ev.type == SDL_EVENT_MOUSE_BUTTON_DOWN;
-        const bool up = ev.type == SDL_EVENT_MOUSE_BUTTON_UP;
-        if ((down && (ev.button.button == SDL_BUTTON_LEFT || ev.button.button == SDL_BUTTON_RIGHT)) ||
-            (up && ev.button.button == SDL_BUTTON_LEFT)) {
+        if (down && (ev.button.button == SDL_BUTTON_LEFT || ev.button.button == SDL_BUTTON_RIGHT)) {
             SDL_ConvertEventToRenderCoordinates(ren, &ev);
+            Actor* hero = scene.actor(0);
+            if (ev.button.button == SDL_BUTTON_LEFT && ev.button.clicks % 2 == 0 && hero) {
+                hero->setRun();  // WM_LBUTTONDBLCLK: CActor_SetRun, kein Klick
+                dbg(g, "Doppelklick: Held rennt");
+                return GameContext::kMessage;
+            }
+            if (hero) hero->clearRun();  // 0x00435330
             scene.onClick(static_cast<int>(ev.button.x), static_cast<int>(ev.button.y));
         }
         // WM_MOUSEMOVE → OnMouseMove 0x00402790 → CSzene_MouseMove (MOUSE.md); Zeiger folgen

@@ -291,5 +291,9 @@
   fehlte dadurch der Gleiter samt Klick. Prüfskript `tools/check_layer_types.py`. `--game` nimmt
   optional die Herkunftsszene (`--game 3 12 8`), sonst bleibt der Held in vielen Schauplätzen
   unsichtbar (wie im Original bei unbekannter Herkunft).
+- 2026-10-29: Maus wie das Original (WndProc 0x00402350, Disassembly): nur Tastendruck löst
+  `CSzene_OnClick` aus, Loslassen nicht (vorher: jedes Ereignis doppelt, zweites brach die
+  Wartestelle des ersten ab – im Fenster „passiert nichts“). Linker Doppelklick =
+  `CActor_SetRun` (Held rennt), sonst `CActor_ClearRun` + Klick. Option `--debug`.
 - Nächste Schritte: Loc02 (Szene 13, von der Brücke), Loc31 (Szene 113, Abflugziel aus Loc01);
   Spielstand laden (`CGame+0x04`); Ramil-Pfad (Sprungziel 1004) im Probelauf prüfen.

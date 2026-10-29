@@ -4,8 +4,10 @@ Belegt durch Dekompilate (Adressen jeweils angegeben) und die Codegenerator-Vorl
 im Binary (`%s->SetEvent(MakeEventValue(CLICKED_%s))`, `switch (thisEvent->Param)`).
 
 ## 1. Fenster → Szene
-`WndProc` (`0x00402350`) leitet `WM_LBUTTONDOWN/UP`, `WM_RBUTTONDOWN/UP`,
-`WM_LBUTTONDBLCLK` (0x201–0x204) und `WM_RBUTTONDBLCLK` (0x206) an
+`WndProc` (`0x00402350`) leitet `WM_LBUTTONDOWN` (0x201), `WM_LBUTTONDBLCLK` (0x203),
+`WM_RBUTTONDOWN` (0x204) und `WM_RBUTTONDBLCLK` (0x206) an (Disassembly `0x004025A7`–
+`0x00402632`; Loslassen 0x202/0x205 geht an `DefWindowProc` – Korrektur 2026-10-29, früher
+stand hier fälschlich auch „UP“)
 `OnMouseButton(msg, x, y)` (`0x00402670`):
 - Fenstermodus: Koordinaten umrechnen (`FUN_00447e50`).
 - `DAT_0047d138 != 0`: Editor-Rest „Set Area“ (zwei Klicks spannen ein Rechteck auf,
@@ -13,10 +15,9 @@ im Binary (`%s->SetEvent(MakeEventValue(CLICKED_%s))`, `switch (thisEvent->Param
 - `WM_LBUTTONDBLCLK` und Figur `CSzene+0x5E0` vorhanden → `FUN_00435320(figur)`, Ende.
 - sonst: Figur vorhanden → `FUN_00435330(figur)`; dann `CSzene_OnClick(x, y)`.
   **Die Nachrichtenart wird nicht weitergegeben** (Disassembly `0x00402779`–`0x00402783`:
-  nur `push y; push x`) – jeder Tasten-Down/Up-Event führt also zu `CSzene_OnClick`.
-  Klicks innerhalb eines Frames fallen zusammen, weil Ereignisse nur markiert und erst in
-  `CSzene_DispatchEvents` ausgelöst werden (Abschnitt 4). Ob Down und Up in getrennten
-  Frames zweimal auslösen, ist noch im Testlauf zu prüfen (UNVERIFIED).
+  nur `push y; push x`) – jeder Tastendruck führt also zu `CSzene_OnClick`, ein Klick
+  genau einmal. (Der Port hatte bis 2026-10-29 auch das Loslassen weitergegeben; dadurch
+  löste jeder Klick sein Ereignis zweimal aus und brach die Wartestelle des ersten ab.)
 
 ## 2. `CSzene_OnClick` (`0x0044C950`)
 Speichert `x, y` in `CSzene+0x500/+0x504`. Bildschirmaufteilung (Szene 640×360 ab y = 60):
