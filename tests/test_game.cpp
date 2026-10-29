@@ -7,6 +7,7 @@
 #include "game/loc01.hpp"
 #include "game/loc02.hpp"
 #include "game/loc03.hpp"
+#include "game/loc31.hpp"
 #include "game/loc04.hpp"
 #include "game/loc05.hpp"
 #include "game/loc06.hpp"
@@ -423,4 +424,10 @@ TEST(loc02_all_scenes_construct_without_changing_flags) {
         CHECK(a.location() == 2 && a.sceneNumber() == scene);
     }
     CHECK(st.at(0x3EA8) + st.at(0x3EB4) + st.at(0x3EC0) + st.at(0x3EA0) == before);
+}
+
+TEST(loc31_scene_number_is_fixed_to_113) {
+    Rig r(10);
+    Loc31 a(*r.ctx, 0, 7);
+    CHECK(a.location() == 31 && a.sceneNumber() == 113);
 }
