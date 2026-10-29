@@ -38,10 +38,10 @@ private:
     AnimLayer* rab1Run_ = nullptr;            // +0x88
     AnimLayer* rab1Talk_ = nullptr;           // +0x8C
     AnimLayer* rab2_ = nullptr;               // +0x90
-    AnimLayer* rodGlider_ = nullptr;          // +0x94 S12_RodGlider
+    Layer* rodGlider_ = nullptr;              // +0x94 S12_RodGlider (TCC-Standbild)
     AnimLayer* sabInGlider_ = nullptr;        // +0x98
     AnimLayer* sabSword_ = nullptr;           // +0x9C
-    AnimLayer* sabGlider_ = nullptr;          // +0xA0
+    Layer* sabGlider_ = nullptr;              // +0xA0 (TCC-Standbild)
     AnimLayer* sabWalk_ = nullptr;            // +0xA4 SabWalk
     Area* bridge_ = nullptr;                  // +0xA8
     Area* sign_ = nullptr;                    // +0xAC

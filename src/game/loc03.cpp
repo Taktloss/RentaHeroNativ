@@ -31,14 +31,14 @@ Loc03::Loc03(GameContext& ctx, int scene, int prevScene) : Game(ctx, 3, scene, p
     getViewObjects();
     takeOff_ = loadAnim("S12_Wegflug");
     approach_ = obj("S12_Anflug");
-    rodGlider_ = obj("S12_RodGlider");
+    rodGlider_ = scene_.getObject("S12_RodGlider");
     if (mask != 0) {
         rab1Run_ = obj("S12_Rab1Run");
         rab1Talk_ = obj("S12_Rab1Talk");
         rab2_ = obj("S12_Rab2");
         sabInGlider_ = obj("S12_SabInGlider");
         sabSword_ = obj("S12_SabSword");
-        sabGlider_ = obj("S12_SabGlider");
+        sabGlider_ = scene_.getObject("S12_SabGlider");
         sabWalk_ = obj("SabWalk");
         ra2Line_ = loadSfx("012_RA2_04");
         stepLeft_ = loadSfx("Gen_StepLeft");
@@ -109,9 +109,9 @@ void Loc03::start() {
     if (Layer* bg = scene_.background()) bg->enable();  // +0x60
     if (flag(kSabMet) == 0 && prevScene_ != 15) {
         scene_.clearFlag510();
-        for (AnimLayer* L : {rab1Talk_, rab2_, sabSword_, sabGlider_})
+        for (Layer* L : std::initializer_list<Layer*>{rab1Talk_, rab2_, sabSword_, sabGlider_})
             if (L) L->enable();
-        const std::pair<AnimLayer*, int> ev[] = {{sabSword_, 6}, {sabGlider_, 7}, {rab1Talk_, 8}, {rab2_, 9}};
+        const std::pair<Layer*, int> ev[] = {{sabSword_, 6}, {sabGlider_, 7}, {rab1Talk_, 8}, {rab2_, 9}};
         for (const auto& [L, id] : ev)
             if (L && L->area) L->area->setEvent(id);  // UNVERIFIED: Original ohne Prüfung
         if (hero_) hero_->blockRect(kGuardBlock[0], kGuardBlock[1], kGuardBlock[2], kGuardBlock[3]);

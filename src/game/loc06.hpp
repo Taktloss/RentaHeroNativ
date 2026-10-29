@@ -37,8 +37,8 @@ private:
     AnimLayer* ranLooks_ = nullptr;       // +0x8C S27_RanSchaut
     AnimLayer* rodTalk_ = nullptr;        // +0x90 S27_RodTalk
     AnimLayer* ranTalk27_ = nullptr;      // +0x94 S27_RanTalk
-    AnimLayer* ranTalkRing_ = nullptr;    // +0x98 S27_RanTalkRing
-    AnimLayer* ranLooksRing_ = nullptr;   // +0x9C S27_RanSchautRing
+    Layer* ranTalkRing_ = nullptr;        // +0x98 S27_RanTalkRing (TCC-Standbild)
+    Layer* ranLooksRing_ = nullptr;       // +0x9C S27_RanSchautRing (TCC-Standbild)
     Area* exit_ = nullptr;                // +0xA0 S26_Exit
     Area* bottle_ = nullptr;              // +0xA4 S26_Bottle
     Area* telescope_ = nullptr;           // +0xA8 S26_Telescope

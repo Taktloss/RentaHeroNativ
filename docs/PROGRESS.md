@@ -286,5 +286,10 @@
 - 2026-10-29: Loc03 (Brücke vor Smashville, Szene 12) portiert: Wachen mit Zufallssprüchen,
   Säbelfrau-Auftritt, Piratenangriff (von Szene 15), Ab-/Anflug. Probelauf: Loc01/S7 → Gleiter
   → Kneipe → Loc03 → Wachen anklicken → ganze Folge. 111 Tests.
+- 2026-10-29: Fehler behoben: TCC-Standbilder (`S12_RodGlider`, `S12_SabGlider`,
+  `S27_RanTalkRing`, `S27_RanSchautRing`) wurden als `AnimLayer` gesucht → `nullptr`; in Loc03
+  fehlte dadurch der Gleiter samt Klick. Prüfskript `tools/check_layer_types.py`. `--game` nimmt
+  optional die Herkunftsszene (`--game 3 12 8`), sonst bleibt der Held in vielen Schauplätzen
+  unsichtbar (wie im Original bei unbekannter Herkunft).
 - Nächste Schritte: Loc02 (Szene 13, von der Brücke), Loc31 (Szene 113, Abflugziel aus Loc01);
   Spielstand laden (`CGame+0x04`); Ramil-Pfad (Sprungziel 1004) im Probelauf prüfen.

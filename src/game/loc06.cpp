@@ -44,11 +44,11 @@ Loc06::Loc06(GameContext& ctx, int scene, int prevScene) : Game(ctx, 6, scene, p
         if (flag(kRing) != 0) {
             earGrab_ = loadAnim("S27_OhrGreif");
             ranLooks_ = dynamic_cast<AnimLayer*>(scene_.getObject("S27_RanSchaut"));
-            ranLooksRing_ = dynamic_cast<AnimLayer*>(scene_.getObject("S27_RanSchautRing"));
+            ranLooksRing_ = scene_.getObject("S27_RanSchautRing");
         }
         rodTalk_ = dynamic_cast<AnimLayer*>(scene_.getObject("S27_RodTalk"));
         ranTalk27_ = dynamic_cast<AnimLayer*>(scene_.getObject("S27_RanTalk"));
-        ranTalkRing_ = dynamic_cast<AnimLayer*>(scene_.getObject("S27_RanTalkRing"));
+        ranTalkRing_ = scene_.getObject("S27_RanTalkRing");
         exit27_ = scene_.getArea("S27_Exit");
     } else {
         sceneNr_ = 26;
@@ -125,7 +125,7 @@ void Loc06::start() {
     if (auto* bar = scene_.inventory()) bar->setUseHandler(kUseHandler);  // 0x0043FA60
     scene_.disableAll();
     if (auto* bg = scene_.background()) bg->enable();
-    const auto areaOf = [](AnimLayer* l) { return l ? l->area : nullptr; };  // Ebene +0x1C0
+    const auto areaOf = [](Layer* l) { return l ? l->area : nullptr; };  // Ebene +0x1C0
     if (sceneNr_ == 27) {
         if (exit27_) exit27_->setEvent(10);
         if (ranTalkRing_) ranTalkRing_->enable();

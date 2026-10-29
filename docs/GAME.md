@@ -61,4 +61,6 @@ Hilfe, Wechsel-Globals). Schauplätze sind Unterklassen (`Loc40`), `createLocati
 `switch`. Bisher nur Loc40: jeder andere Wechsel scheitert und läuft in den Rücksprung mit
 vertauschten Werten – nach dem Intro-Teil 1 beginnt das Intro deshalb neu. Musik
 (`CSzene+0x1A8`) liegt in `GameContext::music` und überlebt Schauplatzwechsel (AUDIO.md).
-Programm: `rentahero --cd … --common … --game 40 114 [--subtitles]`.
+Programm: `rentahero --cd … --common … --game 40 114 [--subtitles]`. Optional dritte Zahl =
+Herkunftsszene (Standard 0); viele Schauplätze stellen Rodrigo nur danach auf, z. B.
+`--game 3 12 8` (Brücke, mit dem Gleiter angekommen), `--game 4 6 7`, `--game 5 10 9`.

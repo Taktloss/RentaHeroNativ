@@ -55,7 +55,7 @@ struct Options {
     int walkX = -1, walkY = -1;    // Held läuft im zweiten Frame dorthin (Szenenkoordinaten)
     std::vector<int> items;        // Inventarleiste zeigen und diese Gegenstände hinzufügen
     std::string hint;              // Hilfe-Symbol zeigen; Klick darauf öffnet diese HLP-Datei
-    int gameLoc = -1, gameScene = 0;  // Spielmodus: Schauplatz/Szene starten (Intro: 40 114)
+    int gameLoc = -1, gameScene = 0, gamePrev = 0;  // Spielmodus: Schauplatz/Szene starten (Intro: 40 114)
     bool subtitles = false;           // rah.ini [MODES] SubTitles
     bool mute = false;                // ohne Tonausgabe
     bool audio3d = false;             // 3D-Ton wie mit Hardware-3D und EAX 1.0 (AUDIO.md „3D“)
@@ -70,7 +70,7 @@ void usage() {
                  "          [--frames <n>] [--frame-ms <n>] [--dump <datei.ppm>] [--hidden]\n"
                  "          [--exe <Rent-A-Hero.exe>] [--font <datei.ttf>] [--mouse <x> <y>] [--click <x> <y>] [--click-at <bild> <x> <y>] [--walk <x> <y>]\n"
                  "          [--items <id,id,…>] [--hint <HLP-Name, z. B. 04_006_A>]\n"
-                 "          [--game <Schauplatz> <Szene> (Intro: --game 40 114)] [--subtitles]\n"
+                 "          [--game <Schauplatz> <Szene> [<Herkunftsszene>] (Intro: --game 40 114)] [--subtitles]\n"
                  "          [--mute] [--music-vol <0-100>] [--sfx-vol <0-100>] [--speech-vol <0-100>]\n"
                  "          [--audio3d] [--audio-dump <datei.wav>]\n");
 }
@@ -123,6 +123,8 @@ bool parse(int argc, char** argv, Options& o) {
         else if (a == "--game" && i + 1 < argc) {
             o.gameLoc = std::atoi(v);
             o.gameScene = std::atoi(argv[++i]);
+            // optional: Herkunftsszene (viele Schauplätze stellen den Helden nur danach auf)
+            if (i + 1 < argc && argv[i + 1][0] >= '0' && argv[i + 1][0] <= '9') o.gamePrev = std::atoi(argv[++i]);
         }
         else if (a == "--click" && i + 1 < argc) {
             o.clickX = std::atoi(v);
@@ -406,7 +408,7 @@ int main(int argc, char** argv) {
     if (game) {
         // Spielstart wie „Neues Spiel“: RequestLocation, Ausführung im ersten Game_Idle
         // (Start darf warten: Nachrichtenschleife muss dafür schon stehen)
-        requestLocation(ctx.request, opt.gameLoc, opt.gameScene, 0, false);
+        requestLocation(ctx.request, opt.gameLoc, opt.gameScene, opt.gamePrev, false);
     }
     if (!opt.hint.empty()) help.iconOn();
     if (!opt.items.empty() && scene.inventory()) {
