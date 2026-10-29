@@ -244,8 +244,20 @@ int main(int argc, char** argv) {
             return 1;
         }
     }
+    // Im Spiel ist Common Pflicht (Rodrigo, Musik, Inventar); ohne ihn fehlt der Held stillschweigend
+    if (opt.gameLoc >= 0 && opt.common.empty()) {
+        std::fprintf(stderr, "Fehlt: --common <Ordner>. Ohne den Common-Ordner gibt es weder Rodrigo noch\n"
+                             "Musik und Inventar (Entpacken: siehe README, Abschnitt „Spieldaten bereitstellen“).\n");
+        return 1;
+    }
     std::unique_ptr<DirFileSystem> common;
-    if (!opt.common.empty()) common = std::make_unique<DirFileSystem>(opt.common);
+    if (!opt.common.empty()) {
+        if (!std::filesystem::is_directory(opt.common)) {
+            std::fprintf(stderr, "Common-Ordner %s nicht gefunden\n", opt.common.c_str());
+            return 1;
+        }
+        common = std::make_unique<DirFileSystem>(opt.common);
+    }
     DataPaths paths(&cd, common.get());
     paths.setLocation(opt.location);
 
