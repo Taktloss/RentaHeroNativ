@@ -39,7 +39,7 @@ std::string joinKey(const std::vector<std::string>& parts, std::size_t count) {
     std::string key;
     for (std::size_t i = 0; i < count; ++i) {
         key += '/';
-        key += toUpperAscii(parts[i]);
+        key += fileNameKey(parts[i]);
     }
     return key;
 }
@@ -121,7 +121,7 @@ IsoFileSystem::Dir* IsoFileSystem::loadDir(const std::string& key, std::uint32_t
             e.extent = le32(data, pos + 2);
             e.size = le32(data, pos + 10);
             e.dir = (data[pos + 25] & 0x02) != 0;
-            dir.byUpper.emplace(toUpperAscii(e.name), e);
+            dir.byUpper.emplace(fileNameKey(e.name), e);
         }
         pos += len;
     }
@@ -134,7 +134,7 @@ const IsoFileSystem::Entry* IsoFileSystem::find(std::string_view path) const {
     for (std::size_t i = 0; i < parts.size(); ++i) {
         if (!cur->dir) return nullptr;
         Dir* dir = loadDir(joinKey(parts, i), cur->extent, cur->size);
-        const auto it = dir->byUpper.find(toUpperAscii(parts[i]));
+        const auto it = dir->byUpper.find(fileNameKey(parts[i]));
         if (it == dir->byUpper.end()) return nullptr;
         cur = &it->second;
     }

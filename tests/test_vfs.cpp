@@ -50,3 +50,9 @@ TEST(iso_matches_merged_folder) {
     CHECK(missing == 0);
     CHECK(diff == 0);
 }
+
+TEST(file_name_key_maps_latin1_to_utf8) {
+    CHECK(rah::fileNameKey("038_M\xC4" "D_02.wav") == "038_M\xC3\x84" "D_02.WAV");
+    CHECK(rah::fileNameKey("038_M\xC3\x84" "D_02.wav") == "038_M\xC3\x84" "D_02.WAV");
+    CHECK(rah::fileNameKey("s37_back") == "S37_BACK");
+}

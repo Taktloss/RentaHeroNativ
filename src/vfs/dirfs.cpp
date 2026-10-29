@@ -16,10 +16,10 @@ std::filesystem::path DirFileSystem::resolve(std::string_view path) const {
             std::error_code ec;
             for (const auto& e : std::filesystem::directory_iterator(cur, ec)) {
                 const std::string name = e.path().filename().string();
-                it->second.emplace(toUpperAscii(name), name);
+                it->second.emplace(fileNameKey(name), name);
             }
         }
-        const auto found = it->second.find(toUpperAscii(part));
+        const auto found = it->second.find(fileNameKey(part));
         if (found == it->second.end()) return {};
         cur /= found->second;
     }

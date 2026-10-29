@@ -11,6 +11,9 @@ namespace rah {
 // ASCII-Großbuchstaben (das Original vergleicht Pfade mit lstrcmpi, die Daten sind ASCII).
 std::string toUpperAscii(std::string_view s);
 bool equalsNoCase(std::string_view a, std::string_view b);
+// Suchschlüssel für Dateinamen: gültiges UTF-8 bleibt, sonst Latin-1 (Namen aus der EXE und den
+// GER-Dateien, z. B. „038_MÄD_02“ mit 0xC4) → UTF-8 wie Ordner- und Joliet-Namen; dann toUpperAscii
+std::string fileNameKey(std::string_view s);
 
 // Pfad an '/' und '\\' zerlegen, leere Teile und "." verwerfen.
 std::vector<std::string> splitPath(std::string_view path);
