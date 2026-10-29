@@ -304,7 +304,10 @@ bool switchLocation(GameContext& ctx) {
     // Config_ReadCdMap 0x00404360 (CD-Abfrage) entfällt: alle Daten sind gemeinsam eingebunden.
     // Renderer 0x0043E960(0x0B) … (0): Bedeutung offen
     ctx.current = createLocation(ctx, r.nextLocation, r.nextScene, r.prevScene);
-    if (!ctx.current) return false;
+    if (!ctx.current) {
+        std::fprintf(stderr, "Schauplatz %d / Szene %d noch nicht portiert\n", r.nextLocation, r.nextScene);
+        return false;
+    }
     ctx.scene.setBarShown(true);  // +0x5BC = g_CurGame
     // Spielstand-Position (0x0047D764) folgt; ausstehende Maus-/Tastennachrichten verwerfen: Plattform
     ctx.current->start();
