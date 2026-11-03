@@ -14,6 +14,7 @@
 #include "game/loc08.hpp"
 #include "game/loc09.hpp"
 #include "game/loc12.hpp"
+#include "game/loc14.hpp"
 #include "game/loc15.hpp"
 #include "game/loc19.hpp"
 #include "game/loc20.hpp"
@@ -517,6 +518,14 @@ TEST(loc20_scene_number_is_fixed_to_70) {
     Rig r(10);
     Loc20 a(*r.ctx, 0, 69);
     CHECK(a.location() == 20 && a.sceneNumber() == 70);
+}
+
+TEST(loc14_scene_number_is_fixed_to_90) {
+    Rig r(10);
+    for (int prev : {89, 91}) {
+        Loc14 a(*r.ctx, 0, prev);
+        CHECK(a.location() == 14 && a.sceneNumber() == 90);
+    }
 }
 
 TEST(loc15_scene_variants_set_night_and_pirate) {

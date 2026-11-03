@@ -1,4 +1,4 @@
-# Loc14 (automatische Übersicht)
+# Loc14 – bei Cynthia, Szene 90
 
 Funktionen `0x00419650`–`0x0041A32F` (6 Stück), Ereignis-Handler `0x00419C90`.
 Erzeugt mit `tools/gen_loc_docs.py`; Bedeutung der Flags und Abläufe folgt bei der Einzelanalyse (UNVERIFIED bis dahin). In der Fallübersicht ist `== N` ein Zweig einer If-Kette – Ereignis-ID **oder** Wert eines Flags/Zählers.
@@ -28,3 +28,28 @@ Erzeugt mit `tools/gen_loc_docs.py`; Bedeutung der Flags und Abläufe folgt bei 
   case 10: Sprache 090_ROD_19 090_CYN_19 090_ROD_20 090_CYN_20 | S= 3F84=1 3F88=1 | S? 3F80 3F88 | ruft CActor_WalkTo CActor_Turn CGame_HeroSayWait FUN_0041a300
   case 11: Sprache 090_ROD_09 090_CYN_09 090_ROD_10 090_CYN_10 | S= 3F88=2 | ruft CActor_WalkTo CGame_HeroSayWait FUN_0041a300
 ```
+
+## Einzelanalyse (2026-11-03, portiert: `src/game/loc14.cpp`)
+
+### Flags
+| Offset | Start | Bedeutung |
+|---|---:|---|
+| `0x3F7C` | 0 | Kamin anklickbar (nach Gesprächsstufe 4 mit Cynthia) |
+| `0x3F80` | 0 | Blumen angesehen – danach anderes Kamingespräch |
+| `0x3F84` | 0 | über den Kamin gesprochen (`090_ROD_20`) |
+| `0x3F88` | 1 | Gesprächsstufe mit Cynthia (1…5); Kamingespräch setzt Werte > 2 auf 1 zurück |
+| `0x3F8C` | 1 | Doppelbett: 2 angesprochen, 3 Klappbett vorgeführt (dann wird `S90_Bett` nicht mehr geladen) |
+
+### Ablauf
+- Ctor `0x00419650`: Szene fest 90, `CSzene_Load("090", Herkunft == 89)`; aus 89 zusätzlich
+  Aufwach-Animationen; `Sfx_Fire` (Vol. 0); bei `0x3F8C < 3` Klappbett-Animation mit drei Cues.
+  Musik `Loc14_Cynthia`, Hall (4, 0.208, 0.478, 0).
+- Start `0x004199C0`: Feuer in Schleife, auf 25 in 2 s; Bereiche 1–6, Kamin 10 (aktiv erst bei
+  `0x3F7C`), Cynthia 11. Aus 89: Rodrigo wacht auf (Vollbild), setzt sich auf, `090_ROD_01`,
+  steht auf, (459,295) Richtung 1 → (407,325); `090_CYN_01`. Sonst Ankunft (10,350) Richtung 6
+  mit `CActor_WalkToClick` nach (143,336).
+- Ereignisse `0x00419C90`: Krankenbett, Blumen, Trog, Regale (Kommentare); Doppelbett –
+  bei Stufe 2, Kamingespräch und Gesprächsstufe 2 führt Cynthia das Klappbett vor (Musik
+  `Loc14_LoveIsBreakingTheNight`, Vollbild `S90_Bett`); Kamin; Cynthia-Gesprächsstufen;
+  Ausgang → 12/91 (Cynthia spricht ohne Warten weiter).
+- Probelauf 2026-11-03: Aufwachen aus 89, Klappbett, Ausgang nach 12/91.
