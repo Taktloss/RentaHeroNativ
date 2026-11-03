@@ -20,6 +20,7 @@
 #include "game/loc20.hpp"
 #include "game/loc21.hpp"
 #include "game/loc22.hpp"
+#include "game/loc23.hpp"
 #include "game/loc31.hpp"
 #include "game/loc04.hpp"
 #include "game/loc05.hpp"
@@ -489,6 +490,14 @@ TEST(loc19_builds_all_scenes_without_data) {
     for (int sc : {68, 69, 101}) {
         Loc19 a(*r.ctx, sc, 38);
         CHECK(a.location() == 19 && a.sceneNumber() == sc);
+    }
+}
+
+TEST(loc23_builds_from_harbour_and_hold) {
+    Rig r(10);
+    for (int prev : {100, 103}) {
+        Loc23 a(*r.ctx, 102, prev);
+        CHECK(a.location() == 23 && a.sceneNumber() == 102);
     }
 }
 

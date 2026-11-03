@@ -335,6 +335,8 @@
   Steinscheibe, Lösung → 9/89. 131 Tests.
 - 2026-11-03: Loc09 (Zwischensequenz Angriff auf Smashville, Szene 89) portiert → 14/90.
 - 2026-11-03: Loc14 (bei Cynthia, Szene 90) portiert: Aufwachen, Gespräche, Klappbett, → 12/91.
+- 2026-11-03: Loc23 (Piratenschiff, Szene 102) portiert: Kiste, Sabrina befreien, Luke → 24/103,
+  Flucht → 8/100. 134 Tests.
   128 Tests.
-- Nächste Schritte: Menü im Fenster prüfen (Regler ziehen, Namenseingabe); offene Ziele: Loc16 (16/58), Loc23 (23/103); Ramil-Pfad (Sprungziel 1004) in Loc10 prüfen;
+- Nächste Schritte: Menü im Fenster prüfen (Regler ziehen, Namenseingabe); noch nicht portierte Schauplätze: Loc16 (58), Loc17, Loc18, Loc24 (103), Loc25–Loc30, Loc41; Ramil-Pfad (Sprungziel 1004) in Loc10 prüfen;
   Hinweis-Countdown/`Hints_Select`.
