@@ -104,6 +104,23 @@ public:
         if (active) dirty = true;
         refreshArea();
     }
+    // orig: Rent-A-Hero.exe 0x00446EC0 – relativ verschieben (x += dx, y += dy), aktiv → dirty,
+    // Bereich nachführen
+    void moveBy(int dx, int dy) {
+        x += dx;
+        y += dy;
+        if (active) dirty = true;
+        refreshArea();
+    }
+    // orig: Rent-A-Hero.exe 0x00446FD0 – Z setzen (gleich → nichts); altes Z nach +0x38 für
+    // die Neusortierung, aktiv → dirty, Bereich nachführen
+    void setZ(int nz) {
+        if (static_cast<double>(nz) == z) return;
+        prevZ = z;
+        z = nz;
+        if (active) dirty = true;
+        refreshArea();
+    }
     // orig: Rent-A-Hero.exe 0x00447470 CLayer_Enable
     void enable();
     // orig: Rent-A-Hero.exe 0x00447490 CLayer_Disable

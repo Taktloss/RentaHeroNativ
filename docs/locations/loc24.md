@@ -1,4 +1,4 @@
-# Loc24 (automatische Übersicht)
+# Loc24 – Kapitänskajüte, Szene 103
 
 Funktionen `0x00427C10`–`0x0042901F` (8 Stück), Ereignis-Handler `0x00428820`.
 Erzeugt mit `tools/gen_loc_docs.py`; Bedeutung der Flags und Abläufe folgt bei der Einzelanalyse (UNVERIFIED bis dahin). In der Fallübersicht ist `== N` ein Zweig einer If-Kette – Ereignis-ID **oder** Wert eines Flags/Zählers.
@@ -48,3 +48,30 @@ Erzeugt mit `tools/gen_loc_docs.py`; Bedeutung der Flags und Abläufe folgt bei 
   case 30: Sprache 103_SAB_07 | ruft FUN_004403e0 CActor_UnblockRect
   case 100: ruft CGame_Random
 ```
+
+## Einzelanalyse (2026-11-03, portiert: `src/game/loc24.cpp`)
+
+### Flags
+| Offset | Start | Bedeutung |
+|---|---:|---|
+| `0x4088` | 0 | Rodrigo ist mit dem Helm über die Treppe hinauf (liest Loc08) |
+| `0x408C` | 0 | Kampf ist nach rechts gerückt (Sabrina-Ebenen +56, Kapitän-Ebenen +36 per `0x00446EC0`) |
+| Loc24 +0x110 | 0 | Kampfrunde: 0, 1, 2 (nach jeder Runde zufällig neu), 3 sobald Rodrigo den Helm hat |
+
+### Ablauf
+- Ctor `0x00427C10`: `CSzene_LoadAll("S103")`; Tisch, Helm, Flasche statisch; Kapitän-, Sabrina-
+  und Rodrigo-Animationen mit Ton-Cues; Umgebungs-Timer; Musik `Loc23_PirateShip`, Hall wie Loc14.
+- Start `0x004282D0`: Dampf in Schleife, Umgebungston alle 1–3 s (Ereignis 100: Meeresrauschen
+  Frequenz, Möwe, Donner), Flasche (Gegenstand 24 → 7), Helm (Gegenstand 5 → `0x16`).
+  Erste Ankunft: Rodrigo (142,264) Richtung 6 → (287,340); Sabrina folgt als `SabWalk`
+  (`0x004474C0`/`0x004475B0`), zieht ihr Schwert; der Kapitän kommt (`CapComes`, Z danach 115 per
+  `0x00446FD0`), `103_CAP_01`, `103_SAB_01`, erster Angriff. Dann Kampfrunde (`0x00428DB0`),
+  Bereiche, Sperrrechteck (114,253)–(300,310) solange ohne Helm.
+- Kampf: Runden 0–2 spielen Angriffs-/Parade-Animationen mit Ende- bzw. Schrittzähler-Ereignissen
+  (`0x00443300`/`0x00443530`: Schritt 8); Ereignis 10 beendet eine Runde. Runde 3 (mit Helm):
+  `103_CAP_06` (Ende → `0x1E`: `103_SAB_07`, Sperre weg), Kapitän stolpert (`0x12`): Kampf
+  rückt nach rechts, `0x408C = 1`, wieder Runde 0.
+- Ereignisse `0x00428820`: Ofen/Hebel/Instrumente/Schwerter/Tisch kommentieren; Treppe (4) ohne
+  Helm `103_ROD_05`, mit Helm `0x4088 = 1` → 23/102; Flasche; Helm (`round = 3`).
+- Probelauf 2026-11-03: Ankunft und Kampf, Helm nehmen, Kapitän stolpert, Sperre weg, Treppe →
+  23/102 → Flucht → 8/100. Flasche angeklickt (Weg), Aufnehmen nicht einzeln geprüft.

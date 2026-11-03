@@ -21,6 +21,7 @@
 #include "game/loc21.hpp"
 #include "game/loc22.hpp"
 #include "game/loc23.hpp"
+#include "game/loc24.hpp"
 #include "game/loc31.hpp"
 #include "game/loc04.hpp"
 #include "game/loc05.hpp"
@@ -491,6 +492,25 @@ TEST(loc19_builds_all_scenes_without_data) {
         Loc19 a(*r.ctx, sc, 38);
         CHECK(a.location() == 19 && a.sceneNumber() == sc);
     }
+}
+
+TEST(loc24_builds_without_data) {
+    Rig r(10);
+    Loc24 a(*r.ctx, 103, 102);
+    CHECK(a.location() == 24 && a.sceneNumber() == 103);
+}
+
+TEST(layer_move_by_and_set_z) {
+    Layer l;
+    l.setPos(10, 20);
+    l.moveBy(0x38, 0);
+    CHECK(l.x == 66.0 && l.y == 20.0);
+    l.z = 50.0;
+    l.setZ(0x73);
+    CHECK(l.z == 115.0 && l.prevZ == 50.0);
+    l.prevZ = -1.0;
+    l.setZ(0x73);  // gleich → nichts
+    CHECK(l.prevZ == -1.0);
 }
 
 TEST(loc23_builds_from_harbour_and_hold) {
