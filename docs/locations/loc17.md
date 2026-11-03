@@ -1,4 +1,4 @@
-# Loc17 (automatische Übersicht)
+# Loc17 – Aasfresser-Lichtung (Szene 59) und Totenschädel (Szene 60)
 
 Funktionen `0x0041CF00`–`0x0041E4EF` (5 Stück), Ereignis-Handler `0x0041D9F0`.
 Erzeugt mit `tools/gen_loc_docs.py`; Bedeutung der Flags und Abläufe folgt bei der Einzelanalyse (UNVERIFIED bis dahin). In der Fallübersicht ist `== N` ein Zweig einer If-Kette – Ereignis-ID **oder** Wert eines Flags/Zählers.
@@ -55,3 +55,33 @@ Erzeugt mit `tools/gen_loc_docs.py`; Bedeutung der Flags und Abläufe folgt bei 
   case 66: ruft CLayer_Disable
   case 100: ruft CGame_Random
 ```
+
+## Einzelanalyse (2026-11-03, portiert: `src/game/loc17.cpp`)
+
+### Flags
+| Offset | Start | Bedeutung |
+|---|---:|---|
+| `0x3F44` | 0 | UNVERIFIED (Loc10); wird 1, wenn beim Start `0x3FD4` gesetzt ist (`0x3FD4` → 0) |
+| `0x3FA8` | 0 | gesetzt nach dem Fressen: ein Pirat folgt nach 58 (Loc16 verbrennt ihn) |
+| `0x3FC8` | 0 | Aasfresser sind satt/weg; danach Mund/Ohr nur `060_ROD_09` |
+| `0x3FCC` | 1 | Busch-Stufe: 1 → `060_ROD_04`; 2 → `060_ROD_05` (zweimal, über `0x3FD8`); 3 Busch wegziehen (`S60_BuschWeg`, Busch gleitet nach x 630); 4 Busch weg, Ohr (Ereignis `0x35`) frei |
+| `0x3FD0` | 0 | `060_ROD_08` vor dem ersten Gang ins Ohr gesagt |
+| `0x3FD8` | 1 | Hilfszähler der Busch-Stufe 2 |
+| `0x3FE4` | 0 | UNVERIFIED (Loc18): Rodrigo kommt aus dem Schädel zurück (Ankunft aus 61) |
+
+### Ablauf
+- Ctor `0x0041CF00`: Szene 59 `S59` (Aasfresser1–7, Startpositionen per `__ftol` aus x/y +0x10/+0x18);
+  Szene 60 `S60` mit `S60_RodRaus`, `S60_TryOpenSkull{Mit,Ohne}Busch`; aus 61 bei `0x3FC8 = 0` und
+  `0x3FE4 ≠ 0` zusätzlich Töne und Cues (Spritz 5/9/12, RodRaus 44). Musik `Loc17_UglyAndDisgusting`.
+- Start `0x0041D480`, Szene 59 aus 58 (301,355) Richtung 4: ohne `0x3FC8` fressen die Aasfresser
+  (Bilder 0–2 Schleife) und fliegen nach je 10–20 Schritten (`0x00443530`) auf: Ereignis
+  `0x1E+2i` Bilder 2–5, `0x1F+2i` Flug 6–17 nach x 485 in 20–30 Schritten, fps 20.
+  Rückweg nach 58 (Ereignis 1): sie kehren von (490,255) an ihre Plätze zurück.
+- Szene 60: aus 59 (8,296) Richtung 6 → (95,313); aus 61 mit `0x3FE4`: `S60_RodRaus`, die Aasfresser
+  fliegen von (−92, 200–230) nach (350,256) Zoom 48 und verschwinden (Ereignisse `0x3C`–`0x42`),
+  `S60_Spritz`, `0x3FC8 = 1`, `0x3FA8 = 1`, `060_ROD_01`. Mund (`0x34`): Schädel öffnen scheitert.
+  Ohr (`0x35`) → 18/61.
+- Original-Eigenheit: Die Ankunft aus 61 spielt die Töne ohne Prüfung; geladen sind sie nur bei
+  `0x3FC8 = 0` (im Port mit Nullprüfung, `// UNVERIFIED`).
+- Probelauf 2026-11-03: 59 aus 58 (Fressen, Auffliegen), Kopf → 60, Busch-Stufen bis zum Wegziehen,
+  Ohr → 18/61, Rückweg 59 → 16/58. Nicht geprüft: Ankunft aus 61 (braucht Loc18), Mund.
