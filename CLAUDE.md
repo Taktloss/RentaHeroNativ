@@ -21,6 +21,10 @@ Ziel: exakt originalgetreues Verhalten (Logik, Timing, Grafik, Ton, Spielstände
 - Indeo-5-Transparenz (2026-10-28): selbst dekodieren – Maskenformat aus `ir50_32.dll`
   verstehen (Ghidra) und in `docs/` beschreiben, Referenz per Wine-Messprogramm mit dem
   Original-Codec, eigener Maskenleser zusätzlich zu FFmpeg (VIDEO.md).
+- Spielmenü-Dialoge (2026-11-01): Ja/Nein über `SDL_ShowMessageBox`, Namenseingabe beim
+  Speichern als Eingabefeld im Spielbild (MENU.md).
+- Spielstände (2026-11-01): Speicherort konfigurierbar (`--save-dir`), Standard
+  Benutzer-Datenordner; Common-Ordner nur auf Wunsch.
 
 ## Zu Beginn jeder Sitzung
 1. `docs/PROGRESS.md` und diese Datei lesen.
