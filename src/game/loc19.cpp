@@ -58,14 +58,14 @@ Loc19::Loc19(GameContext& ctx, int scene, int prevScene) : Game(ctx, 19, scene, 
         hug_ = obj("S69_Umarm");
         guard_ = obj("S69_Wache");
         dwarf1_ = obj("S69_Zwerg1");
-        ramBack_ = obj("S69_RamBack");
+        ramBack_ = scene_.getObject("S69_RamBack");
         ramCloseup_ = obj("S69_RamTalkCloseup");
-        jasBack_ = obj("S69_JasBack");
+        jasBack_ = scene_.getObject("S69_JasBack");
         jasCloseup_ = obj("S69_JasTalkCloseup");
         jasTalk_ = obj("S69_JasTalk");
         ramBackTalk_ = obj("S69_RamBackTalk");
         ramTalkAnim_ = obj("S69_RamTalkAnim");
-        guardAmazedBack_ = obj("S69_WacheStauntBack");
+        guardAmazedBack_ = scene_.getObject("S69_WacheStauntBack");
         guardTalk_ = obj("S69_WacheTalk");
         to71_ = scene_.getArea("S69_To71");
         to70_ = scene_.getArea("S69_To70");
@@ -390,7 +390,7 @@ void Loc19::closeup(const char* key, int who, std::uint32_t before, std::uint32_
         if (areas[i]) areas[i]->active = false;
     }
     scene_.disableInput();
-    AnimLayer* back = nullptr;
+    Layer* back = nullptr;
     AnimLayer* talker = nullptr;
     if (who == 0) {
         back = ramBack_;

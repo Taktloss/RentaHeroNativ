@@ -56,14 +56,14 @@ private:
     AnimLayer* hug_ = nullptr;             // +0xA4 S69_Umarm
     AnimLayer* guard_ = nullptr;           // +0xA8 S69_Wache
     AnimLayer* dwarf1_ = nullptr;          // +0xAC S69_Zwerg1
-    AnimLayer* ramBack_ = nullptr;         // +0xB0
+    Layer* ramBack_ = nullptr;            // +0xB0
     AnimLayer* ramCloseup_ = nullptr;      // +0xB4 S69_RamTalkCloseup
-    AnimLayer* jasBack_ = nullptr;         // +0xB8
+    Layer* jasBack_ = nullptr;            // +0xB8
     AnimLayer* jasCloseup_ = nullptr;      // +0xBC S69_JasTalkCloseup
     AnimLayer* jasTalk_ = nullptr;         // +0xC0
     AnimLayer* ramBackTalk_ = nullptr;     // +0xC4
     AnimLayer* ramTalkAnim_ = nullptr;     // +0xC8
-    AnimLayer* guardAmazedBack_ = nullptr; // +0xCC S69_WacheStauntBack
+    Layer* guardAmazedBack_ = nullptr;    // +0xCC S69_WacheStauntBack
     AnimLayer* guardTalk_ = nullptr;       // +0xD0
     std::unique_ptr<AnimLayer> guardAmazed_;  // +0xD4 S69_WacheStaunt
     Area* to71_ = nullptr;                 // +0xD8
