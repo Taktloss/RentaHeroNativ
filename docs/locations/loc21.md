@@ -1,4 +1,4 @@
-# Loc21 (automatische Übersicht)
+# Loc21 – Zwergenbergwerk, Szenen 71–80
 
 Funktionen `0x00422D90`–`0x00425CEF` (5 Stück), Ereignis-Handler `0x00424600`.
 Erzeugt mit `tools/gen_loc_docs.py`; Bedeutung der Flags und Abläufe folgt bei der Einzelanalyse (UNVERIFIED bis dahin). In der Fallübersicht ist `== N` ein Zweig einer If-Kette – Ereignis-ID **oder** Wert eines Flags/Zählers.
@@ -101,3 +101,37 @@ Erzeugt mit `tools/gen_loc_docs.py`; Bedeutung der Flags und Abläufe folgt bei 
   case 105: Sprache 080_ROD_05 | S= 4054=3 | S? 4054 | Inv Add(23) | ruft CGame_DescribeItem CActor_WalkTo CActor_Hide CSzene_DisableInput CAnimLayer_PlayRange CLayer_Disable CActor_Show FUN_004409c0 CSzene_EnableInput
   case 200: ruft CGame_PlaySfxRandom3D CGame_Random CEvent_SetTimerHandler
 ```
+
+## Einzelanalyse (2026-11-03, portiert: `src/game/loc21.cpp`)
+
+### Flags
+| Offset | Start | Bedeutung |
+|---|---:|---|
+| `0x4034` | 1 | Bohrer steht in 73 (1), 76 (2) oder 79 (3) |
+| `0x4038` | 0 | Gegenstand 23 (Stein aus 80) im Kessel des Bohrers in 73 – erst dann fährt er |
+| `0x403C` | 0 | Weiche in 74 umgestellt (Schaufel, Gegenstand 11): 73 → 76 nur bei 0, 76 → 79 nur bei 1 |
+| `0x4040` | 1 | Kommentar zur Weiche (`074_ROD_03` einmal, dann `074_ROD_04`) |
+| `0x4044` | 1 | Schutt in 76: 1 ganz, 2 halb, 3 weg (legt Zunder frei) |
+| `0x4048` | 0 | Zunder (Gegenstand 26) liegt in 76 |
+| `0x404C` | 1 | Schutt in 79; bei 3 Ausgang nach 22/81, vorher Sperrrechteck (414,200)–(639,359) |
+| `0x4054` | 1 | Stein in 80: 1 in der Wand, 2 am Boden (heiß), 3 mit der Schaufel genommen (Gegenstand 23) |
+| `0x4058` | 1 | Stein am Boden angefasst (`080_ROD_03`, danach `080_ROD_04`) |
+| `0x405C` | 0 | Wand in 80 zweimal abgetastet – erst dann hackt die Spitzhacke (Gegenstand 9) |
+| Loc21 +0xD8 | 0 | Wand in 80 einmal abgetastet (nur solange die Szene lebt) |
+
+### Ablauf
+- Ctor `0x00422D90`: `wsprintf("S%d")` + `CSzene_LoadAll`; Töne Kurbel, Bohrer, Tür, Flügel,
+  Explosion, Tropfen; je Szene Ebenen und Ton-Cues (Bohrer entfernt sich: 8 erweiterte Cues
+  mit Lautstärke 90…30 und z 0.1…0.4; Schutt zweimal Bild 30 wie im Original). Musik
+  `Loc21_DwarvesMine`, Hall wie Loc07, kein `0x004375B0`.
+- Start `0x00423880`: Bereiche je Szene, Ankünfte mit Richtungen aus dem Disasm; Held wird
+  nur nach dem Laden eines Spielstands per `CActor_Show` gezeigt.
+- Ereignisse `0x00424600`: Wege (`CGame_ChangeScene(ziel, 21)`, 71 → 19/69, 79 → 22/81),
+  Wandkommentare, Schaufel, Wand abtasten (72, 80), Weiche, Kessel, Hebel in 73, Fahr- und
+  Bohrhebel in 76/79 (`Gen_RodGreif` per `0x004474C0` an (336,156,18,106) bzw. (370,158,9,119)),
+  Zunder, Spitzhacke, Stein; Tropfen alle 5–15 s (Ereignis 200).
+- Original-Eigenheiten (nachgebildet): Bohrhebel ruft `CGame_Wait` auch ohne vorheriges
+  `BeginWait`; in 79 wartet er nicht auf den Weg zum Platz (Platz bleibt belegt).
+- Probelauf 2026-11-03: alle zehn Szenen aufgebaut; Hebel in 73 (Bohrer fährt los), Bohrhebel
+  76 (Schutt 2 → 3), Zunder, Bohrhebel 79 (Schutt 2 → 3) und Weg nach 22/81.
+  Offen: Weiche, Wand/Spitzhacke/Stein in 80, Kessel.
