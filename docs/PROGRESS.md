@@ -320,6 +320,11 @@
   Gespräch, Klappe, Boot, Fahne, Bootsfahrt), Loc19 (Esragoth 68/101 und Zwergentor 69: Jasmin,
   Zwerg 1, Ramil, Kette, Thalion). Doku je Schauplatz mit Flags. `tools/save_patch.py` setzt
   Flags in Spielständen für Probeläufe (`--auto-load`). 127 Tests.
-- Nächste Schritte: Menü im Fenster prüfen (Regler ziehen, Namenseingabe); offene Ziele:
-  Loc07 (Kanal, 7/53), Loc16 (16/58), Loc20 (20/70), Loc21 (21/71), Loc23 (23/103),
-  Loc09; Ramil-Pfad (Sprungziel 1004) in Loc10 prüfen; Hinweis-Countdown/`Hints_Select`.
+- 2026-11-03: Loc07 (Kanalisation, Szenen 47–56) portiert: Leiter von/nach 1/46, Kurbel mit
+  altem/neuem Seil, Gitter, Sack, Pirat, Weg zur Schlucht 15/57. Korrektur Loc19: statische
+  Ebenen (BMP/TCC) sind keine AnimLayer – Nahaufnahmen hatten keinen Hintergrund (LOCATIONS.md).
+  128 Tests.
+- Nächste Schritte: Menü im Fenster prüfen (Regler ziehen, Namenseingabe); ältere Schauplätze
+  auf `obj()`-Casts statischer Ebenen prüfen; offene Ziele: Loc16 (16/58), Loc20 (20/70),
+  Loc21 (21/71), Loc23 (23/103), Loc09; Ramil-Pfad (Sprungziel 1004) in Loc10 prüfen;
+  Hinweis-Countdown/`Hints_Select`.

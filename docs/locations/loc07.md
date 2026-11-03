@@ -1,4 +1,4 @@
-# Loc07 (automatische Übersicht)
+# Loc07 – Kanalisation unter Smashville, Szenen 47–56
 
 Funktionen `0x0040F7B0`–`0x0041163F` (5 Stück), Ereignis-Handler `0x00410870`.
 Erzeugt mit `tools/gen_loc_docs.py`; Bedeutung der Flags und Abläufe folgt bei der Einzelanalyse (UNVERIFIED bis dahin). In der Fallübersicht ist `== N` ein Zweig einer If-Kette – Ereignis-ID **oder** Wert eines Flags/Zählers.
@@ -63,3 +63,46 @@ Erzeugt mit `tools/gen_loc_docs.py`; Bedeutung der Flags und Abläufe folgt bei 
   case 100: → 7/51 | ruft CActor_WalkTo
   case 110: → 7/52 | ruft CActor_WalkTo
 ```
+
+## Einzelanalyse (2026-11-03, portiert: `src/game/loc07.cpp`)
+
+### Flags
+| Offset | Start | Bedeutung |
+|---|---:|---|
+| `0x3EF4` | 0 | Ankünfte über die Leiter (0 → `047_ROD_01`, 1 → `047_ROD_02`); nach dem Seil 2 |
+| `0x3EF8` | 1 | Sack liegt in Szene 52 |
+| `0x3EFC` | 1 | Seil hängt an der Kurbel (anfangs das alte) |
+| `0x3F00` | 0 | neues Seil (Gegenstand 10) befestigt |
+| `0x3F04` | 1 | Gitter in 52/53 unten (Loc15 setzt es beim Einstieg mit Gleiter/Nacht wieder) |
+| `0x3F08` | 0 | Pirat in Szene 51 gesehen |
+| `0x3F30` | 0 | altes Seil gerissen → Mädchen in Loc10 springt Seil |
+| `0x3FC8` | 0 | UNVERIFIED (Loc16/17); ≠ 0 → kein Pirat in 51 |
+
+### Konstruktor `0x0040F7B0`
+- Szene 52: `CSzene_Load("52", Maske)` mit Bit 1 = Sack, Bit 2 = Gitter unten; Kurbel, Gitter,
+  Seil, Sack sind statische `.TCC`-Ebenen, `52_SeilReisst` eine Animation.
+- Andere Szenen: `wsprintf("%d")` + `CSzene_LoadAll`.
+- Töne: Blubbern (Vol. 50), Kurbel, Gitter fällt, Gummiband, Seil festmachen, Streicher,
+  Klavier; Musik `Loc07_Sewage`, Hall (0x15, 0.652, 2.886, 0.25).
+
+### Start `0x0040FAD0`
+- Je Szene `NN_BackAnim` (Modus 13) und Bereiche. Szene 49 startet `48_BackAnim` (Original).
+- 47 aus 46: Rodrigo rutscht die Leiter herunter (`47_RodRunter` 80 px in 30 Schritten,
+  `47_RodRunterStop`), Kommentar je `0x3EF4`.
+- 51 aus 54: einmal schaut ein Pirat herein (`0x3F08`, nicht bei `0x3FC8`).
+- 52: Kurbel nur bei Gitter unten anklickbar; ohne Seil Gegenstand 10 → Ereignis `0x4C`;
+  Gitter oben bei (507,−40), sonst Sperrrechteck vor dem Bogen.
+- 53: Gitter oben bei (0,−100), sonst Sperrrechteck.
+- Blubbern alle 5–7 s, danach 5–10 s mit Frequenz 50–100 %.
+
+### Ereignisse `0x00410870`
+- Türen: hingehen, `CGame_ChangeScene(ziel, 7)`; Sackgassen `000_ROD_01`; Leiter (`0x22`) → 1/46;
+  53 → 15/57 (Gitter offen), sonst `053_ROD_01`; 52 → 53 nur bei offenem Gitter, sonst rütteln.
+- Kurbel (`0x4A`): ohne Seil dreht sie leer (`052_ROD_02`); altes Seil reißt (`0x3EFC = 0`,
+  `0x3F30 = 1`, `052_ROD_01`); mit neuem Seil geht das Gitter hoch (`0x3F04 = 0`, `052_ROD_06`).
+- Sack (`0x4B`): ins Wasser stoßen, `0x3EF8 = 0`, `052_ROD_03`.
+- Gegenstand 10 (`0x4C`): Seil festmachen, `0x3F00 = 0x3EFC = 1`, `0x3EF4 = 2`, `052_ROD_04`.
+- Unbekannt: `MessageBoxA("Unknown_Event____")` – Port: Meldung auf stderr.
+
+- Probelauf 2026-11-03: 47 (Leiter), 49, 52, 53; Kurbel mit altem Seil (reißt) und neuem Seil
+  (Gitter hoch), Weg 52 → 53 → 15/57. Offen: Seil festmachen, Sack, Pirat in 51.

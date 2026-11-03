@@ -10,6 +10,7 @@
 #include "game/loc02.hpp"
 #include "game/loc03.hpp"
 #include "game/loc10.hpp"
+#include "game/loc07.hpp"
 #include "game/loc08.hpp"
 #include "game/loc12.hpp"
 #include "game/loc15.hpp"
@@ -462,6 +463,14 @@ TEST(loc12_scene_number_is_fixed_to_91) {
     Rig r(10);
     Loc12 a(*r.ctx, 0, 42);
     CHECK(a.location() == 12 && a.sceneNumber() == 91);
+}
+
+TEST(loc07_builds_all_scenes_without_data) {
+    Rig r(10);
+    for (int sc = 47; sc <= 56; ++sc) {
+        Loc07 a(*r.ctx, sc, 46);
+        CHECK(a.location() == 7 && a.sceneNumber() == sc);
+    }
 }
 
 TEST(loc08_builds_both_scenes_without_data) {

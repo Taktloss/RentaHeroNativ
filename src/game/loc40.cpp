@@ -7,6 +7,7 @@
 #include "game/loc04.hpp"
 #include "game/loc05.hpp"
 #include "game/loc06.hpp"
+#include "game/loc07.hpp"
 #include "game/loc08.hpp"
 #include "game/loc10.hpp"
 #include "game/loc12.hpp"
@@ -374,6 +375,7 @@ std::unique_ptr<Game> createLocation(GameContext& ctx, int location, int scene, 
     case 4: return std::make_unique<Loc04>(ctx, scene, prevScene);
     case 5: return std::make_unique<Loc05>(ctx, scene, prevScene);
     case 6: return std::make_unique<Loc06>(ctx, scene, prevScene);
+    case 7: return std::make_unique<Loc07>(ctx, scene, prevScene);
     case 8: return std::make_unique<Loc08>(ctx, scene, prevScene);
     case 10: return std::make_unique<Loc10>(ctx, scene, prevScene);
     case 12: return std::make_unique<Loc12>(ctx, scene, prevScene);

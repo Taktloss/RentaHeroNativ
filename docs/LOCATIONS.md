@@ -21,6 +21,10 @@ Einzeldokumentation; Bedeutung der Flags siehe formats/gamestate.md.
 - Szenenwechsel `CGame_ChangeScene(this, szene, loc)` (SCRIPTING.md). Szenen ≥ 1000
   sind Varianten einer Szene (z. B. 1007 zu 7, 2013 zu 13).
 
+- Ebenen-Typ im Port: `.a16`/`.avi` sind `AnimLayer`, `.TCC`/`.bmp` sind einfache `Layer`.
+  Ein `dynamic_cast<AnimLayer*>` auf eine statische Ebene liefert `nullptr` – statische Ebenen
+  mit `CSzene_GetObject` als `Layer*` holen (Typ steht im SZN unter `Filename=`).
+
 ## Tabelle
 Spalten: „IDs registriert“ = Literale in `EventValue(n)`; „im Handler erkannt“ = Fälle
 in Switch/If-Ketten über `event->Param` (Skript-Erkennung, Untergrenze, da Ghidra
