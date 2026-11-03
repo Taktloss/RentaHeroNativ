@@ -85,7 +85,9 @@ claude mcp add --scope user rea \
   -e JAVA_HOME=$HOME/.local/opt/jdk-25.0.5+8 -- npx -y rea-agents@6.8.0 mcp
 ```
 CLI-Test: `rea decompile re/private/bin/Rent-A-Hero.exe 0x0044CBB0 --provider ghidra`
-(ca. 30 s, eigener Snapshot). REA verlangt Node ≥ 22.23.4 bzw. ≥ 24.22.1.
+(ca. 30 s, eigener Snapshot). REA verlangt Node ≥ 22.23.4 bzw. ≥ 24.22.1; die
+Fedora-Pakete sind älter, daher Node v24.22.2 von nodejs.org (SHA-256 geprüft) unter
+`~/.local/opt/node-v24.22.2-linux-x64`, Symlinks `node/npm/npx/corepack` in `~/.local/bin`.
 
 Noch nicht installiert (benötigt root):
 ```sh
