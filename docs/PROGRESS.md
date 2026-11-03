@@ -340,6 +340,8 @@
 - 2026-11-03: Loc24 (Kapitänskajüte, Szene 103) portiert: Kampf Sabrina gegen den Kapitän,
   Helm, Flasche, zurück nach 23/102. Neu in der Engine: `Layer::moveBy` (0x00446EC0),
   `Layer::setZ` (0x00446FD0). 136 Tests.
+- 2026-11-03: Loc16 (Drachenhorst, Szene 58) portiert: Tag/Nacht, drei Gesprächsreihen,
+  Haltungssteuerung des Drachen, Piraten-Sequenz, Hut/Hand, Abflug → 26/93. 137 Tests.
   128 Tests.
-- Nächste Schritte: Menü im Fenster prüfen (Regler ziehen, Namenseingabe); noch nicht portierte Schauplätze: Loc16 (58), Loc17, Loc18, Loc25–Loc30, Loc41; Ramil-Pfad (Sprungziel 1004) in Loc10 prüfen;
+- Nächste Schritte: Menü im Fenster prüfen (Regler ziehen, Namenseingabe); noch nicht portierte Schauplätze: Loc17, Loc18, Loc25–Loc30, Loc41; Ramil-Pfad (Sprungziel 1004) in Loc10 prüfen;
   Hinweis-Countdown/`Hints_Select`.

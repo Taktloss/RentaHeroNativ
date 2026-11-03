@@ -16,6 +16,7 @@
 #include "game/loc12.hpp"
 #include "game/loc14.hpp"
 #include "game/loc15.hpp"
+#include "game/loc16.hpp"
 #include "game/loc19.hpp"
 #include "game/loc20.hpp"
 #include "game/loc21.hpp"
@@ -492,6 +493,12 @@ TEST(loc19_builds_all_scenes_without_data) {
         Loc19 a(*r.ctx, sc, 38);
         CHECK(a.location() == 19 && a.sceneNumber() == sc);
     }
+}
+
+TEST(loc16_builds_without_data) {
+    Rig r(10);
+    Loc16 a(*r.ctx, 58, 57);
+    CHECK(a.location() == 16 && a.sceneNumber() == 58);
 }
 
 TEST(loc24_builds_without_data) {
