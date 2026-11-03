@@ -315,6 +315,11 @@
   `--auto-load`, `--save-dir`, `--key-at`. Korrekturen: `CGame_ctor` setzt `SetEventVariant`,
   Wartestellen-Rückrufe gehen an die aktuelle Klasse; Hinweis-Countdown `CGame+0x10` (nur
   Szene ≠ 0). Original-Spielstand „Save2Draussen“ lädt korrekt. 124 Tests.
-- Nächste Schritte: Menü im Fenster prüfen (Regler ziehen, Namenseingabe); Ziele aus dem Wald
-  (Loc08 Szene 99, Loc15 Szene 57, Loc19 Szenen 68/101), weitere Ziele aus Loc02/Loc03;
-  Ramil-Pfad (Sprungziel 1004) im Probelauf prüfen; Hinweis-Countdown/`Hints_Select`.
+- 2026-11-03: Ziele aus dem Pilzwald portiert: Loc15 (Kanal-Schlucht, Szene 57: Tag/Nacht,
+  Gleiter landet und startet, Pirat, Geldsack), Loc08 (Hafen mit Sabrina, Szenen 99/100: Fass,
+  Gespräch, Klappe, Boot, Fahne, Bootsfahrt), Loc19 (Esragoth 68/101 und Zwergentor 69: Jasmin,
+  Zwerg 1, Ramil, Kette, Thalion). Doku je Schauplatz mit Flags. `tools/save_patch.py` setzt
+  Flags in Spielständen für Probeläufe (`--auto-load`). 127 Tests.
+- Nächste Schritte: Menü im Fenster prüfen (Regler ziehen, Namenseingabe); offene Ziele:
+  Loc07 (Kanal, 7/53), Loc16 (16/58), Loc20 (20/70), Loc21 (21/71), Loc23 (23/103),
+  Loc09; Ramil-Pfad (Sprungziel 1004) in Loc10 prüfen; Hinweis-Countdown/`Hints_Select`.

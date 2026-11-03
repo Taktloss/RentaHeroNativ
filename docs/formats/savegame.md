@@ -57,3 +57,8 @@ Summe 17 122 Bytes.
 
 Dateinamen der Speicherplätze: `%sSaveGame%02d.rah` (Spielmenü, `0x004442D1`/`0x004443F9`,
 noch nicht im Detail analysiert). Dateidialog-Filter: `Gamestatus (*.rah)`.
+
+## Werkzeug
+`tools/save_patch.py` wandelt einen Spielstand für Probeläufe ab (Ort, Herkunft, Position,
+Flags). Mit `--play --auto-load --save-dir <ordner>` startet der Port dort; so lassen sich
+Abläufe mitten im Spiel prüfen, ohne sie vorher durchzuspielen.
