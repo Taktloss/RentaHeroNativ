@@ -350,6 +350,8 @@
   Grube; Rundflug 58 → 93 → 58 geprüft. 140 Tests.
 - 2026-11-04: Loc27 (Hütte 95, Geheimraum 96) portiert: Megophias-Gespräche, Geheimgang, Helm
   ablegen und aufsetzen → 25/104. 141 Tests.
+- 2026-11-04: Loc25 (Cyberspace, Endkampf, Szene 105) portiert: Helfer in der richtigen
+  Reihenfolge → 41/112. 142 Tests.
   128 Tests.
-- Nächste Schritte: Menü im Fenster prüfen (Regler ziehen, Namenseingabe); noch nicht portierte Schauplätze: Loc25, Loc28–Loc30, Loc41; Ramil-Pfad (Sprungziel 1004) in Loc10 prüfen;
+- Nächste Schritte: Menü im Fenster prüfen (Regler ziehen, Namenseingabe); noch nicht portierte Schauplätze: Loc28–Loc30, Loc41; Ramil-Pfad (Sprungziel 1004) in Loc10 prüfen;
   Hinweis-Countdown/`Hints_Select`.
