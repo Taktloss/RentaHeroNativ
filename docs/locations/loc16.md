@@ -62,4 +62,6 @@ Geste (Timer 5–7 s, läuft noch → 3–6 s), 6 Timer 1–2 s neu. Haltung +0x
   4/5 Hut/Hand aufheben (`S58_RodPickUp` an (248,246) bzw. (282,243)), 6 Haltung, 7 Umgebungston.
 - Probelauf 2026-11-03: Begrüßung, Stufe 1 (Angriff), Weg 59 versperrt; Stufe 9 → 17/59;
   nachts Stufe 5 → Abflug → 26/93; Nachtbild geprüft. Piraten-Sequenz über 61 → 60 → 59 → 58 geprüft.
-  Nicht geprüft: Landung, Hut/Hand aufheben.
+  Landung aus 93 geprüft (2026-11-04). Nicht geprüft: Hut/Hand aufheben.
+  Port-Hinweis: Ankunft aus 93 bei Tag (nur per `--game`) wartet ewig, weil `S58_DragonLanding`
+  nur nachts geladen wird (Original: Nullzeiger).
