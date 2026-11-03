@@ -303,6 +303,18 @@
 - 2026-10-29: Loc10 (Pilzwald, Szenen 37–44 und 66) portiert; Dateisuche findet Latin-1-Namen
   (`038_MÄD_xx`). Probelauf: Flug 113 → 37, 37 → 41 (Teddy) → 37, Nacht (1001), Absturz (66).
 - 2026-10-29: Loc12 (Brunnen vor Cynthias Haus, Szene 91) portiert.
-- Nächste Schritte: Hauptmenü; Ziele aus dem Wald (Loc08 Szene 99, Loc15 Szene 57,
-  Loc19 Szenen 68/101), weitere Ziele aus Loc02/Loc03;
-  Spielstand laden (`CGame+0x04`); Ramil-Pfad (Sprungziel 1004) im Probelauf prüfen.
+- 2026-11-03: Werkzeug REA (MCP, `rea-agents` 6.8.0) eingerichtet; braucht Ghidra 12.1.x
+  (parallel installiert) und Node ≥ 22.23.4 bzw. 24.22.1 (SETUP.md). Für Funktionen ohne
+  Ghidra-Funktionsgrenzen und mit unseren Namen bleibt `re/scripts/` der Hauptweg.
+- 2026-11-03: Spielmenü und Spielstände (MENU.md). Menü-Szene/-Klasse `0x00403520`/`0x004436B0`,
+  Öffnen/Schließen mit eingefrorenem Spielbild, einfahrende Rahmen (in den Hintergrund
+  gebacken), Optionen (Untertitel, Maus-Verzögerung, drei Lautstärken), Spielstand-Seite (neun
+  Plätze, Namen, oranger Rahmen), Laden/Speichern/Neues Spiel/Beenden mit Autosave
+  (`Save_Read`/`Save_Write`/`Save_Process`), Figur-Position beim Laden, Tasten Esc/F1–F12 und
+  Ctrl-Kürzel, Befehle `0x00402870`. Dialogtexte zur Laufzeit aus der EXE. Optionen `--play`,
+  `--auto-load`, `--save-dir`, `--key-at`. Korrekturen: `CGame_ctor` setzt `SetEventVariant`,
+  Wartestellen-Rückrufe gehen an die aktuelle Klasse; Hinweis-Countdown `CGame+0x10` (nur
+  Szene ≠ 0). Original-Spielstand „Save2Draussen“ lädt korrekt. 124 Tests.
+- Nächste Schritte: Menü im Fenster prüfen (Regler ziehen, Namenseingabe); Ziele aus dem Wald
+  (Loc08 Szene 99, Loc15 Szene 57, Loc19 Szenen 68/101), weitere Ziele aus Loc02/Loc03;
+  Ramil-Pfad (Sprungziel 1004) im Probelauf prüfen; Hinweis-Countdown/`Hints_Select`.

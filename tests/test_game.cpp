@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+#include <filesystem>
+#include <fstream>
 #include <functional>
 #include <map>
 
@@ -16,6 +18,7 @@
 #include "game/loc35.hpp"
 #include "game/loc37.hpp"
 #include "game/loc40.hpp"
+#include "game/savegame.hpp"
 #include "test.hpp"
 
 using namespace rah;
@@ -456,4 +459,105 @@ TEST(loc12_scene_number_is_fixed_to_91) {
     Rig r(10);
     Loc12 a(*r.ctx, 0, 42);
     CHECK(a.location() == 12 && a.sceneNumber() == 91);
+}
+
+namespace {
+// Spielstand-Datei nach formats/savegame.md (Werte frei gewählt)
+std::string writeTestSave(const std::string& name, std::int32_t version, std::int32_t blockSize, std::size_t cut = 0) {
+    const auto dir = std::filesystem::temp_directory_path() / "rah_test_saves";
+    std::filesystem::create_directories(dir);
+    const std::string path = (dir / name).string();
+    std::string d;
+    auto i32 = [&](std::int32_t v) {
+        for (int k = 0; k < 4; ++k) d.push_back(static_cast<char>((v >> (8 * k)) & 0xFF));
+    };
+    i32(version);
+    std::string nm = "Test";
+    nm.resize(30, '\0');
+    nm[5] = 'x';  // Rest hinter dem NUL
+    d += nm;
+    for (int v : {2, 3, 4, 6, 123, 156, 7}) i32(v);
+    for (int k = 0; k < 100; ++k) i32(0);
+    i32(blockSize);
+    for (std::size_t k = 0; k < GameState::kSize / 4; ++k) i32(k == 0x3E80 / 4 ? 77 : 0);
+    if (cut) d.resize(cut);
+    std::ofstream(path, std::ios::binary) << d;
+    return path;
+}
+}  // namespace
+
+TEST(save_name_buffer_keeps_old_bytes) {
+    std::array<char, 30> b{};
+    copySaveName(b, "SaveGame01.rah");
+    copySaveName(b, "AutoSaveGame");
+    CHECK(saveName(b) == "AutoSaveGame");
+    CHECK(b[12] == '\0' && b[13] == 'h' && b[14] == '\0');
+}
+
+TEST(save_slot_path_format) {
+    SaveGlobals s;
+    s.dir_ = "/x/";
+    CHECK(slotPath(s, 0) == "/x/SaveGame00.rah");
+    CHECK(slotPath(s, 8) == "/x/SaveGame08.rah");
+}
+
+TEST(save_read_sets_request_position_and_state) {
+    Rig r(10);
+    r.ctx->save.path = writeTestSave("ok.rah", 1, 0x4110);
+    CHECK(saveRead(*r.ctx));
+    const LocationRequest& q = r.ctx->request;
+    CHECK(q.prevLocation == 2 && q.prevScene == 3 && q.nextLocation == 4 && q.nextScene == 6);
+    CHECK(r.ctx->save.x == 123 && r.ctx->save.y == 156 && r.ctx->save.dir == 7);
+    CHECK(r.ctx->state.at(0x3E80) == 77);
+    CHECK(r.ctx->save.restorePos);
+    CHECK(saveName(r.ctx->save.name) == "Test" && r.ctx->save.name[5] == 'x');
+}
+
+TEST(save_read_rejects_wrong_version_without_touching_request) {
+    Rig r(10);
+    r.ctx->request.nextLocation = 99;
+    r.ctx->save.path = writeTestSave("v2.rah", 2, 0x4110);
+    CHECK(!saveRead(*r.ctx));
+    CHECK(r.ctx->request.nextLocation == 99 && r.ctx->save.version == 2 && !r.ctx->save.restorePos);
+}
+
+TEST(save_read_clamps_block_size) {
+    Rig r(10);
+    r.ctx->save.path = writeTestSave("big.rah", 1, 0x7FFFFFF0);
+    CHECK(saveRead(*r.ctx));  // Port: auf 0x4110 begrenzt statt Überlauf
+    CHECK(r.ctx->state.at(0x3E80) == 77);
+}
+
+TEST(save_read_short_file_behaves_like_readfile) {
+    Rig r(10);
+    r.ctx->request.nextScene = 55;
+    // endet nach dem Schauplatz: ReadFile liefert am Ende TRUE mit 0 Bytes, Werte bleiben
+    r.ctx->save.path = writeTestSave("short.rah", 1, 0x4110, 4 + 30 + 12);
+    CHECK(saveRead(*r.ctx));
+    CHECK(r.ctx->request.nextLocation == 4 && r.ctx->request.nextScene == 55);
+}
+
+TEST(save_header_for_menu_list) {
+    const auto h = readSaveHeader(writeTestSave("hdr.rah", 1, 0x4110));
+    CHECK(h && h->versionRead && h->version == 1 && h->nameBytes == 30 && saveName(h->name) == "Test");
+    CHECK(!readSaveHeader("/nonexistent/rah.rah"));
+}
+
+TEST(save_process_quit_requests) {
+    Rig r(10);
+    int quits = 0;
+    r.ctx->postQuit = [&] { ++quits; };
+    r.ctx->save.dir_ = (std::filesystem::temp_directory_path() / "rah_test_saves" / "").string();
+    std::filesystem::remove(r.ctx->save.dir_ + "SaveGameExit.rah");
+    r.ctx->save.request = 4;  // ohne Schauplatz: kein Autosave, nur beenden
+    saveProcess(*r.ctx);
+    CHECK(quits == 1 && r.ctx->save.request == 0);
+    CHECK(!std::filesystem::exists(r.ctx->save.dir_ + "SaveGameExit.rah"));
+    r.ctx->save.request = 5;
+    saveProcess(*r.ctx);
+    CHECK(quits == 2);
+    r.g.gameMenuOpen = true;  // nicht bei offenem Menü
+    r.ctx->save.request = 5;
+    saveProcess(*r.ctx);
+    CHECK(quits == 2 && r.ctx->save.request == 5);
 }

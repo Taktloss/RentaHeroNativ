@@ -31,7 +31,8 @@ Summe 17 122 Bytes.
   HINTS.md, gamestate.md) – der Zähler wird also im Zustandsblock mitgespeichert.
 - Der Name wird mit festen 30 Bytes geschrieben. Da Namen per `strcpy` in den Puffer
   kopiert werden, stehen hinter dem NUL **Reste früherer Namen**
-  (z. B. „AutoSaveGame“ über „SaveGame01.rah“ → `AutoSaveGame\0ah\0…`). Für
+  (z. B. „AutoSaveGame“ über „SaveGame01.rah“ → `AutoSaveGame\0h\0…`; das echte
+  `SaveGameExit.rah` im Common-Ordner hat keine Reste – Puffer war beim Schreiben noch leer). Für
   byte-identische Dateien muss der Port diesen Puffer genauso fortführen.
 
 ## Lesen (`0x00404780`)

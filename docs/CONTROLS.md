@@ -52,7 +52,7 @@ Zuordnung der Lautstärke-Setter (aus `FUN_00404db0`, INI `[SOUNDS]`):
 (`FUN_00436a20`; die beiden anderen analog, UNVERIFIED).
 `FUN_00436500`: Maus-Verzögerung `DAT_004764ac`, begrenzt auf 100…2000, INI-Default 250.
 
-## Spielmenü (`FUN_00403370` / `FUN_00403480`)
+## Spielmenü (`FUN_00403370` / `FUN_00403480`) – vollständig in MENU.md
 Öffnen: nur wenn nicht schon offen (`DAT_0047d688`) und `DAT_0047d754 == 0`. Die aktuelle
 Szene/Spielinstanz (`DAT_0047d264`/`DAT_0047d26c`) wird gesichert und durch die
 Menü-Szene (`DAT_0047d268`/`DAT_0047d270`) ersetzt. Schließen stellt beides wieder her

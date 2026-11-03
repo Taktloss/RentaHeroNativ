@@ -7,9 +7,11 @@
 #include <functional>
 #include <vector>
 #include <memory>
+#include <string>
 #include <string_view>
 
 #include "game/gamestate.hpp"
+#include "game/savegame.hpp"
 #include "engine/animlayer.hpp"
 #include "engine/audio.hpp"
 #include "engine/scene.hpp"
@@ -55,12 +57,35 @@ struct GameContext {
     // Freigabe hier erst auf oberster Ebene (Tiefe 0).
     std::vector<std::unique_ptr<Game>> retired;
     void releaseRetired() { if (g.idleDepth == 0) retired.clear(); }
+    // Spielstände (savegame.hpp)
+    SaveGlobals save;
+    // PostQuitMessage(0)
+    std::function<void()> postQuit;
+    // Spielmenü (MENU.md): g_MenuScene 0x0047D268, g_MenuGame 0x0047D270; Modus 0x00470808
+    // (1 Optionen, 2 Spielstand). Bei offenem Menü bleibt `current` die gesicherte Spielklasse
+    // (0x0047D76C) und `scene` die gesicherte Szene (0x0047D768).
+    Scene* menuScene = nullptr;
+    std::unique_ptr<Game> menu;
+    int menuMode = 0;
+    // g_CurScene / g_CurGame (bei offenem Menü die Menü-Objekte)
+    Scene& curScene() { return g.gameMenuOpen && menuScene ? *menuScene : scene; }
+    Game* curGame() { return g.gameMenuOpen ? menu.get() : current.get(); }
+    // Plattform (MENU.md): MessageBoxA(MB_YESNO) → true bei IDYES; Namensdialog IDD_FILENAME an
+    // der Bereichsposition (false = Abbrechen); Zeichenkette der EXE an einer VA (leer, wenn
+    // unbekannt); GetAsyncKeyState(VK_LBUTTON); WM_COMMAND verteilen (0x00402870)
+    std::function<bool(const std::string& text, const std::string& title)> askYesNo;
+    std::function<bool(const Rect& slot, std::string& text)> editName;
+    std::function<std::string(std::uint32_t va)> exeString;
+    std::function<bool()> leftButtonDown;
+    int lastCommand = 0;  // von pumpMessage mit kCommand geliefert
 };
 
 class Game {
 public:
     // orig: Rent-A-Hero.exe 0x0043F4D0 CGame_ctor (+ Felder aus den LocNN-Ctoren)
     Game(GameContext& ctx, int location, int scene, int prevScene);
+    // Menüklasse: eigene Szene g_MenuScene (0x00403520)
+    Game(GameContext& ctx, Scene& scene, int location, int scene_, int prevScene);
     // orig: Rent-A-Hero.exe 0x0043F580 CGame_dtor (Rumpf in shutdown())
     virtual ~Game();
     // Destruktor-Rümpfe: erst der des Schauplatzes (destroyLocal), dann CGame_dtor. Game_Idle
@@ -68,6 +93,9 @@ public:
     void shutdown();
     Game(const Game&) = delete;
     Game& operator=(const Game&) = delete;
+    // orig: Rent-A-Hero.exe 0x0043F1B0 SetEventVariant(this) – diese Klasse empfängt die
+    // Funktions-Handler (Wartestellen-Rückrufe)
+    void bindEventVariant();
     // vtable +0x04 (Start), aus Game_SwitchLocation
     virtual void start() {}
 
@@ -77,6 +105,12 @@ protected:
 
 public:
 
+    Actor* hero() const { return hero_; }
+    AudioStream* musicStream() const { return music_; }
+    void setMusic(AudioStream* m) { music_ = m; }
+    int hintCountdown() const { return hintCountdown_; }
+    // +0x04 (Game_SwitchLocation: 1, wenn die Figur aus dem Spielstand gesetzt wurde)
+    void setRestored(int v) { restored_ = v; }
     int location() const { return location_; }
     int sceneNumber() const { return sceneNr_; }
     int prevScene() const { return prevScene_; }
@@ -155,6 +189,8 @@ protected:
     std::uint32_t seed_;      // +0x20 timeGetTime()
     // +0x04: 1, wenn die Figur aus dem Spielstand gesetzt wurde (SCRIPTING.md) – folgt mit dem Laden
     int restored_ = 0;
+    // +0x10 Hinweis-Countdown (GetViewObjects lädt state[Szene], Save_Write schreibt zurück; HINTS.md)
+    int hintCountdown_ = 0;
     std::unique_ptr<Speech> speech_;  // +0x70
 
 private:

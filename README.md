@@ -75,7 +75,12 @@ COMMON="rah-setup/Ausf_hrbare_Programmdateien/Common"
 ./build/rentahero --cd RentAHero --common "$COMMON" --game 40 114
 ```
 
-`--game 40 114` startet mit dem Intro. Einzelne Schauplätze lassen sich direkt starten mit
+`--play` startet wie das Original: „Neues Spiel“ (Intro), mit `--auto-load` stattdessen den
+Spielstand vom letzten Beenden (`SaveGameExit.rah`). Spielstände liegen im Benutzer-Datenordner
+(Linux: `~/.local/share/RentaHeroNativ/`); `--save-dir <Ordner>` wählt einen anderen, z. B. den
+Common-Ordner einer Original-Installation, um deren Spielstände zu nutzen.
+
+`--game 40 114` startet ebenfalls mit dem Intro. Einzelne Schauplätze lassen sich direkt starten mit
 `--game <Schauplatz> <Szene> [<Herkunftsszene>]`. Die Herkunftsszene bestimmt, wo Rodrigo
 auftaucht. Ohne sie bleibt er in vielen Schauplätzen unsichtbar, wie im Original.
 
@@ -94,7 +99,11 @@ auftaucht. Ohne sie bleibt er in vielen Schauplätzen unsichtbar, wie im Origina
 ### Bedienung
 
 Wie im Original: Linksklick geht hin bzw. benutzt, Doppelklick lässt Rodrigo rennen,
-Inventar am unteren Bildrand, `Esc` beendet.
+Inventar am unteren Bildrand. `Esc` oder `F1`…`F12` öffnet und schließt das Spielmenü
+(Optionen, Spielstände laden/speichern, Neues Spiel, Beenden). `Ctrl+F1`/`Ctrl+F2` öffnen
+Optionen bzw. Spielstände direkt, weitere Ctrl-Kürzel stellen Lautstärken ein (docs/CONTROLS.md).
+Während eines Videos oder einer gesperrten Sequenz nimmt das Spiel wie das Original keine
+Tasten an. Das Fenster schließen beendet ohne Speichern.
 
 ### Nützliche Optionen
 

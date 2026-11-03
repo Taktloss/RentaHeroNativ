@@ -121,3 +121,21 @@ Beim Laden setzt `Game_SwitchLocation` die Figur auf X/Y/Richtung aus dem Spiels
 - Speicherort konfigurierbar (Entscheidung Nutzer): `--save-dir <ordner>`; Standard ist der
   Benutzer-Datenordner (`SDL_GetPrefPath`), der Common-Ordner bleibt unverändert. Wer die
   Original-Spielstände nutzen will, gibt den Common-Ordner als `--save-dir` an.
+- Umsetzung: `src/game/menu.cpp` (Menüklasse, Öffnen/Schließen, Befehle `0x00402870`),
+  `src/game/savegame.cpp` (`Save_Read`/`Save_Write`/`Save_Process`), Szene: `setMenuScene`,
+  `onKeyDown`, `snapshotBackground`, `frameRect`; `Layer::setX`.
+- `PostMessage(WM_COMMAND)` = Warteschlange vor den Plattform-Ereignissen; `CGame_Wait`
+  bricht bei einem Befehl ab und verwirft ihn (Original: Esc während einer Wartestelle beendet
+  sie, öffnet aber kein Menü). Ctrl-Kürzel (Accelerator) landen ebenfalls in der Schlange
+  (UNVERIFIED: genaue Reihenfolge zu anderen Nachrichten).
+- `SetEventVariant` = `Game::bindEventVariant`: die Wartestellen-Rückrufe gehen an die
+  aktuelle Klasse (Menü bzw. Schauplatz).
+- Folge des Originals: Die Menü-Szene wird nach der Spielszene gebaut und ist danach das
+  Ziel des Bereichstext-Umschalters (`0x00481F30`, `CSzene_ctor`).
+- Prüfoptionen: `--play`, `--auto-load`, `--save-dir`, `--key-at <bild> <vk|befehl>`; kopflos
+  (`--hidden`) beantwortet Abfragen mit Ja und übernimmt den Namen unverändert.
+- Probelauf 2026-11-03: Loc03 → Esc → Optionen (Einfahren, Regler), Spielstand-Seite (Namen,
+  Rahmen), Speichern in Platz 3 („Game 2“, 17 122 Bytes), Laden des Original-Spielstands
+  „Save2Draussen“ (Loc01/S7, Held auf 123/156), Beenden mit Autosave, `--auto-load`.
+- Offen: Regler-Ziehen und Namenseingabe nur ohne Fenster geprüft; Bildschirm leeren beim
+  Schließen ohne Spiel (Renderer-vtable +0x04); Tastatur `0x0044CF00` ohne Spiel.

@@ -9,6 +9,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <array>
+#include <deque>
 #include <filesystem>
 #include <fstream>
 #include <optional>
@@ -21,6 +22,8 @@
 #include "engine/help.hpp"
 #include "engine/scene.hpp"
 #include "game/game.hpp"
+#include "game/menu.hpp"
+#include "game/savegame.hpp"
 #include "formats/pe.hpp"
 #include "render/font.hpp"
 #include "video/ffvideo.hpp"
@@ -62,6 +65,10 @@ struct Options {
     bool audio3d = false;             // 3D-Ton wie mit Hardware-3D und EAX 1.0 (AUDIO.md „3D“)
     int musicVol = 100, sfxVol = 100, speechVol = 100;  // rah.ini [SOUNDS]
     std::string audioDump;            // Mischer-Ausgabe als WAV mitschneiden (Prüfung)
+    bool play = false;                // wie das Original starten: Neues Spiel (bzw. Autoload), Menü
+    bool autoLoad = false;            // rah.ini [MODES] AutoLoadGame: SaveGameExit.rah beim Start laden
+    std::string saveDir;              // Spielstandordner (Standard: Benutzer-Datenordner; MENU.md)
+    std::vector<int> keysAt;          // Prüfläufe: Esc in Bild n (Paare Bild, VK)
 };
 
 void usage() {
@@ -73,7 +80,8 @@ void usage() {
                  "          [--items <id,id,…>] [--hint <HLP-Name, z. B. 04_006_A>]\n"
                  "          [--game <Schauplatz> <Szene> [<Herkunftsszene>] (Intro: --game 40 114)] [--subtitles]\n"
                  "          [--mute] [--music-vol <0-100>] [--sfx-vol <0-100>] [--speech-vol <0-100>]\n"
-                 "          [--audio3d] [--audio-dump <datei.wav>]\n");
+                 "          [--audio3d] [--audio-dump <datei.wav>]\n"
+                 "          [--play] [--auto-load] [--save-dir <Ordner>] [--key-at <bild> <vk>]\n");
 }
 
 bool parse(int argc, char** argv, Options& o) {
@@ -101,6 +109,14 @@ bool parse(int argc, char** argv, Options& o) {
             o.subtitles = true;
             continue;
         }
+        if (a == "--play") {
+            o.play = true;
+            continue;
+        }
+        if (a == "--auto-load") {
+            o.autoLoad = true;
+            continue;
+        }
         if (!(v = val())) return false;
         if (a == "--cd") o.cd.emplace_back(v);
         else if (a == "--common") o.common = v;
@@ -117,6 +133,11 @@ bool parse(int argc, char** argv, Options& o) {
         else if (a == "--music-vol") o.musicVol = std::atoi(v);
         else if (a == "--sfx-vol") o.sfxVol = std::atoi(v);
         else if (a == "--speech-vol") o.speechVol = std::atoi(v);
+        else if (a == "--save-dir") o.saveDir = v;
+        else if (a == "--key-at" && i + 1 < argc) {
+            o.keysAt.push_back(std::atoi(v));
+            o.keysAt.push_back(static_cast<int>(std::strtol(argv[++i], nullptr, 0)));
+        }
         else if (a == "--items") {
             for (const char* p = v; *p;) {
                 char* end = nullptr;
@@ -164,6 +185,44 @@ void present(const Surface565& s, const Rect& r, Surface565& screen) {
             screen.row(sy)[x] = s.row(y)[x];
         }
     }
+}
+
+// Texte der EXE (CP1252) für SDL (UTF-8) und zurück (Eingabefeld)
+std::string cp1252ToUtf8(std::string_view in) {
+    std::string out;
+    for (unsigned char c : in) {
+        const char32_t u = cp1252ToUnicode(c);
+        if (u < 0x80) out.push_back(static_cast<char>(u));
+        else if (u < 0x800) {
+            out.push_back(static_cast<char>(0xC0 | (u >> 6)));
+            out.push_back(static_cast<char>(0x80 | (u & 0x3F)));
+        } else {
+            out.push_back(static_cast<char>(0xE0 | (u >> 12)));
+            out.push_back(static_cast<char>(0x80 | ((u >> 6) & 0x3F)));
+            out.push_back(static_cast<char>(0x80 | (u & 0x3F)));
+        }
+    }
+    return out;
+}
+
+std::string utf8ToCp1252(std::string_view in) {
+    std::string out;
+    for (std::size_t i = 0; i < in.size();) {
+        const auto b = static_cast<unsigned char>(in[i]);
+        char32_t u = b;
+        std::size_t n = 1;
+        if (b >= 0xF0) u = b & 0x07, n = 4;
+        else if (b >= 0xE0) u = b & 0x0F, n = 3;
+        else if (b >= 0xC0) u = b & 0x1F, n = 2;
+        for (std::size_t k = 1; k < n && i + k < in.size(); ++k) u = (u << 6) | (static_cast<unsigned char>(in[i + k]) & 0x3F);
+        i += n;
+        for (int c = 0x20; c < 0x100; ++c)
+            if (cp1252ToUnicode(static_cast<unsigned char>(c)) == u) {
+                out.push_back(static_cast<char>(c));
+                break;
+            }
+    }
+    return out;
 }
 
 void writePpm(const Surface565& screen, const std::string& path) {
@@ -245,7 +304,7 @@ int main(int argc, char** argv) {
         }
     }
     // Im Spiel ist Common Pflicht (Rodrigo, Musik, Inventar); ohne ihn fehlt der Held stillschweigend
-    if (opt.gameLoc >= 0 && opt.common.empty()) {
+    if ((opt.gameLoc >= 0 || opt.play) && opt.common.empty()) {
         std::fprintf(stderr, "Fehlt: --common <Ordner>. Ohne den Common-Ordner gibt es weder Rodrigo noch\n"
                              "Musik und Inventar (Entpacken: siehe README, Abschnitt „Spieldaten bereitstellen“).\n");
         return 1;
@@ -347,7 +406,7 @@ int main(int argc, char** argv) {
         g.audio = audio.get();
     }
     Scene scene(paths, g, surf);
-    const bool game = opt.gameLoc >= 0;
+    const bool game = opt.gameLoc >= 0 || opt.play;
     g.subtitles = opt.subtitles;
     GameContext ctx(g, paths, scene);
     scene.setLocationNumber(opt.location);
@@ -394,7 +453,7 @@ int main(int argc, char** argv) {
     }
     auto mouseMove = [&](int x, int y) {
         // CSzene_MouseMove Schritt 3: neu ≠ alt → Renderer_SetCursor
-        const int c = scene.onMouseMove(x, y);
+        const int c = ctx.curScene().onMouseMove(x, y);
         if (c != cursors.get()) cursors.set(c);
     };
 
@@ -423,8 +482,45 @@ int main(int argc, char** argv) {
     }
     scene.setHelp(&help);
     ctx.help = &help;
+    // Zeichenketten der EXE (Dialogtexte; keine Originaltexte im Quelltext)
+    PeResources exePe;
+    {
+        std::string exe = opt.exe;
+        if (exe.empty() && !opt.common.empty()) exe = (std::filesystem::path(opt.common) / ".." / "Rent-A-Hero.exe").string();
+        if (auto f = exe.empty() ? std::nullopt : readFile(exe); !f || !exePe.parse(std::move(*f)))
+            if (game) std::fprintf(stderr, "EXE %s nicht lesbar – Dialoge ohne Text\n", exe.c_str());
+    }
+    ctx.exeString = [&exePe](std::uint32_t va) { return exePe.stringAt(va).value_or(std::string()); };
+    // Spielstandordner: --save-dir, sonst Benutzer-Datenordner (Entscheidung Nutzer, MENU.md)
     if (game) {
-        // Spielstart wie „Neues Spiel“: RequestLocation, Ausführung im ersten Game_Idle
+        std::string dir = opt.saveDir;
+        if (dir.empty()) {
+            if (char* pref = SDL_GetPrefPath(nullptr, "RentaHeroNativ")) {
+                dir = pref;
+                SDL_free(pref);
+            }
+        }
+        if (!dir.empty() && dir.back() != '/' && dir.back() != '\\') dir += '/';
+        ctx.save.dir_ = dir;
+        dbg(g, "Spielstände: %s", dir.c_str());
+    }
+    // Menü-Szene und -Klasse (WinMain → 0x00403520) auf derselben Oberfläche, Ordner GAME/MENU/
+    DataPaths menuPaths(&cd, common.get());
+    menuPaths.setLocation(0);
+    std::unique_ptr<Scene> menuScene;
+    if (game) {
+        menuScene = std::make_unique<Scene>(menuPaths, g, surf);
+        createGameMenu(ctx, *menuScene);
+    }
+    if (opt.play) {
+        // WinMain: Auftrag 3 (Neues Spiel), mit AutoLoadGame und SaveGameExit.rah Auftrag 1
+        ctx.save.request = 3;
+        if (opt.autoLoad) {
+            ctx.save.path = ctx.save.dir_ + "SaveGameExit.rah";
+            if (std::filesystem::exists(ctx.save.path)) ctx.save.request = 1;
+        }
+    } else if (game) {
+        // Prüfstart: RequestLocation, Ausführung im ersten Game_Idle
         // (Start darf warten: Nachrichtenschleife muss dafür schon stehen)
         requestLocation(ctx.request, opt.gameLoc, opt.gameScene, opt.gamePrev, false);
     }
@@ -439,13 +535,102 @@ int main(int argc, char** argv) {
     // GameContext re-entrant aufrufbar (CGame_Wait, SCRIPTING.md).
     bool quit = false;
     int frame = 0;
+    // PostMessage(WM_COMMAND): Warteschlange vor den Plattform-Ereignissen
+    std::deque<int> commands;
+    g.postCommand = [&commands](int id) { commands.push_back(id); };
+    ctx.postQuit = [&quit] { quit = true; };  // PostQuitMessage(0)
+    ctx.leftButtonDown = [] { return (SDL_GetMouseState(nullptr, nullptr) & SDL_BUTTON_LMASK) != 0; };
+    auto showScreen = [&] {
+        SDL_UpdateTexture(tex, nullptr, screen.pixels.data(), kScreenW * 2);
+        SDL_RenderClear(ren);
+        SDL_RenderTexture(ren, tex, nullptr, nullptr);
+        SDL_RenderPresent(ren);
+    };
+    // MessageBoxA(hWnd, text, titel, MB_YESNO) als System-Dialog (Entscheidung Nutzer)
+    ctx.askYesNo = [&](const std::string& text, const std::string& title) {
+        const std::string t = cp1252ToUtf8(text), c = cp1252ToUtf8(title);
+        const SDL_MessageBoxButtonData buttons[] = {
+            {SDL_MESSAGEBOX_BUTTON_RETURNKEY_DEFAULT, 6, "Ja"},
+            {SDL_MESSAGEBOX_BUTTON_ESCAPEKEY_DEFAULT, 7, "Nein"},
+        };
+        const SDL_MessageBoxData box{SDL_MESSAGEBOX_INFORMATION, win, c.c_str(), t.c_str(), 2, buttons, nullptr};
+        int id = 7;
+        if (opt.hidden) {
+            std::fprintf(stderr, "Abfrage: %s → Ja (kopflos)\n", t.c_str());
+            return true;
+        }
+        if (!SDL_ShowMessageBox(&box, &id)) std::fprintf(stderr, "Dialog: %s\n", SDL_GetError());
+        return id == 6;  // IDYES
+    };
+    // DialogBoxParamA(IDD_FILENAME): modal, das Spiel steht (kein Game_Idle). Port: Eingabefeld im
+    // Spielbild an der Dialogposition (Client + (links − 2, oben + 0x36))
+    ctx.editName = [&](const Rect& slot, std::string& text) {
+        if (opt.hidden) {
+            std::fprintf(stderr, "Namenseingabe: \"%s\" übernommen (kopflos)\n", text.c_str());
+            return true;
+        }
+        const Surface565 backup = screen;
+        // UNVERIFIED: Größe des Dialogs (Ressource IDD_FILENAME nicht ausgewertet)
+        Rect box{slot.left - 2, slot.top + 0x36, slot.left - 2 + std::max(160, slot.right - slot.left + 4), slot.top + 0x36 + 22};
+        std::string edit = text;
+        bool done = false, ok = false;
+        SDL_StartTextInput(win);
+        while (!done) {
+            screen = backup;
+            for (int y = std::max(0, box.top); y < std::min(kScreenH, box.bottom); ++y)
+                for (int x = std::max(0, box.left); x < std::min(kScreenW, box.right); ++x)
+                    screen.row(y)[x] = (y == box.top || y == box.bottom - 1 || x == box.left || x == box.right - 1) ? 0x0000 : 0xFFFF;
+            if (helpFont.isOpen()) helpFont.textOut(screen, box.left + 4, box.bottom - 6, edit + "|", TextAlign::Left, 0x0000);
+            showScreen();
+            SDL_Event ev;
+            if (!SDL_WaitEvent(&ev)) break;
+            if (ev.type == SDL_EVENT_QUIT) {
+                quit = true;
+                break;
+            }
+            if (ev.type == SDL_EVENT_TEXT_INPUT) {
+                for (char c : utf8ToCp1252(ev.text.text))
+                    if (edit.size() < 29) edit.push_back(c);  // cchMax 30
+            } else if (ev.type == SDL_EVENT_KEY_DOWN) {
+                if (ev.key.key == SDLK_BACKSPACE && !edit.empty()) edit.pop_back();
+                else if (ev.key.key == SDLK_RETURN || ev.key.key == SDLK_KP_ENTER) done = ok = true;
+                else if (ev.key.key == SDLK_ESCAPE) done = true;
+            }
+        }
+        SDL_StopTextInput(win);
+        screen = backup;
+        showScreen();
+        if (ok) text = edit;
+        return ok;
+    };
     ctx.pumpMessage = [&]() -> int {
         if (quit) return GameContext::kQuit;
+        if (!commands.empty()) {
+            ctx.lastCommand = commands.front();
+            commands.pop_front();
+            return GameContext::kCommand;
+        }
         SDL_Event ev;
         if (!SDL_PollEvent(&ev)) return GameContext::kNoMessage;
-        if (ev.type == SDL_EVENT_QUIT || (ev.type == SDL_EVENT_KEY_DOWN && ev.key.key == SDLK_ESCAPE)) {
+        if (ev.type == SDL_EVENT_QUIT || (!game && ev.type == SDL_EVENT_KEY_DOWN && ev.key.key == SDLK_ESCAPE)) {
             quit = true;
             return GameContext::kQuit;
+        }
+        Scene& cs = ctx.curScene();
+        if (game && ev.type == SDL_EVENT_KEY_DOWN && !ev.key.repeat) {
+            const SDL_Keycode k = ev.key.key;
+            const int fn = k >= SDLK_F1 && k <= SDLK_F12 ? static_cast<int>(k - SDLK_F1) : -1;
+            if ((ev.key.mod & SDL_KMOD_CTRL) && fn >= 0) {
+                // Accelerator-Tabelle 110 (CONTROLS.md); UNVERIFIED: Reihenfolge zu anderen Nachrichten
+                static constexpr int kAccel[12] = {40093, 40094, 40087, 40088, 40082, 40081,
+                                                   40083, 40084, 40085, 40086, 40090, 40091};
+                commands.push_back(kAccel[fn]);
+            } else if (k == SDLK_ESCAPE) {
+                cs.onKeyDown(0x1B);  // WM_KEYDOWN → 0x0044CE50
+            } else if (fn >= 0) {
+                cs.onKeyDown(0x70 + fn);
+            }
+            return GameContext::kMessage;
         }
         // WndProc 0x00402350 (Disassembly 0x004025A7–0x00402632): nur WM_LBUTTONDOWN (0x201),
         // WM_LBUTTONDBLCLK (0x203), WM_RBUTTONDOWN (0x204) und WM_RBUTTONDBLCLK (0x206) gehen an
@@ -455,14 +640,14 @@ int main(int argc, char** argv) {
         const bool down = ev.type == SDL_EVENT_MOUSE_BUTTON_DOWN;
         if (down && (ev.button.button == SDL_BUTTON_LEFT || ev.button.button == SDL_BUTTON_RIGHT)) {
             SDL_ConvertEventToRenderCoordinates(ren, &ev);
-            Actor* hero = scene.actor(0);
+            Actor* hero = cs.actor(0);
             if (ev.button.button == SDL_BUTTON_LEFT && ev.button.clicks % 2 == 0 && hero) {
                 hero->setRun();  // WM_LBUTTONDBLCLK: CActor_SetRun, kein Klick
                 dbg(g, "Doppelklick: Held rennt");
                 return GameContext::kMessage;
             }
             if (hero) hero->clearRun();  // 0x00435330
-            scene.onClick(static_cast<int>(ev.button.x), static_cast<int>(ev.button.y));
+            cs.onClick(static_cast<int>(ev.button.x), static_cast<int>(ev.button.y));
         }
         // WM_MOUSEMOVE → OnMouseMove 0x00402790 → CSzene_MouseMove (MOUSE.md); Zeiger folgen
         if (ev.type == SDL_EVENT_MOUSE_MOTION) {
@@ -474,38 +659,49 @@ int main(int argc, char** argv) {
     // Game_Idle 0x004030C0 (ein Bild); 0x0047D754 = Verschachtelungstiefe
     ctx.idle = [&]() {
         ++g.idleDepth;
+        // g_CurScene (bei offenem Menü die Menü-Szene)
+        Scene& cs = ctx.curScene();
         if (frame == 1 && opt.mouseX >= 0) mouseMove(opt.mouseX, opt.mouseY);
-        if (frame == 2 && opt.clickX >= 0) scene.onClick(opt.clickX, opt.clickY);
+        if (frame == 2 && opt.clickX >= 0) cs.onClick(opt.clickX, opt.clickY);
         for (auto& c : opt.clicksAt)
             if (frame == c.frame && !c.done) {
                 c.done = true;
-                scene.onClick(c.x, c.y);
+                ctx.curScene().onClick(c.x, c.y);
             }
-        if (frame == 2 && opt.walkX >= 0 && scene.actor(0)) scene.actor(0)->walkTo(opt.walkX, opt.walkY, 0, -1);
+        for (std::size_t k = 0; k + 1 < opt.keysAt.size(); k += 2)
+            if (frame == opt.keysAt[k]) {
+                const int vk = opt.keysAt[k + 1];
+                if (vk >= 40000) commands.push_back(vk);  // Befehls-ID direkt (Ctrl-Kürzel)
+                else ctx.curScene().onKeyDown(vk);
+                opt.keysAt[k] = -1;
+            }
+        if (frame == 2 && opt.walkX >= 0 && cs.actor(0)) cs.actor(0)->walkTo(opt.walkX, opt.walkY, 0, -1);
         pollTimers(g);  // Port: Timer im Hauptthread je Schleifendurchlauf (TIMING.md)
-        scene.update(true);
-        // Game_Idle: Compose, Inventarleiste (0x00441C30), Ausgabe, dann Statustext (0x0043E830)
-        if (scene.compose(false)) {
-            if (auto r = scene.output().first()) present(surf, *r, screen);
-            scene.clearOutput();
+        // Game_Idle: CSzene_Update mit g_CurGame ≠ 0
+        cs.update(true);
+        // Compose, Inventarleiste (0x00441C30, nicht bei offenem Menü), Ausgabe, dann Statustext (0x0043E830)
+        if (cs.compose(false)) {
+            if (auto r = cs.output().first()) present(surf, *r, screen);
+            cs.clearOutput();
         }
-        if (scene.inventory() && scene.inventory()->draw()) {
+        if (!g.gameMenuOpen && scene.inventory() && scene.inventory()->draw()) {
             present(surf, scene.inventory()->takeOutputRect(), screen);
             rendererRedrawStatusText(g);
         }
         // Statustext und Löschen schreiben auch außerhalb davon in den Bildschirm
-        SDL_UpdateTexture(tex, nullptr, screen.pixels.data(), kScreenW * 2);
-        SDL_RenderClear(ren);
-        SDL_RenderTexture(ren, tex, nullptr, nullptr);
-        SDL_RenderPresent(ren);
-        scene.dispatchEvents();
+        showScreen();
+        cs.dispatchEvents();
         if (game) {
             const int before = ctx.current ? ctx.current->location() * 1000 + ctx.current->sceneNumber() : -1;
-            processLocationChange(ctx);  // Game_Idle Schritt 7
+            // Schritt 7. Port: nicht bei offenem Menü (g_CurGame wäre die Menüklasse; im Original
+            // entsteht dabei kein Wechselauftrag, weil die Spielszene keine Ereignisse verteilt)
+            if (!g.gameMenuOpen) processLocationChange(ctx);
             const int after = ctx.current ? ctx.current->location() * 1000 + ctx.current->sceneNumber() : -1;
-            if (ctx.current && before != after)
+            saveProcess(ctx);  // Save_Process 0x004045C0 am Ende von Game_Idle
+            const int loaded = ctx.current ? ctx.current->location() * 1000 + ctx.current->sceneNumber() : -1;
+            if (ctx.current && (before != after || after != loaded))
                 std::fprintf(stderr, "Schauplatz %d / Szene %d\n", ctx.current->location(), ctx.current->sceneNumber());
-            if (!ctx.current && frame == 0)
+            if (!ctx.current && frame == 0 && !opt.play)
                 std::fprintf(stderr, "Schauplatz %d/%d nicht verfügbar\n", opt.gameLoc, opt.gameScene);
         }
         if (opt.frameMs > 0) SDL_Delay(static_cast<Uint32>(opt.frameMs));
@@ -514,7 +710,9 @@ int main(int argc, char** argv) {
         --g.idleDepth;
     };
     while (!quit) {
-        if (ctx.pumpMessage() == GameContext::kNoMessage) ctx.idle();
+        const int m = ctx.pumpMessage();
+        if (m == GameContext::kNoMessage) ctx.idle();
+        else if (m == GameContext::kCommand) onCommand(ctx, ctx.lastCommand);  // WndProc → 0x00402870
         ctx.releaseRetired();
     }
     if (!opt.dump.empty()) writePpm(screen, opt.dump);
@@ -522,6 +720,8 @@ int main(int argc, char** argv) {
     ctx.idle = nullptr;
     ctx.current.reset();  // vor Hilfe und Szene abbauen (CGame_dtor greift auf beide zu)
     ctx.retired.clear();
+    ctx.menu.reset();  // WinMain: g_MenuGame, dann g_MenuScene
+    menuScene.reset();
     ctx.music.reset();
     scene.reset();  // Figuren mit ihren Schrittgeräuschen vor dem Mischer abbauen
     if (audioOut) SDL_DestroyAudioStream(audioOut);  // vor dem Mischer

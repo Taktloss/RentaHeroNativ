@@ -9,10 +9,18 @@
 
 namespace rah {
 
-Game::Game(GameContext& ctx, int location, int scene, int prevScene)
-    : ctx_(ctx), g_(ctx.g), scene_(ctx.scene), location_(location), sceneNr_(scene), prevScene_(prevScene),
+Game::Game(GameContext& ctx, int location, int scene, int prevScene) : Game(ctx, ctx.scene, location, scene, prevScene) {}
+
+Game::Game(GameContext& ctx, Scene& scene, int location, int sceneNr, int prevScene)
+    : ctx_(ctx), g_(ctx.g), scene_(scene), location_(location), sceneNr_(sceneNr), prevScene_(prevScene),
       seed_(ctx.g.now ? ctx.g.now() : 0) {
+    bindEventVariant();  // SetEventVariant(this) 0x0043F4DB
     setEventProc(nullptr);
+}
+
+void Game::bindEventVariant() {
+    // Die Rückrufe CGame_WaitDone_i laufen im Original mit this = g_EventVariant (0x0047E608)
+    g_.eventVariant = 1;
     for (int i = 0; i < 5; ++i)
         g_.fnHandlers[kWaitDone[static_cast<std::size_t>(i)]] = {this, [this, i](Event& e, int t) { waitDone(i, e, t); }};
 }
@@ -47,6 +55,7 @@ void Game::shutdown() {
 }
 
 void Game::setEventProc(Handler h) {
+    g_.prevEventProc = g_.eventProc;  // SetGlobalEventProc 0x0043F1C0
     if (h) g_.eventProc = [this, h](Event& e, int t) { (this->*h)(e, t); };
     else g_.eventProc = nullptr;
     // 0x00441E60(leiste, proc, this): Beschreibung über CGame_DescribeItem – folgt mit dem Inventar
@@ -58,6 +67,9 @@ void Game::getViewObjects() {
     hero_ = scene_.actor(0);    // +0x1C = CSzene+0x5E0
     second_ = scene_.actor(1);  // +0x58 = CSzene+0x5E4
     scene_.setSceneNumber(sceneNr_);  // CSzene+0x5D4 = +0x2C
+    // +0x10 = state[+0x2C], nur bei Szene ≠ 0 (gamestate.md); Wert −1 (Symbol sofort) folgt mit den
+    // Hinweisen. UNVERIFIED: Szenennummer außerhalb 0…3999 (Original liest ungeprüft)
+    if (sceneNr_ > 0 && sceneNr_ < 4000) hintCountdown_ = ctx_.state.at(static_cast<std::size_t>(sceneNr_) * 4);
 }
 
 void Game::changeScene(int scene, int location) {
@@ -309,7 +321,15 @@ bool switchLocation(GameContext& ctx) {
         return false;
     }
     ctx.scene.setBarShown(true);  // +0x5BC = g_CurGame
-    // Spielstand-Position (0x0047D764) folgt; ausstehende Maus-/Tastennachrichten verwerfen: Plattform
+    // Spielstand-Position (0x0047D764): Held auf X/Y/Richtung (CActor_SetPos 0x00434AB0, 0x0040415D)
+    if (!ctx.save.restorePos || !ctx.scene.actor(0)) {
+        ctx.current->setRestored(0);
+    } else {
+        ctx.current->setRestored(1);
+        ctx.scene.actor(0)->setPosDir(ctx.save.x, ctx.save.y, ctx.save.dir);
+        ctx.save.restorePos = false;
+    }
+    // ausstehende Maus-/Tastennachrichten verwerfen: Plattform
     ctx.current->start();
     if (ctx.help) ctx.help->setup(&ctx.scene, nullptr, false);  // 0x004410C0(hwnd, 0, szene, game)
     rendererClearStatusText(ctx.g);                             // 0x0043E7C0

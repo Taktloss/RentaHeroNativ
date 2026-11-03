@@ -44,6 +44,8 @@ add_library(rah_core STATIC
   src/audio/mixer.cpp
   src/formats/wav.cpp
   src/game/game.cpp
+  src/game/menu.cpp
+  src/game/savegame.cpp
   src/game/loc01.cpp
   src/game/loc02.cpp
   src/game/loc03.cpp
