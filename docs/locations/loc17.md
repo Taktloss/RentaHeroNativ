@@ -84,4 +84,4 @@ Erzeugt mit `tools/gen_loc_docs.py`; Bedeutung der Flags und Abläufe folgt bei 
 - Original-Eigenheit: Die Ankunft aus 61 spielt die Töne ohne Prüfung; geladen sind sie nur bei
   `0x3FC8 = 0` (im Port mit Nullprüfung, `// UNVERIFIED`).
 - Probelauf 2026-11-03: 59 aus 58 (Fressen, Auffliegen), Kopf → 60, Busch-Stufen bis zum Wegziehen,
-  Ohr → 18/61, Rückweg 59 → 16/58. Nicht geprüft: Ankunft aus 61 (braucht Loc18), Mund.
+  Ohr → 18/61, Rückweg 59 → 16/58. Ankunft aus 61 über Loc18 geprüft (Festmahl). Nicht geprüft: Mund.

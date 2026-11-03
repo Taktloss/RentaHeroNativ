@@ -61,5 +61,5 @@ Geste (Timer 5–7 s, läuft noch → 3–6 s), 6 Timer 1–2 s neu. Haltung +0x
 - Ereignisse: 1 → 15/57, 2 → 17/59 (bzw. Drache versperrt den Weg, `058_DRA_33`), 3 Gespräch,
   4/5 Hut/Hand aufheben (`S58_RodPickUp` an (248,246) bzw. (282,243)), 6 Haltung, 7 Umgebungston.
 - Probelauf 2026-11-03: Begrüßung, Stufe 1 (Angriff), Weg 59 versperrt; Stufe 9 → 17/59;
-  nachts Stufe 5 → Abflug → 26/93; Nachtbild geprüft. Nicht geprüft: Piraten-Sequenz (Ankunft aus
-  59 braucht Loc17), Landung, Hut/Hand aufheben.
+  nachts Stufe 5 → Abflug → 26/93; Nachtbild geprüft. Piraten-Sequenz über 61 → 60 → 59 → 58 geprüft.
+  Nicht geprüft: Landung, Hut/Hand aufheben.

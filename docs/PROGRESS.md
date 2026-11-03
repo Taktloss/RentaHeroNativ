@@ -344,6 +344,8 @@
   Haltungssteuerung des Drachen, Piraten-Sequenz, Hut/Hand, Abflug → 26/93. 137 Tests.
 - 2026-11-03: Loc17 (Szenen 59/60, Aasfresser und Totenschädel) portiert: Aasfresser fressen und
   fliegen auf, Busch-Stufen, Ohr → 18/61, Rückkehr aus 61 mit dem Piraten-Festmahl. 138 Tests.
+- 2026-11-03: Loc18 (im Totenschädel, Szene 61) portiert: Gehirn, Säure, Rauch-Timer, Kiefer
+  öffnen; Kette 61 → 60 → 59 → 58 mit Piraten-Sequenz geprüft. 139 Tests.
   128 Tests.
-- Nächste Schritte: Menü im Fenster prüfen (Regler ziehen, Namenseingabe); noch nicht portierte Schauplätze: Loc18, Loc25–Loc30, Loc41; Ramil-Pfad (Sprungziel 1004) in Loc10 prüfen;
+- Nächste Schritte: Menü im Fenster prüfen (Regler ziehen, Namenseingabe); noch nicht portierte Schauplätze: Loc25–Loc30, Loc41; Ramil-Pfad (Sprungziel 1004) in Loc10 prüfen;
   Hinweis-Countdown/`Hints_Select`.
