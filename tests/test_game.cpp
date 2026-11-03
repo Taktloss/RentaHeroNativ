@@ -11,6 +11,7 @@
 #include "game/loc03.hpp"
 #include "game/loc10.hpp"
 #include "game/loc12.hpp"
+#include "game/loc15.hpp"
 #include "game/loc31.hpp"
 #include "game/loc04.hpp"
 #include "game/loc05.hpp"
@@ -459,6 +460,27 @@ TEST(loc12_scene_number_is_fixed_to_91) {
     Rig r(10);
     Loc12 a(*r.ctx, 0, 42);
     CHECK(a.location() == 12 && a.sceneNumber() == 91);
+}
+
+TEST(loc15_scene_variants_set_night_and_pirate) {
+    Rig r(10);
+    {
+        Loc15 a(*r.ctx, 571, 58);  // 0x23B → Nacht
+        CHECK(a.sceneNumber() == 57 && r.ctx->state.at(0x3E80) == 1);
+    }
+    {
+        Loc15 a(*r.ctx, 572, 53);  // 0x23C → Pirat, bleibt bei Ankunft aus 53
+        CHECK(r.ctx->state.at(0x3F90) == 1);
+    }
+    {
+        Loc15 a(*r.ctx, 570, 113);  // 0x23A → Tag; Gleiter steht, Pirat zurückgesetzt
+        CHECK(r.ctx->state.at(0x3E80) == 0 && r.ctx->state.at(0x3F9C) == 1 && r.ctx->state.at(0x3F90) == 0);
+    }
+    {
+        r.ctx->state.at(0x3E80) = 1;
+        Loc15 a(*r.ctx, 57, 113);  // nachts: kein Gleiter, Herkunft wird 58
+        CHECK(r.ctx->state.at(0x3F9C) == 0);
+    }
 }
 
 namespace {
