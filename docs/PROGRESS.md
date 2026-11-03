@@ -348,6 +348,8 @@
   öffnen; Kette 61 → 60 → 59 → 58 mit Piraten-Sequenz geprüft. 139 Tests.
 - 2026-11-04: Loc26 (Insel, Szenen 93/98) portiert: Landung und Abflug des Drachen, Fahne,
   Grube; Rundflug 58 → 93 → 58 geprüft. 140 Tests.
+- 2026-11-04: Loc27 (Hütte 95, Geheimraum 96) portiert: Megophias-Gespräche, Geheimgang, Helm
+  ablegen und aufsetzen → 25/104. 141 Tests.
   128 Tests.
-- Nächste Schritte: Menü im Fenster prüfen (Regler ziehen, Namenseingabe); noch nicht portierte Schauplätze: Loc25, Loc27–Loc30, Loc41; Ramil-Pfad (Sprungziel 1004) in Loc10 prüfen;
+- Nächste Schritte: Menü im Fenster prüfen (Regler ziehen, Namenseingabe); noch nicht portierte Schauplätze: Loc25, Loc28–Loc30, Loc41; Ramil-Pfad (Sprungziel 1004) in Loc10 prüfen;
   Hinweis-Countdown/`Hints_Select`.
