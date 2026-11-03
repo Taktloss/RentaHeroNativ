@@ -4,6 +4,7 @@
 
 #include "engine/help.hpp"
 
+#include <algorithm>
 #include <cmath>
 #include <cstdio>
 
@@ -656,9 +657,71 @@ bool Scene::compose(bool force) {
     }
     // 12. Bereichstext (CArea_DrawText über GetDC); Editor-Rahmen und Slot +0x10 der letzten
     // Ebene (Debug-Text) entfallen
-    if (textShown() && g_.drawAreaText) g_.drawAreaText(surface_, *lastHit_, textX_, textY_ - 60);
+    // (Editor-Vollbild +0x5C8 entfällt); ohne Text in der Menü-Szene das Menü-Zeichnen
+    if (textShown()) {
+        if (g_.drawAreaText) g_.drawAreaText(surface_, *lastHit_, textX_, textY_ - 60);
+    } else if (editor_ && menuDraw_) {
+        menuDraw_();
+    }
     g_.sceneChanged = false;
     return true;
+}
+
+void Scene::onKeyDown(int vk) {
+    if (help_ && help_->isOpen()) {
+        help_->close();  // 0x004416C0
+        return;
+    }
+    if (!clicksEnabled) {  // +0x514
+        dbg(g_, "Taste %02X verworfen: Eingabe gesperrt", vk);
+        return;
+    }
+    if (modal_ && modal_->active && modal_->running) {  // +0x5DC, +0x1A4, +0x1A8
+        dbg(g_, "Taste %02X verworfen: Vollbildobjekt läuft", vk);
+        return;
+    }
+    if (vk == 0x1B || (vk > 0x6F && vk < 0x7C)) {
+        // PostMessage(+0x2CC, WM_COMMAND, 40079 bzw. 40092)
+        if (g_.postCommand) g_.postCommand(g_.gameMenuOpen ? 40092 : 40079);
+        return;
+    }
+    // else if (+0x5BC == 0) 0x0044CF00(vk) – Tastatur ohne laufendes Spiel (Editor) folgt
+}
+
+bool Scene::snapshotBackground() {
+    Layer* bg = background_;
+    if (!bg || bg->isAnim || !bg->hasSurface) return false;  // +0x1BC, +0x08
+    // vtable +0x14 der Oberfläche +0x08: Blt(&{0,0,640,360}, Szenenoberfläche, &{0,0,640,360}, DDBLT_WAIT)
+    Image565& dst = bg->bmp;
+    const int w = std::min({640, dst.width, surface_.width});
+    const int h = std::min({360, dst.height, surface_.height});
+    for (int y = 0; y < h; ++y)
+        for (int x = 0; x < w; ++x)
+            dst.pixels[static_cast<std::size_t>(y) * static_cast<std::size_t>(dst.width) + static_cast<std::size_t>(x)] =
+                surface_.row(y)[x];
+    return true;
+}
+
+void Scene::clearBackground() {
+    Layer* bg = background_;
+    if (!bg || !bg->hasSurface) return;
+    std::fill(bg->bmp.pixels.begin(), bg->bmp.pixels.end(), std::uint16_t{0});
+}
+
+void Scene::frameRect(const Rect& r, std::uint32_t colorref) {
+    Rect c = r;
+    clipToScene(c);
+    listB_.add(c);
+    listA_.add(c);
+    // FrameRect auf das ungeclippte Rechteck (GetDC der Szenenoberfläche, Clipping durch die Oberfläche)
+    const std::uint16_t col = static_cast<std::uint16_t>(((colorref & 0xF8) << 8) | (((colorref >> 8) & 0xFC) << 3) |
+                                                         ((colorref >> 16) & 0xF8) >> 3);
+    const auto put = [&](int x, int y) {
+        if (x >= 0 && y >= 0 && x < surface_.width && y < surface_.height) surface_.row(y)[x] = col;
+    };
+    if (r.right <= r.left || r.bottom <= r.top) return;
+    for (int x = r.left; x < r.right; ++x) put(x, r.top), put(x, r.bottom - 1);
+    for (int y = r.top; y < r.bottom; ++y) put(r.left, y), put(r.right - 1, y);
 }
 
 }  // namespace rah

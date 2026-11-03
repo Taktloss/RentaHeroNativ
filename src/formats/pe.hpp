@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <optional>
 #include <span>
+#include <string>
 #include <vector>
 
 #include "core/bytes.hpp"
@@ -16,6 +17,8 @@ public:
     bool parse(Bytes file);
     // Daten der Ressource (Typ, numerische ID), erste Sprache
     std::optional<std::span<const std::uint8_t>> find(std::uint32_t type, std::uint32_t id) const;
+    // NUL-terminierte Zeichenkette an einer virtuellen Adresse (ImageBase + RVA), roh (CP1252)
+    std::optional<std::string> stringAt(std::uint32_t va) const;
 
 private:
     Bytes d_;
@@ -23,7 +26,8 @@ private:
         std::uint32_t va, size, raw;
     };
     std::vector<Section> secs_;
-    std::size_t base_ = 0;  // Dateiversatz des Ressourcenverzeichnisses
+    std::size_t base_ = 0;
+    std::uint32_t imageBase_ = 0;  // Dateiversatz des Ressourcenverzeichnisses
     std::optional<std::size_t> offset(std::uint32_t rva) const;
     std::optional<std::uint32_t> child(std::size_t dir, std::optional<std::uint32_t> id) const;
 };

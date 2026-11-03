@@ -4,6 +4,7 @@
 #pragma once
 
 #include <array>
+#include <functional>
 #include <memory>
 #include <optional>
 #include <string_view>
@@ -148,6 +149,22 @@ public:
     // verbergen, Vollbildobjekt, alle Ebenen bis zur ersten Lücke aus, alle Bereiche inaktiv.
     // +0x2B0 (nur vom Editor 0x00449D50 belegt) entfällt.
     void disableAll();
+    // +0xAC8 = 1: Menü-Szene (0x00403520; wie Editor: kein Raster-Test, keine globalen Ereignisse);
+    // Compose ruft am Ende menuDraw (0x00444830 mit +0x5BC), wenn kein Bereichstext sichtbar ist
+    void setMenuScene(std::function<void()> draw) {
+        editor_ = true;
+        menuDraw_ = std::move(draw);
+    }
+    // orig: Rent-A-Hero.exe 0x0044CE50 – Taste (VK) in der Szene: offene Hilfe-Seite schließen, sonst
+    // Esc/F1…F12 → Menü öffnen (40079) bzw. schließen (40092); übrige Tasten (0x0044CF00) folgen
+    void onKeyDown(int vk);
+    // orig: Rent-A-Hero.exe 0x0044A0C0 – Szenenoberfläche (0,0)–(640,360) in die Oberfläche des
+    // statischen Hintergrunds kopieren; false ohne/mit animiertem Hintergrund
+    bool snapshotBackground();
+    // GameMenu_Open 0x00403370 ohne Spiel: Hintergrund-Oberfläche schwarz füllen (DDBLT_COLORFILL 0)
+    void clearBackground();
+    // orig: Rent-A-Hero.exe 0x0044C220 – Rechteck (geclippt) in beide Listen, 1-Pixel-Rahmen (FrameRect)
+    void frameRect(const Rect& r, std::uint32_t colorref);
     // Hilfe-Objekt +0x9F8 (WinMain setzt es nach dem Laden des Symbols)
     void setHelp(HelpOverlay* h) { help_ = h; }
     void setBarShown(bool on) { barShown_ = on; }
@@ -201,7 +218,8 @@ private:
     HelpOverlay* help_ = nullptr;                               // +0x9F8
     AnimLayer* modal_ = nullptr;                                // +0x5DC (Vollbildobjekt)
     Event sceneEvent_;                                          // +0x2C4 (Klick ins Leere, Typ 0x16)
-    bool editor_ = false;                                       // +0xAC8
+    bool editor_ = false;                                       // +0xAC8 (Editor bzw. Menü-Szene)
+    std::function<void()> menuDraw_;
     std::uint32_t windowStart_ = 0;                             // +0x2DC
     std::array<int, 4> stageCount_{};                           // +0x2E0…+0x2EC
     int unsupported_ = 0;

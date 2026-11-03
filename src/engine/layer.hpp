@@ -97,6 +97,13 @@ public:
     virtual void applyImageColor(int r, int g, int b);
     // orig: Rent-A-Hero.exe 0x00446E70 (vtable +0x14 SetPos; CActor: 0x00434A90)
     virtual void setPos(int nx, int ny);
+    // orig: Rent-A-Hero.exe 0x00446F10 – nur x setzen (gleich → nichts), aktiv → dirty, Bereich nachführen
+    void setX(int nx) {
+        if (nx == static_cast<int>(x)) return;  // UNVERIFIED: Vergleich int mit double +0x10 (Ghidra: int)
+        x = nx;
+        if (active) dirty = true;
+        refreshArea();
+    }
     // orig: Rent-A-Hero.exe 0x00447470 CLayer_Enable
     void enable();
     // orig: Rent-A-Hero.exe 0x00447490 CLayer_Disable

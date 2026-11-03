@@ -49,6 +49,12 @@ struct EngineGlobals {
     std::map<int, FnHandler> fnHandlers;
     // Verschachtelungstiefe von Game_Idle 0x0047D754 (Wartestellen rufen es re-entrant auf)
     int idleDepth = 0;
+    // Spielmenü offen (g_GameMenuOpen 0x0047D688)
+    bool gameMenuOpen = false;
+    // PostMessage(hWnd, WM_COMMAND, id, 0) – Plattform stellt die Warteschlange (MENU.md)
+    std::function<void(int)> postCommand;
+    // Vorige Ereignisprozedur (g_PrevEventProc 0x0047E610, SetGlobalEventProc 0x0043F1C0)
+    std::function<void(Event&, int type)> prevEventProc;
     // Bereichstext unter der Maus (docs/MOUSE.md)
     bool textVisible = false;              // 0x00481F24
     std::unique_ptr<Event> toggleEvent;    // 0x00481F2C, Handler 0x0044C8D0

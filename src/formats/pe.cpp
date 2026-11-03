@@ -19,6 +19,7 @@ bool PeResources::parse(Bytes file) {
     if (!ok(opt, 2)) return false;
     const std::size_t dd = opt + (le16(d_, opt) == 0x10B ? 96 : 112);
     if (!ok(dd + 2 * 8, 8)) return false;
+    imageBase_ = le16(d_, opt) == 0x10B && ok(opt + 28, 4) ? le32(d_, opt + 28) : 0;
     const std::uint32_t rva = le32(d_, dd + 2 * 8);
     for (unsigned i = 0; i < n; ++i) {
         const std::size_t s = opt + optSize + 40 * i;
@@ -30,6 +31,15 @@ bool PeResources::parse(Bytes file) {
     if (!b || !ok(*b, 16)) return false;
     base_ = *b;
     return true;
+}
+
+std::optional<std::string> PeResources::stringAt(std::uint32_t va) const {
+    if (va < imageBase_) return std::nullopt;
+    const auto off = offset(va - imageBase_);
+    if (!off) return std::nullopt;
+    std::string r;
+    for (std::size_t i = *off; i < d_.size() && d_[i] != 0; ++i) r.push_back(static_cast<char>(d_[i]));
+    return r;
 }
 
 std::optional<std::size_t> PeResources::offset(std::uint32_t rva) const {
