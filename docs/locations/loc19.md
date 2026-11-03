@@ -1,4 +1,4 @@
-# Loc19 (automatische Übersicht)
+# Loc19 – Esragoth: Waldweg (68, nachts 101) und Zwergentor (69)
 
 Funktionen `0x0041F070`–`0x004223DF` (8 Stück), Ereignis-Handler `0x004202D0`, `0x00420500`, `0x00420D60`.
 Erzeugt mit `tools/gen_loc_docs.py`; Bedeutung der Flags und Abläufe folgt bei der Einzelanalyse (UNVERIFIED bis dahin). In der Fallübersicht ist `== N` ein Zweig einer If-Kette – Ereignis-ID **oder** Wert eines Flags/Zählers.
@@ -42,3 +42,58 @@ Erzeugt mit `tools/gen_loc_docs.py`; Bedeutung der Flags und Abläufe folgt bei 
   case 7: S? 3FFC 4008 | ruft CActor_WalkTo
   case 8: S? 400C
 ```
+
+## Einzelanalyse (2026-11-03, portiert: `src/game/loc19.cpp`)
+
+### Flags
+| Offset | Start | Bedeutung (aus den Abläufen) |
+|---|---:|---|
+| `0x3F28` | 0 | Jasmin begleitet Rodrigo (aus Loc10); bei Ankunft in 69 → 0 und `0x4014 = 1` |
+| `0x3F48` | 0 | Ramil-Abfolge beendet; Weg links führt dann nach 21/71 (UNVERIFIED: Loc10 nutzt den Offset für „Jasmin auf dem Baum“) |
+| `0x3FF0` | 0 | Tor zu Szene 70 offen (Thalion) |
+| `0x3FF4` | 0 | Zwerg 1 steht vor dem Haus |
+| `0x3FFC` | 0 | Jasmin an der Kette ansprechbar |
+| `0x4004` | 1 | Ramil-mit-Kette-Auftritt: 1 bereit, 2 erledigt |
+| `0x4008` | 1 | Gespräch mit Jasmin an der Kette 1…4 |
+| `0x400C` | 1 | Gespräch mit Ramil 1…4 (bei 1 ist die Wache nicht anklickbar) |
+| `0x4010` | 1 | Gespräch mit Zwerg 1 (1 → Ramil kommt, 2 danach) |
+| `0x4014` | 0 | Jasmin ist in 69 dabei |
+| `0x4018` | 0 | Jasmin ist (mit Ramil) gegangen |
+| `0x401C` | −1 | Ebenen in 69: 1 Jasmin an der Kette + Ramil, 2 Jasmin/Ramil von hinten, −1 keine |
+| `0x4028` | 0 | Weg nach 71 offen (gesetzt in Loc20) |
+
+### Konstruktor `0x0041F070`
+- Szene 68 (`S68`, Maske 0) und 101 (`S68` mit Hintergrund `S68_Back_nd`): Vögel, Donner,
+  Bereiche `S68_To67` und `S68_To69` bzw. `S101_To69`; Musik `Loc19_Esragoth` bzw.
+  `Loc10_ForestInDarkness`.
+- Szene 69 (`S69`): `S69_WacheStaunt` als eigene Animation, 22 Ebenen (Jasmin, Ramil, Rodrigo,
+  Thalion, Tür, Wache, Zwerg 1, Nahaufnahmen), Bereiche `S69_To71/70/68`, Schritte (Vol. 90)
+  als Cues an 7 Ebenen, Türgeräusche. Hall wie Loc01.
+
+### Start `0x0041F960`
+- 68: aus 38 bei (4,331) Richtung 6 → (266,325), Jasmin (wenn dabei) (4,312) → (339,318); aus 69
+  bei (554,273) Richtung 2. Andere Herkunft ohne Spielstand: Held bleibt unsichtbar (Original).
+- 101: Weg rechts gesperrt (`BlockRect`), Ankunft (7,292) → (257,312), `101_ROD_01`.
+- 69: Ebenen je `0x401C`. Ankunft aus 68 (631,244); mit Jasmin: Wache fragt, Jasmin antwortet,
+  Zwerg 1 kommt heraus (`0x3FF4 = 1`). Aus 70: Tür auf, (332,312), Tür zu. Aus 71: (39,298) →
+  (78,311). Wache nur aktiv bei `0x400C ≠ 1`, Tor bei `0x3FF0`, Weg 71 bei `0x4028`.
+- Umgebungs-Timer 1000: 68/69 Vögel alle 2–10 s, 101 Donner alle 5–15 s (Lautstärke 50–100).
+
+### Ereignisse Szene 69 `0x00420D60`
+| ID | Ablauf |
+|---:|---|
+| 1 | `0x3F48` → (17,276) → 21/71. `0x4004 = 1`: Ramil bringt Jasmin an der Kette, zwei Nahaufnahmen, Rodrigo starrt; `0x401C = 1`, `0x3FFC = 1`, `0x4004 = 2`. Sonst `069_ROD_24` |
+| 2 | Tor offen: (367,311), Tür auf → 20/70 |
+| 3 | Jasmin noch da: `069_JAS_03`. Tor zu: Thalion öffnet, Wache staunt (Nahaufnahme), `0x3FF0 = 1` → 20/70. Sonst → 19/68 |
+| 4 | Zwerg 1 (nur `0x3FF4`): Stufe 1 Ramil rennt herbei, umarmt Jasmin, `0x401C = 2`, `0x4010 = 2`; sonst `069_ROD_08`/`069_ZW1_08` |
+| 5 | Wache: `069_ROD_14`/`069_ZW2_14` |
+| 7 | Jasmin an der Kette: Stufen 1–3 Gespräch mit Nahaufnahme; 4 Ramil führt Jasmin ab, Thalion, `0x3F48 = 1`, `0x401C = −1`. Ohne Kette: `069_ROD_16`/`069_JAS_16` |
+| 8 | Ramil von hinten: 1 → 2 (Wache wird aktiv), 2 → Jasmin geht (`0x4018 = 1`), 3/4 Nahaufnahme Ramil |
+
+- `0x00420600` Nahaufnahme: Sichtbarkeit (+0x1A4) aller Ebenen, Figuren und des Hintergrunds
+  sowie der Bereiche merken, ausblenden, sprechen (Ramil, Jasmin oder Wache nach `WacheStaunt`),
+  wiederherstellen; optional `CSzene_InvalidateAll`.
+- Tür rückwärts (10 → 0) endet auf Bild 1, weil Bild 0 rückwärts nie gezeigt wird (ANIM).
+- Probelauf 2026-11-03: 68 aus 38 mit/ohne Jasmin, 101, 69 aus 68/70/71, Ankunft mit Jasmin,
+  Zwerg 1 → Ramil, drei Ramil-Gespräche, Kette (Ereignis 1), vier Kettengespräche mit Finale.
+  Spielstände mit gesetzten Flags über `--auto-load`. Offen: Thalion-Abfolge (Ereignis 3).

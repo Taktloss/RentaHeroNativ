@@ -56,6 +56,7 @@ add_library(rah_core STATIC
   src/game/loc10.cpp
   src/game/loc12.cpp
   src/game/loc15.cpp
+  src/game/loc19.cpp
   src/game/loc31.cpp
   src/game/loc35.cpp
   src/game/loc37.cpp
