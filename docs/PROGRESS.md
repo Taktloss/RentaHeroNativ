@@ -324,7 +324,8 @@
   altem/neuem Seil, Gitter, Sack, Pirat, Weg zur Schlucht 15/57. Korrektur Loc19: statische
   Ebenen (BMP/TCC) sind keine AnimLayer – Nahaufnahmen hatten keinen Hintergrund (LOCATIONS.md);
   alle übrigen Schauplätze per Skript gegen die SZN-Typen geprüft, keine weiteren Fälle.
+- 2026-11-03: Loc20 (Bibliothek mit Tharain, Szene 70) portiert: Begrüßung, acht
+  Gesprächsstufen, Stein (Gegenstand 21), öffnet den Weg nach 71.
   128 Tests.
-- Nächste Schritte: Menü im Fenster prüfen (Regler ziehen, Namenseingabe); offene Ziele: Loc16 (16/58), Loc20 (20/70),
-  Loc21 (21/71), Loc23 (23/103), Loc09; Ramil-Pfad (Sprungziel 1004) in Loc10 prüfen;
+- Nächste Schritte: Menü im Fenster prüfen (Regler ziehen, Namenseingabe); offene Ziele: Loc16 (16/58), Loc21 (21/71), Loc23 (23/103), Loc09; Ramil-Pfad (Sprungziel 1004) in Loc10 prüfen;
   Hinweis-Countdown/`Hints_Select`.

@@ -1,4 +1,4 @@
-# Loc20 (automatische Übersicht)
+# Loc20 – Bibliothek mit Tharain, Szene 70
 
 Funktionen `0x004223E0`–`0x00422D8F` (6 Stück), Ereignis-Handler `0x00422930`.
 Erzeugt mit `tools/gen_loc_docs.py`; Bedeutung der Flags und Abläufe folgt bei der Einzelanalyse (UNVERIFIED bis dahin). In der Fallübersicht ist `== N` ein Zweig einer If-Kette – Ereignis-ID **oder** Wert eines Flags/Zählers.
@@ -29,3 +29,29 @@ Erzeugt mit `tools/gen_loc_docs.py`; Bedeutung der Flags und Abläufe folgt bei 
   case 7: Sprache 070_ROD_11 070_THA_11 | S= 4030=8 | ruft CGame_HeroSayWait FUN_00422d50
   case 8: Sprache 070_ROD_12 070_THA_12 | S= 4024=1 4028=1 402C=1 | ruft CGame_HeroSayWait FUN_00422d50
 ```
+
+## Einzelanalyse (2026-11-03, portiert: `src/game/loc20.cpp`)
+
+### Flags
+| Offset | Start | Bedeutung |
+|---|---:|---|
+| `0x3FEC` | 0 | Tharain nicht mehr da (gesetzt in Loc22): Ladebit 1 fehlt, nur Boden-Kommentar |
+| `0x4020` | 1 | erster Besuch: Begrüßung `070_THA_01`/`070_ROD_01`/`070_THA_02`; danach fehlt zufällig eine der sechs Farbebenen |
+| `0x4024` | 0 | UNVERIFIED: nach Gesprächsstufe 8 gesetzt, sonst nicht gelesen |
+| `0x4028` | 0 | Weg nach 71 offen (liest Loc19) |
+| `0x402C` | 0 | Gespräch beendet – vorher ruft Tharain Rodrigo zurück |
+| `0x4030` | 1 | Gesprächsstufe 1…8 |
+
+### Ablauf
+- Ctor `0x004223E0`: Szene fest 70, `CSzene_Load("S70", 0x3FEC = 0)`; Pult, Buch, Stein und Farben
+  sind statische Ebenen; `Sfx_MobileDown` als Cue Bild 0 am fliegenden Stein; Musik
+  `Loc20_Library`, Hall (10, 0.5, 10.0, 0.3).
+- Start `0x00422690`: Held (28,312) Richtung 6 → (253,345). Tharain, Buch, Pult und Stein (bis
+  Stufe 5) → Ereignis 10.
+- Ereignis 10 `0x00422930`: Stufen 1–4 Gespräch; 5 Tharain nimmt den Stein; 6 wirft ihn Rodrigo
+  zu (Gegenstand 21); 7; 8 setzt `0x4024`, `0x4028`, `0x402C`. Tharain spricht über `0x00422D50`
+  (Bilder 15–45).
+- Ereignis 1: vor `0x402C` ruft Tharain zurück (`070_THA_13`, Drehungen), sonst (28,312) → 19/69
+  (mit zweitem `CGame_Wait` ohne Platz wie im Original). Ereignis 2: Boden-Kommentar.
+- Probelauf 2026-11-03: Begrüßung, Stufen 5 und 6 (Stein, Gegenstand 21), Rückweg vor/nach dem
+  Gespräch. Offen: Variante ohne Tharain.
