@@ -72,6 +72,20 @@ Ein Original-Spielstand ließ sich in go-rent-a-hero laden (Szene und Position s
 | bchunk, 7z, xorriso, objdump, strings | System | dnf |
 | Wine | 11.17 Staging | System |
 | gamescope | System | dnf |
+| REA (`rea-agents`) | 6.8.0 | npm/npx, MCP-Server `rea` (User-Scope) |
+| Ghidra (nur für REA) | 12.1.4 PUBLIC | `~/.local/opt/ghidra_12.1.4_PUBLIC` (GitHub-Release, SHA-256 `ddac49f9…d4db` geprüft) |
+
+### REA (Reverse-Engineering-MCP)
+REA akzeptiert nur Ghidra 12.1.x; 12.2 wird mit `unsupported_version` abgelehnt. Deshalb
+liegt 12.1.4 parallel nur für REA. Unser Projekt `re/private/ghidra` und die Skripte in
+`re/scripts/` laufen weiter mit 12.2. Registrierung:
+```sh
+claude mcp add --scope user rea \
+  -e GHIDRA_INSTALL_DIR=$HOME/.local/opt/ghidra_12.1.4_PUBLIC \
+  -e JAVA_HOME=$HOME/.local/opt/jdk-25.0.5+8 -- npx -y rea-agents@6.8.0 mcp
+```
+CLI-Test: `rea decompile re/private/bin/Rent-A-Hero.exe 0x0044CBB0 --provider ghidra`
+(ca. 30 s, eigener Snapshot). REA verlangt Node ≥ 22.23.4 bzw. ≥ 24.22.1.
 
 Noch nicht installiert (benötigt root):
 ```sh
