@@ -161,7 +161,7 @@ deren Ende-Ereignis aus.
 | Adresse | Name | Wirkung |
 |---|---|---|
 | `0x00441B00` | `Inventory_Remove(id)` | Eintrag (0x14 Bytes, max. 50) entfernen, Rest nachrücken, Auswahl ggf. −1 |
-| `0x00442240` | `Inventory_SetEvent(id, ev)` | Ereignis-ID am Gegenstand (`+0x10`); UNVERIFIED: wird beim Benutzen des Gegenstands ausgelöst |
+| `0x00442240` | `Inventory_SetEvent(id, ev)` | Ereignis-ID am Gegenstand (`+0x10`); Klick auf den Gegenstand ruft die Ereignisprozedur mit dieser ID (INVENTORY.md); nur für Gegenstände, die schon in der Leiste liegen |
 
 ## `CGame+0x04`: Position aus Spielstand
 `Game_SwitchLocation` (`0x004036E0`) setzt vor `Start` (vtable `+4`) `CGame+0x04 = 1`

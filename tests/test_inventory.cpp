@@ -160,6 +160,14 @@ TEST(inventory_hover_click_and_scroll) {
     r.scene->onClick(70, 430);
     r.scene->dispatchEvents();
     CHECK(r.described.back() == 4);
+    // Schauplatzwechsel (CGame_dtor): 0x0043FA60(0), 0x00442280 → nichts mehr auslösen/beschreiben
+    b.setUseHandler(0);
+    b.clearItemEvents();
+    const auto nFired = r.fired.size();
+    const auto nDescribed = r.described.size();
+    r.scene->onClick(10, 430);
+    r.scene->dispatchEvents();
+    CHECK(r.fired.size() == nFired && r.described.size() == nDescribed && b.entry(2).eventId == 0);
 }
 
 TEST(inventory_hit_needs_bar_shown) {

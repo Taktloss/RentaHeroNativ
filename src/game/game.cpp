@@ -23,6 +23,9 @@ void Game::bindEventVariant() {
     g_.eventVariant = 1;
     for (int i = 0; i < 5; ++i)
         g_.fnHandlers[kWaitDone[static_cast<std::size_t>(i)]] = {this, [this, i](Event& e, int t) { waitDone(i, e, t); }};
+    g_.fnHandlers[kEventProcHandler] = {this, [this](Event& e, int t) {
+                                            if (g_.eventProc) g_.eventProc(e, t);
+                                        }};
 }
 
 Game::~Game() {
@@ -31,6 +34,8 @@ Game::~Game() {
         const auto it = g_.fnHandlers.find(id);
         if (it != g_.fnHandlers.end() && it->second.owner == this) g_.fnHandlers.erase(it);
     }
+    const auto it = g_.fnHandlers.find(kEventProcHandler);
+    if (it != g_.fnHandlers.end() && it->second.owner == this) g_.fnHandlers.erase(it);
 }
 
 void Game::shutdown() {
@@ -46,8 +51,12 @@ void Game::shutdown() {
             if (ctx_.pumpMessage) ctx_.pumpMessage();
     }
     setEventProc(nullptr);
-    if (auto* bar = scene_.inventory()) bar->setUseHandler(0);  // 0x0043FA60(0)
-    // +0x74 (Leiste): 0x00442280, 0x00441E60(0, 0); +0x60…+0x6C Ton – folgen mit dem Ton
+    if (auto* bar = scene_.inventory()) {
+        bar->setUseHandler(0);     // 0x0043FA60(0)
+        bar->clearItemEvents();    // 0x00442280
+        bar->setDescribe(0, nullptr);  // 0x00441E60(0, 0)
+    }
+    // +0x60…+0x6C Ton – folgen mit dem Ton
     stopSpeech();
     if (ctx_.help) ctx_.help->iconOff();  // 0x004414B0
     scene_.reset();
@@ -58,7 +67,11 @@ void Game::setEventProc(Handler h) {
     g_.prevEventProc = g_.eventProc;  // SetGlobalEventProc 0x0043F1C0
     if (h) g_.eventProc = [this, h](Event& e, int t) { (this->*h)(e, t); };
     else g_.eventProc = nullptr;
-    // 0x00441E60(leiste, proc, this): Beschreibung über CGame_DescribeItem – folgt mit dem Inventar
+    // 0x00441E60(leiste, proc, this): Benutzen-Handler = Ereignisprozedur, Beschreibung über
+    // CGame_DescribeItem. Gegenstände mit Inventory_SetEvent rufen so die Prozedur mit
+    // Parameter = Ereignis-ID auf, alle anderen werden beschrieben.
+    if (auto* bar = scene_.inventory())
+        bar->setDescribe(h ? kEventProcHandler : 0, [this](int id) { describeItem(id); });
 }
 
 void Game::getViewObjects() {

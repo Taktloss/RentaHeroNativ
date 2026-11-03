@@ -7,14 +7,16 @@ beliebige Flags im Zustandsblock. Mit `rentahero --play --auto-load --save-dir <
 startet der Port dann genau dort (Datei als SaveGameExit.rah ablegen).
 
   python3 -I tools/save_patch.py <quelle.rah> <ziel.rah> <loc> <szene> <herkunft-loc>
-      <herkunft-szene> <x> <y> <richtung> [OFFSET=WERT ...]
+      <herkunft-szene> <x> <y> <richtung> [OFFSET=WERT ...] [+ID ...] [-ID ...]
 
 OFFSET ist hexadezimal wie in formats/gamestate.md (z. B. 3F28=1, 401C=-1).
++ID / -ID (dezimal, 0–99) legt Gegenstand ID ins Inventar bzw. nimmt ihn heraus.
 """
 import struct
 import sys
 
 HEAD = 4 + 30            # Version, Name
+INV = HEAD + 7 * 4       # 100 × u32 Inventar
 STATE = HEAD + 7 * 4 + 100 * 4 + 4  # Kopf, Inventar, Blockgröße → Zustandsblock
 
 
@@ -28,6 +30,12 @@ def main(argv):
         sys.exit('Quelle ist kein Spielstand')
     struct.pack_into('<7i', b, HEAD, ploc, pscene, loc, scene, x, y, d)
     for kv in argv[9:]:
+        if kv[0] in '+-' and '=' not in kv:
+            item = int(kv[1:])
+            if not 0 <= item < 100:
+                sys.exit(f'ungültiger Gegenstand {kv}')
+            struct.pack_into('<I', b, INV + 4 * item, 1 if kv[0] == '+' else 0)
+            continue
         k, v = kv.split('=')
         off = int(k, 16)
         if off % 4 or STATE + off + 4 > len(b):

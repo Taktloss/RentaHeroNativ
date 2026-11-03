@@ -201,6 +201,9 @@ private:
     bool shutDown_ = false;
 
 public:
+    // Port: Handler-Wert für „Ereignisprozedur des Schauplatzes“ (im Original deren Adresse,
+    // von CGame_SetEventProc 0x0043FA30 als Benutzen-Handler an die Leiste gegeben)
+    static constexpr int kEventProcHandler = 0x0043FA30;
     static constexpr std::array<int, 5> kWaitDone = {0x0043F910, 0x0043F940, 0x0043F970, 0x0043F9B0, 0x0043F9E0};
     const std::array<int, 5>& waitSlots() const { return waits_; }
 };

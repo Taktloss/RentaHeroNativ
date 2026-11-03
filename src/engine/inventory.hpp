@@ -55,6 +55,9 @@ public:
     void clear();
     // orig: Rent-A-Hero.exe 0x00442240 Inventory_SetEvent(id, ev)
     void setItemEvent(int id, int ev);
+    // orig: Rent-A-Hero.exe 0x00442280 – alle Gegenstand-Ereignisse und den Benutzen-Handler
+    // löschen (CGame_dtor beim Schauplatzwechsel)
+    void clearItemEvents();
     // orig: Rent-A-Hero.exe 0x00441DB0 – Ereignis „benutzt“ (+0x424) mit Handler h
     void setUseHandler(int h);
     // orig: Rent-A-Hero.exe 0x00441E60(h, game) – game wird hier zum Aufruf von CGame_DescribeItem

@@ -147,6 +147,13 @@ void InventoryBar::setItemEvent(int id, int ev) {
     setUseHandler(useHandler_);
 }
 
+void InventoryBar::clearItemEvents() {
+    for (Entry& e : entries_) e.eventId = 0;  // +0x10 je Eintrag
+    itemEvents_ = false;                      // +0x418
+    useHandler_ = 0;                          // +0x41C
+    describe_ = nullptr;                      // +0x420
+}
+
 void InventoryBar::setUseHandler(int h) {
     if (!useEvent_) useEvent_ = std::make_unique<Event>();
     useEvent_->setHandler(h);

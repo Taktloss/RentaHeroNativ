@@ -54,6 +54,13 @@ sonst 640).
 - `0x00441DB0(h)`: Ereignis `+0x424` anlegen, Handler `h`; `h ≠ 0`: aktivieren und bei
   `h ≠ +0x41C` → `+0x418 = 0`.
 - `0x00441E60(h, game)`: `+0x41C = h`, `+0x420 = game`, `+0x418 = (h ≠ 0)`.
+- `0x00442280`: alle 50 Ereignis-IDs `+0x10 = 0`, `+0x418 = +0x41C = +0x420 = 0`.
+- Verdrahtung: `CGame_SetEventProc` (`0x0043FA30`) ruft `0x00441E60(proc, this)` – der
+  Benutzen-Handler ist die Ereignisprozedur des Schauplatzes. Ein Gegenstand mit
+  `Inventory_SetEvent(id, ev)` ruft beim Anklicken `proc` mit Parameter = Typ = `ev`; ohne
+  eigenes Ereignis folgt `CGame_DescribeItem`. `CGame_dtor` (`0x0043F580`): `0x0043FA60(0)`,
+  `0x00442280`, `0x00441E60(0, 0)` – Gegenstand-Ereignisse gelten nur im aktuellen Schauplatz.
+  Port: Handler-Wert `Game::kEventProcHandler` (Pseudo-Adresse `0x0043FA30`) in `fnHandlers`.
 
 ## Leiste leeren `0x00441F60`
 `Blt` mit `DDBLT_COLORFILL` (Farbe 0) des Bereichsrechtecks `+0x428` (0, 360, 640, 420) auf
