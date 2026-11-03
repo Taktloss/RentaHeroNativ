@@ -10,6 +10,7 @@
 #include "game/loc02.hpp"
 #include "game/loc03.hpp"
 #include "game/loc10.hpp"
+#include "game/loc08.hpp"
 #include "game/loc12.hpp"
 #include "game/loc15.hpp"
 #include "game/loc31.hpp"
@@ -460,6 +461,12 @@ TEST(loc12_scene_number_is_fixed_to_91) {
     Rig r(10);
     Loc12 a(*r.ctx, 0, 42);
     CHECK(a.location() == 12 && a.sceneNumber() == 91);
+}
+
+TEST(loc08_builds_both_scenes_without_data) {
+    Rig r(10);
+    { Loc08 a(*r.ctx, 99, 39); CHECK(a.location() == 8 && a.sceneNumber() == 99); }
+    { Loc08 a(*r.ctx, 100, 103); CHECK(a.sceneNumber() == 100); }
 }
 
 TEST(loc15_scene_variants_set_night_and_pirate) {
