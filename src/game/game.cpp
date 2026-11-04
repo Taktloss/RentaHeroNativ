@@ -169,7 +169,7 @@ void Game::delay(std::uint32_t ms) {
 
 void Game::walkAndComment(int x, int y, int dir, std::string_view key) {
     const int cb = beginWait();
-    if (hero_) hero_->walkTo(x, y, cb, dir);  // UNVERIFIED: Original ohne Prüfung auf Held
+    if (hero_) hero_->walkTo(x, y, cb, dir);  // Port-Schutz: Original ohne Prüfung; nur Schauplätze mit Held rufen das
     if (wait()) comment(key);
 }
 

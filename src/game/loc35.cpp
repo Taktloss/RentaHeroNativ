@@ -13,7 +13,8 @@ constexpr int kItem = 27;
 }  // namespace
 
 AnimLayer* Loc35::obj(std::string_view name) {
-    // UNVERIFIED: das Original prüft weder auf fehlende noch auf statische Ebenen
+    // Original prüft weder auf fehlende noch auf statische Ebenen; alle Namen vorhanden und
+    // animiert (A16/AVI, tools/name_check.py) – die Prüfungen sind reiner Port-Schutz
     return dynamic_cast<AnimLayer*>(scene_.getObject(name));
 }
 

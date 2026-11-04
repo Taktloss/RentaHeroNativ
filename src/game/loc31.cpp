@@ -20,7 +20,8 @@ Loc31::Loc31(GameContext& ctx, int scene, int prevScene) : Game(ctx, 31, 113, pr
     to37_ = loadAnim("S113_To37");
     to57_ = loadAnim("S113_To57");
     to8_ = loadAnim("S113_To8");
-    // UNVERIFIED: das Original prüft weder auf fehlende noch auf statische Ebenen
+    // Original prüft weder auf fehlende noch auf statische Ebenen; alle Namen vorhanden und
+    // animiert (A16/AVI, tools/name_check.py) – die Prüfungen sind reiner Port-Schutz
     backLoop_ = dynamic_cast<AnimLayer*>(scene_.getObject("S113_BackLoop"));
     areaTo8_ = scene_.getArea("S113_To8");
     areaTo37_ = scene_.getArea("S113_To37");

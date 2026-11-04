@@ -17,7 +17,8 @@ Loc37::Loc37(GameContext& ctx, int scene, int prevScene) : Game(ctx, 37, scene, 
     getViewObjects();
     scene_.load("S3", 0xFFFF);  // CSzene_LoadAll(DAT_00476274)
     getViewObjects();
-    // UNVERIFIED: das Original prüft weder auf fehlende noch auf statische Ebenen
+    // Original prüft weder auf fehlende noch auf statische Ebenen; alle Namen vorhanden und
+    // animiert (A16/AVI, tools/name_check.py) – die Prüfungen sind reiner Port-Schutz
     landing_ = dynamic_cast<AnimLayer*>(scene_.getObject("S3_Landen"));
     pointing_ = dynamic_cast<AnimLayer*>(scene_.getObject("S3_Zeigen"));
     glider_ = scene_.getObject("S3_Gleiter");

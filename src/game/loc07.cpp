@@ -84,7 +84,8 @@ bool Loc07::moveWait(Layer* l, double x, double y, int steps) {
 }
 
 void Loc07::startBack(const char* name) {
-    // UNVERIFIED: das Original ruft CAnimLayer_Start ohne Nullprüfung (Szene 49 nutzt „48_BackAnim“)
+    // Original ruft CAnimLayer_Start ohne Nullprüfung (Szene 49 nutzt „48_BackAnim“); alle Namen
+    // vorhanden (tools/name_check.py)
     if (AnimLayer* a = obj(name)) a->start(0x0D);
 }
 

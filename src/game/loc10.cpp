@@ -204,11 +204,11 @@ bool Loc10::playWait(AnimLayer* a, unsigned mode, int from, int to) {
 }
 
 void Loc10::setLayerEvent(Layer* l, int ev) {
-    if (l && l->area) l->area->setEvent(ev);  // UNVERIFIED: Original ohne Prüfung
+    if (l && l->area) l->area->setEvent(ev);  // Port-Schutz, Original ohne Prüfung; alle Namen in den Daten vorhanden (tools/name_check.py)
 }
 
 void Loc10::setAreaEvent(const char* name, int ev) {
-    if (Area* a = scene_.getArea(name)) a->setEvent(ev);  // UNVERIFIED: Original ohne Prüfung
+    if (Area* a = scene_.getArea(name)) a->setEvent(ev);  // Port-Schutz, Original ohne Prüfung; alle Namen in den Daten vorhanden (tools/name_check.py)
 }
 
 void Loc10::start() {

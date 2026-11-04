@@ -140,7 +140,7 @@ void Loc16::exchangeN(int n) {
 
 void Loc16::pose(int mode, int arg) {
     AnimLayer* L = dragon_;
-    if (!L) return;  // UNVERIFIED: Original ohne Prüfung
+    if (!L) return;  // Port-Schutz, Original ohne Prüfung; alle Namen in den Daten vorhanden (tools/name_check.py)
     if (mode == 5) {
         if (L->running) {  // +0x1A8
             setTimerHandler(*poseTimer_, static_cast<std::uint32_t>(random(30, 60) * 100), 0, kPoseEvent);

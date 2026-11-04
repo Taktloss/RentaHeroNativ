@@ -182,7 +182,7 @@ void Loc01::start() {
     if (auto* bg = scene_.background()) bg->enable();
     if (hero_) hero_->show(scene_.clicksEnabled);
     const auto areaEvent = [this](const char* name, int ev) {
-        // UNVERIFIED: das Original prüft nicht auf fehlende Bereiche
+        // Original prüft nicht auf fehlende Bereiche; alle Namen vorhanden (tools/name_check.py)
         if (Area* a = scene_.getArea(name)) a->setEvent(ev);
     };
     int walkX = 0, walkY = 0;  // LAB_0040656A: CActor_WalkToClick

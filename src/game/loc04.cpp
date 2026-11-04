@@ -146,7 +146,7 @@ void Loc04::start() {
                                             {cabinet_, 5}, {door_, 6},    {barrel_, 11},  {news_, 12},
                                             {drawer2_, 13}, {drawer3_, 14}, {drawer4_, 15}};
     for (const auto& [a, ev] : events)
-        if (a) a->setEvent(ev);  // UNVERIFIED: Original ohne Prüfung
+        if (a) a->setEvent(ev);  // Port-Schutz, Original ohne Prüfung; alle Namen in den Daten vorhanden (tools/name_check.py)
     for (const auto& [a, ev] : {std::pair<Area*, int>{doorRamil_, 7}, {newsRamil_, 8}, {barrelRamil_, 9}}) {
         if (!a) continue;
         a->setEvent(ev);

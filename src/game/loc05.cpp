@@ -104,7 +104,7 @@ void Loc05::start() {
         {"S10_Kitchen", 5},     {"S10_Loui", 6},          {"S10_Truhe", 7},    {"S10_KastenLinks", 10},
         {"S10_KastenRechts", 11}, {"S10_Ofen", 9},        {"S10_Krug", 8}};
     for (const auto& [name, ev] : areas)
-        if (Area* a = scene_.getArea(name)) a->setEvent(ev);  // UNVERIFIED: Original ohne Prüfung
+        if (Area* a = scene_.getArea(name)) a->setEvent(ev);  // Port-Schutz, Original ohne Prüfung; alle Namen in den Daten vorhanden (tools/name_check.py)
     scene_.enableInput();
 }
 
@@ -141,7 +141,7 @@ void Loc05::walkExchange(std::string_view rod, std::string_view lou) {
 
 void Loc05::pose(int mode, int arg) {
     AnimLayer* L = louiTalk_;
-    if (!L) return;  // UNVERIFIED: Original ohne Prüfung
+    if (!L) return;  // Port-Schutz, Original ohne Prüfung; alle Namen in den Daten vorhanden (tools/name_check.py)
     int trans = 0;
     if (mode == 5) {
         if (L->running) {

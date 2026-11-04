@@ -28,7 +28,8 @@ Loc12::Loc12(GameContext& ctx, int scene, int prevScene) : Game(ctx, 12, 91, pre
     if (prevScene_ == 90) scene_.replaceBackground("S91_Back2");  // 0x0043FD90(…, 1)
     inCam_ = loadAnim("S91_RodReinCam");
     outCam_ = loadAnim("S91_RodRausCam");
-    // UNVERIFIED: das Original prüft weder auf fehlende noch auf statische Ebenen
+    // Original prüft weder auf fehlende noch auf statische Ebenen; alle Namen vorhanden und
+    // animiert (A16/AVI, tools/name_check.py) – die Prüfungen sind reiner Port-Schutz
     well_ = scene_.getObject("S91_Brunnen");
     shake1_ = obj("S91_RodRuettel1");
     shake2_ = obj("S91_RodRuettel2");

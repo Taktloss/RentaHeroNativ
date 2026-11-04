@@ -135,7 +135,7 @@ void Loc02::start() {
     if (Layer* bg = scene_.background()) bg->enable();  // CSzene+0x5C0
     setEventProc(&Loc02::onEvent);
     const auto area = [this](const char* name, int ev) {
-        if (Area* a = scene_.getArea(name)) a->setEvent(ev);  // UNVERIFIED: Original ohne Prüfung
+        if (Area* a = scene_.getArea(name)) a->setEvent(ev);  // Port-Schutz, Original ohne Prüfung; alle Namen in den Daten vorhanden (tools/name_check.py)
     };
     switch (sceneNr_) {
     case 15:
@@ -576,7 +576,7 @@ void Loc02::tableExchange(std::string_view rod, std::string_view fre) {
 
 void Loc02::drink(int mode, int arg) {
     AnimLayer* L = freDrink_;
-    if (!L || !drinkTimer_) return;  // UNVERIFIED: Original ohne Prüfung
+    if (!L || !drinkTimer_) return;  // Port-Schutz, Original ohne Prüfung; alle Namen in den Daten vorhanden (tools/name_check.py)
     int trans = 0;
     if (mode == 5) {
         if (L->running) {

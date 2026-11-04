@@ -30,7 +30,7 @@ Loc17::Loc17(GameContext& ctx, int scene, int prevScene) : Game(ctx, 17, scene, 
         for (int i = 0; i < 7; ++i) {
             std::snprintf(name, sizeof name, "Aasfresser%d", i + 1);  // DAT_00473C90
             vultures_[i] = dynamic_cast<AnimLayer*>(scene_.getObject(name));
-            if (vultures_[i]) {  // UNVERIFIED: Original ohne Prüfung
+            if (vultures_[i]) {  // Port-Schutz, Original ohne Prüfung; alle Namen in den Daten vorhanden (tools/name_check.py)
                 homeX_[i] = static_cast<int>(vultures_[i]->x);  // __ftol
                 homeY_[i] = static_cast<int>(vultures_[i]->y);
             }
@@ -212,7 +212,8 @@ void Loc17::start60() {
             showForeground60();
             if (hero_) hero_->setPosDir(0x140, 0x14E, 7);
             walk(0x140, 0x154, 4);
-            if (smack_) smack_->play();  // UNVERIFIED: Original ohne Prüfung (nur geladen, wenn 0x3FC8 == 0)
+            if (smack_) smack_->play();  // Original ohne Prüfung; nur geladen bei 0x3FC8 == 0. Danach führt
+            // kein Weg mehr in den Schädel (Fall 53: nur 060_ROD_09), also auch keine Ankunft aus 61
             for (int i = 0; i < 7; ++i) {
                 AnimLayer* v = vultures_[i];
                 const int y = random(200, 0xE6);

@@ -113,7 +113,7 @@ void Loc03::start() {
             if (L) L->enable();
         const std::pair<Layer*, int> ev[] = {{sabSword_, 6}, {sabGlider_, 7}, {rab1Talk_, 8}, {rab2_, 9}};
         for (const auto& [L, id] : ev)
-            if (L && L->area) L->area->setEvent(id);  // UNVERIFIED: Original ohne Prüfung
+            if (L && L->area) L->area->setEvent(id);  // Port-Schutz, Original ohne Prüfung; alle Namen in den Daten vorhanden (tools/name_check.py)
         if (hero_) hero_->blockRect(kGuardBlock[0], kGuardBlock[1], kGuardBlock[2], kGuardBlock[3]);
         if (guardTimer_) setTimerHandler(*guardTimer_, static_cast<std::uint32_t>(random(4, 9) * 333), 0, 10);
     }
