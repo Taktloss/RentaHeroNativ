@@ -114,6 +114,10 @@ Siehe formats/savegame.md. Beim Start setzt WinMain Auftrag 3 (Neues Spiel → I
 `AutoLoadGame` ist ohne INI-Eintrag **1** (Vorgabe in `0x00404DB0`): „Beenden“ im Spielmenü
 speichert `SaveGameExit.rah`, der nächste Start setzt dort fort. Port: ebenso Standard;
 `--no-auto-load` schaltet es ab (= `AutoLoadGame=0`).
+**Port-Option** `--save-on-close` (Abweichung, Standard aus): Fenster schließen wirkt wie
+„Beenden“ (Auftrag 4 → `SaveGameExit.rah`, „AutoSaveGame“), wenn der Held vorhanden und aktiv ist
+und keine Wartestelle läuft (Bedingungen von `GameMenu_Open`); bei offenem Menü wird es erst
+geschlossen (40092). Sonst normales Beenden ohne Speichern.
 Beim Laden setzt `Game_SwitchLocation` die Figur auf X/Y/Richtung aus dem Spielstand
 (`CActor_SetPos` `0x00434AB0`, Disassembly `0x0040415D`) und `CGame+0x04 = 1`.
 

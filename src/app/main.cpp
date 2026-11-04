@@ -69,6 +69,9 @@ struct Options {
     // rah.ini [MODES] AutoLoadGame: SaveGameExit.rah beim Start laden; Vorgabe 1 wie im Original
     // (GetPrivateProfileIntA-Default in 0x00404DB0)
     bool autoLoad = true;
+    // Port-Option (Abweichung, Standard aus): Fenster schließen speichert wie „Beenden“ im
+    // Spielmenü nach SaveGameExit.rah (Auftrag 4), wenn Speichern gerade möglich ist
+    bool saveOnClose = false;
     std::string saveDir;              // Spielstandordner (Standard: Benutzer-Datenordner; MENU.md)
     std::vector<int> keysAt;          // Prüfläufe: Esc in Bild n (Paare Bild, VK)
 };
@@ -83,7 +86,7 @@ void usage() {
                  "          [--game <Schauplatz> <Szene> [<Herkunftsszene>] (Intro: --game 40 114)] [--subtitles]\n"
                  "          [--mute] [--music-vol <0-100>] [--sfx-vol <0-100>] [--speech-vol <0-100>]\n"
                  "          [--audio3d] [--audio-dump <datei.wav>]\n"
-                 "          [--play] [--auto-load|--no-auto-load] [--save-dir <Ordner>] [--key-at <bild> <vk>]\n");
+                 "          [--play] [--auto-load|--no-auto-load] [--save-on-close] [--save-dir <Ordner>] [--key-at <bild> <vk>]\n");
 }
 
 bool parse(int argc, char** argv, Options& o) {
@@ -117,6 +120,10 @@ bool parse(int argc, char** argv, Options& o) {
         }
         if (a == "--auto-load") {
             o.autoLoad = true;
+            continue;
+        }
+        if (a == "--save-on-close") {
+            o.saveOnClose = true;
             continue;
         }
         if (a == "--no-auto-load") {  // entspricht AutoLoadGame=0
@@ -619,6 +626,24 @@ int main(int argc, char** argv) {
         }
         SDL_Event ev;
         if (!SDL_PollEvent(&ev)) return GameContext::kNoMessage;
+        if (ev.type == SDL_EVENT_QUIT && game && opt.saveOnClose && ctx.save.request == 0) {
+            // Port-Option --save-on-close: wie GameMenu „Beenden“ (Auftrag 4, Save_Process am Ende
+            // von Game_Idle). Nur außerhalb von Wartestellen (wie GameMenu_Open, Tiefe 0) und mit
+            // aktivem Held (0x0047D694); sonst normales Beenden.
+            const bool inWait = g.idleDepth > 0;
+            if (g.gameMenuOpen) {
+                // Menü offen: canSave stammt von GameMenu_Open; Menü schließen wie dessen „Beenden“
+                ctx.save.request = 4;
+                commands.push_back(40092);
+                return GameContext::kNoMessage;
+            }
+            Actor* h = ctx.current ? ctx.current->hero() : nullptr;
+            if (!inWait && h && h->active) {
+                ctx.save.canSave = true;
+                ctx.save.request = 4;
+                return GameContext::kNoMessage;
+            }
+        }
         if (ev.type == SDL_EVENT_QUIT || (!game && ev.type == SDL_EVENT_KEY_DOWN && ev.key.key == SDLK_ESCAPE)) {
             quit = true;
             return GameContext::kQuit;

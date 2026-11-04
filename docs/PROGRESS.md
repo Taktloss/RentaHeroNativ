@@ -368,4 +368,7 @@
   `0x00404DB0`): Beenden über das Spielmenü speichert `SaveGameExit.rah`, der nächste Start
   setzt dort fort; `--no-auto-load` schaltet ab. Spielmenü im Gleiter-Abschnitt per Esc
   erreichbar, sobald die Eingabe frei ist (vorher wie im Original gesperrt).
+- 2026-11-04: Port-Option `--save-on-close` (Standard aus): Fenster schließen speichert wie
+  „Beenden“ nach `SaveGameExit.rah`. Geprüft per SIGINT: ohne Option unverändert, mit Option
+  geschrieben und beim nächsten Start geladen.
 - Nächste Schritte: Menü im Fenster prüfen (Regler ziehen, Namenseingabe); noch nicht portierte Schauplätze: keine.
