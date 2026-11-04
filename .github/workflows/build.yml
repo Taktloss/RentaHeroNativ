@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 # Automatischer Bau: Linux-AppImage und Windows-Paket, Tests unter Linux und echtem Windows,
-# bei Tags v* ein Release-Entwurf. Ohne Originaldaten (docs/CI.md).
+# bei Tags v* ein Release. Ohne Originaldaten (docs/CI.md).
 name: build
 
 on:
@@ -151,10 +151,18 @@ jobs:
           pattern: rentahero-{linux-appimage,win64}
           path: out
           merge-multiple: true
-      - name: Release-Entwurf anlegen
+      - name: Release anlegen
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           ls -l out
-          gh release create "$GITHUB_REF_NAME" out/* --repo "$GITHUB_REPOSITORY" --draft \
-            --title "Rent-A-Hero (Port) $GITHUB_REF_NAME" --generate-notes
+          # v0.x und Tags mit Bindestrich (v1.0-rc1) als Vorabversion
+          pre=; case $GITHUB_REF_NAME in v0.*|*-*) pre=--prerelease ;; esac
+          gh release create "$GITHUB_REF_NAME" out/* --repo "$GITHUB_REPOSITORY" $pre \
+            --title "Rent-A-Hero (Port) $GITHUB_REF_NAME" --generate-notes \
+            --notes-file - <<'EOT'
+          Source Port von „Rent-A-Hero“ (neo Software, 1999). **Die Originaldaten (CDs) sind nicht
+          enthalten** und werden im Startmenü gewählt.
+          - Linux: `RentAHero-*-x86_64.AppImage` (glibc ≥ 2.35), ausführbar machen und starten.
+          - Windows 10/11: `rentahero-win64-*.zip` entpacken, `rentahero.exe` starten.
+          EOT
