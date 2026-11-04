@@ -43,8 +43,10 @@ bool TccSprite::draw(Surface565& s, const TccPlanes& planes, Rect rect, int flag
     if (!(rect.top == 360 && rect.bottom == 420) && !clipToScene(rect)) return true;
     const Rect visible = rect;  // +0x20
     if (flag == 0) s.fill(rect.left, rect.top, rect.right, rect.bottom, 0);
-    // Lock(rect) – UNVERIFIED: DirectDraw lehnt Rechtecke außerhalb der Oberfläche ab
-    if (rect.left < 0 || rect.top < 0 || rect.right > s.width || rect.bottom > s.height) return false;
+    // Lock(rect): außerhalb oder umgedreht → DDERR_INVALIDPARAMS, leer erlaubt (Wine-Messung, WINEPROBE.md)
+    if (rect.left < 0 || rect.top < 0 || rect.right > s.width || rect.bottom > s.height ||
+        rect.right < rect.left || rect.bottom < rect.top)
+        return false;
 
     // orig: 0x0043B9ED–0x0043BA1C – Z wird vorzeichenlos gegen 255.0 verglichen
     if (!planes.hasAlpha() || flag == 0 || static_cast<unsigned>(z) >= 255u) {

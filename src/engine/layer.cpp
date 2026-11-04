@@ -256,12 +256,16 @@ bool Layer::draw(Surface565& s, int flag, const Rect& src, const ZMap* zmap) {
         // DirectDraw-Oberfläche der Ebene (fehlt sie: 0x00446C90)
         if (!hasSurface && !renderToSurface()) return false;
         if (zoom != 100.0) {
-            return false;  // UNVERIFIED: gestrecktes Blt (Verfahren des Treibers) noch nicht nachgebildet
+            // Gestrecktes Blt nicht nachgebildet – unerreichbar: Zoom ≠ 100 haben in den Daten nur TCC mit
+            // Alpha (eigener Blitter) und A16; BMP/AVI immer 100 (WINEPROBE.md). Wine streckt
+            // nächster-Nachbar mit (x · ((s << 16) / d)) >> 16.
+            return false;
         }
         // BltFast(r.left + src.left, r.top + src.top, src), mit Farbschlüssel bei flag != 0.
-        // UNVERIFIED: BltFast ohne Clipper lehnt Ziele außerhalb der Oberfläche ab.
+        // BltFast ohne Clipper: Quelle oder Ziel nur teilweise außerhalb, leere Quelle → DDERR_INVALIDRECT,
+        // nichts gezeichnet (Wine-Messung tools/wineprobe, WINEPROBE.md)
         const int dx = r.left + src.left, dy = r.top + src.top;
-        if (src.left < 0 || src.top < 0 || src.right > width || src.bottom > height || dx < 0 || dy < 0 ||
+        if (src.width() <= 0 || src.height() <= 0 || src.left < 0 || src.top < 0 || src.right > width || src.bottom > height || dx < 0 || dy < 0 ||
             dx + src.width() > s.width || dy + src.height() > s.height) {
             return false;  // dirty bleibt gesetzt
         }

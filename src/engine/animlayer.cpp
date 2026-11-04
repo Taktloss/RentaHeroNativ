@@ -88,8 +88,8 @@ bool AnimLayer::renderToSurface() {
     if (alpha && kind != LayerKind::Bmp) return true;  // A16/TCC; AVI vor dem ersten Zeichnen
     if (active) dirty = true;
     if (!hasSurface) {
-        // Neue Oberfläche, Farbschlüssel = colorKey. UNVERIFIED: Inhalt einer neuen DirectDraw-
-        // Oberfläche (hier: unverändert vom letzten Bild bzw. schwarz)
+        // Neue Oberfläche, Farbschlüssel = colorKey. Inhalt neuer Oberflächen unter Wine 0 (WINEPROBE.md);
+        // unsichtbar, da avi->draw sofort das volle Bildrechteck schreibt
         hasSurface = true;
     }
     if (!avi) return true;

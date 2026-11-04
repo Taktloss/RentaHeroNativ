@@ -17,7 +17,8 @@ struct Image565 {
 
 // orig: Rent-A-Hero.exe 0x004382C0 CImageBmp_Load (LoadImageA) und 0x00438330 (Übertragen in
 // die 16-Bit-Oberfläche per GDI).
-// UNVERIFIED: GDI wandelt 24 → 16 Bit durch Abschneiden (wie pack565), ohne Dithering.
+// GDI-BitBlt (DDCopyBitmap 0x0043D130) wandelt 24 → 16 Bit durch Abschneiden (wie pack565), ohne
+// Dithering – Wine-Messung: 1024/1024 Werte abgeschnitten, einfarbige Fläche gleichmäßig (WINEPROBE.md).
 bool loadBmp565(std::span<const std::uint8_t> file, Image565& out, std::string* error);
 
 }  // namespace rah

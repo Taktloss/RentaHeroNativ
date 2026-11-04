@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Blitter-Kerne für TCC-Bilder auf RGB565 (Formeln und Eigenheiten: docs/RENDERER.md,
 // docs/COMPOSITOR.md). Ziel wird wie im Original linear adressiert (Startpixel + Zeile · Pitch);
-// UNVERIFIED: Pitch der DirectDraw-Oberfläche = Breite · 2 Bytes. Schreibzugriffe außerhalb des
+// Pitch = Breite · 2 Bytes. Das Original rechnet mit lPitch aus Lock (0x004399E0: DDSURFACEDESC+0x10),
+// Wine richtet auf 8 Bytes aus (WINEPROBE.md) – für den Port gleichwertig. Schreibzugriffe außerhalb des
 // Puffers werden verworfen.
 #pragma once
 

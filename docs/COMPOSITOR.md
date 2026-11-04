@@ -81,9 +81,10 @@ Dann `left/right += ftol(X)`, `top/bottom += ftol(Y)` (Abschneiden Richtung 0).
    - Zoom = 100: `BltFast(r.left + src.left, r.top + src.top, src)` mit
      `DDBLTFAST_WAIT | (flag ? SRCCOLORKEY : 0)`.
    - sonst `Blt(r, src)` gestreckt, `DDBLT_WAIT | (flag ? KEYSRC : 0)`.
-   Schlägt der Blit fehl → Rückgabe 0, **dirty bleibt gesetzt**. UNVERIFIED: `BltFast`
-   ohne Clipper lehnt Ziele außerhalb der Oberfläche ab (DDERR_INVALIDRECT) – Ebene
-   wird dann nicht gezeichnet; Streckverfahren von `Blt`.
+   Schlägt der Blit fehl → Rückgabe 0, **dirty bleibt gesetzt**. `BltFast` ohne Clipper
+   lehnt Ziele oder Quellen teilweise außerhalb sowie leere Quellen ab (DDERR_INVALIDRECT,
+   unter Wine gemessen, WINEPROBE.md). Die Ebene wird dann nicht gezeichnet. Gestrecktes `Blt` ist
+   im Spiel unerreichbar (WINEPROBE.md).
 8. Mit Alpha (TCC/A16): `image->Draw(surface, &r, flag, ZBuffered ? zmap : 0, ftol(Z),
    ftol(Zoom))` (`0x004472DA`–`0x0044730C`).
 9. dirty (`+0x1A0`) = 0, Rückgabe 1.
