@@ -1,0 +1,13 @@
+libretro glsl-shaders, unverändert (Auswahl für den Bildfilter, docs/FILTERS.md)
+Quelle: https://github.com/libretro/glsl-shaders, Commit 1aaabbebdd88a8a89a82edfdc94e10580c99ffdd (2026-11-02)
+Lizenzen stehen in den Kopfzeilen der Dateien:
+- interpolation/sharp-bilinear-simple: Public Domain
+- fsr (AMD FidelityFX FSR 1, Shadertoy-Port): MIT
+- xbr/xbr-lv2 (Hyllian): MIT
+- xbrz/xbrz-freescale (Hyllian; enthält xBRZ von Zenju): MIT + GPL-3.0 (HqMAME)
+- hqx (Maxim Stepin, Cameron Zemek, Jules Blok): LGPL-2.1-or-later, inkl. resources/*.png
+- scalefx (Sp00kyFox): MIT
+- crt/crt-lottes (Timothy Lottes): Public Domain
+- crt/crt-geom (cgwg, Themaister, DOLLS): GPL-2.0-or-later
+- misc/deband: GPL-2.0-or-later
+Alle mit GPL-3.0-or-later vereinbar; das Programm als Ganzes steht unter GPL-3.0.
