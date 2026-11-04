@@ -97,7 +97,8 @@ void AudioManager::fadeTick() {
                 // (***this)(1): Puffer löscht sich selbst
                 auto it = std::find_if(adopted_.begin(), adopted_.end(), [b](const auto& p) { return p.get() == b; });
                 if (it != adopted_.end()) adopted_.erase(it);
-                // UNVERIFIED: nicht übernommene Puffer mit +0x12C kommen im Spielcode nicht vor
+                // +0x12C = 1 setzt nur 0x00438014, einziger Aufrufer CGame_PlayMusic (0x0044010C) für
+                // die laufende Musik – die der Port vorher übernimmt (game.cpp playMusic)
             }
         }
     }

@@ -375,4 +375,21 @@
   `SETUP/DATA1.CAB` entpackt (libunshield, `src/vfs/install.cpp`), auch direkt aus den
   BIN/CUE-Images; Abgleich mit `install.sha256` gleich. README auf `--play` ohne `--common`
   umgestellt. 150 Tests.
-- Nächste Schritte: Menü im Fenster prüfen (Regler ziehen, Namenseingabe); noch nicht portierte Schauplätze: keine.
+- 2026-11-04: UNVERIFIED-Abbau (von ~100 auf 35):
+  - Flag-Bedeutungen über alle Schauplätze belegt (`re/scripts/ScalarUses.java`,
+    `tools/flag_xref.py`), Namen vereinheitlicht.
+  - Datenscan `tools/data_scan.py`: Z, fps, Filename, Hex, Richtungen 0…7, alle 67
+    Figurendateien da, jede Szene mit Figur hat eine Wegkarte.
+  - `tools/name_check.py`: alle Objekt-, Bereichs-, Ton-, Animations- und Musiknamen gegen die
+    Daten geprüft. **Port-Fehler behoben:** Loc14 lud `…ShortClang_wav` statt `.wav`, der Ton
+    fehlte. `Sfx_Drip` (Loc21) fehlt auch im Original.
+  - Am Binary: `CLayer` setX vergleicht als Gleitkommazahl (0x00446F10, **Port korrigiert**),
+    `CEvent_dtor` 0x0043F160, `CSzene_CreateBackground` löscht den alten Hintergrund,
+    `SetModal(0)` ohne Prüfung, Inventar-Farbschlüssel 0, Inventar +0x420, Musik +0x12C.
+  - Wegsucher gemessen (`rah_pathstat`): Der Pool läuft nie voll, aber der
+    Wegpunkt-Überlauf (Heap-Beschädigung im Original) ist in S61/S57 erreichbar. Der Port hängt
+    an (PATHFINDING.md).
+  - Rest (35): fast nur DirectDraw-, GDI- und EAX-Feinheiten (Gruppe C, Messung unter Wine
+    nötig), dazu Speicherzugriffe außerhalb von Puffern, die das Original undefiniert lässt.
+- Nächste Schritte: Menü im Fenster prüfen (Regler ziehen, Namenseingabe); Gruppe C per
+  Wine-Messprogramm; Windows-Build (Weg mit Nutzer klären); Durchspielen der ungeprüften Wege.
