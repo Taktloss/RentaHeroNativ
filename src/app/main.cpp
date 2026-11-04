@@ -66,7 +66,9 @@ struct Options {
     int musicVol = 100, sfxVol = 100, speechVol = 100;  // rah.ini [SOUNDS]
     std::string audioDump;            // Mischer-Ausgabe als WAV mitschneiden (Prüfung)
     bool play = false;                // wie das Original starten: Neues Spiel (bzw. Autoload), Menü
-    bool autoLoad = false;            // rah.ini [MODES] AutoLoadGame: SaveGameExit.rah beim Start laden
+    // rah.ini [MODES] AutoLoadGame: SaveGameExit.rah beim Start laden; Vorgabe 1 wie im Original
+    // (GetPrivateProfileIntA-Default in 0x00404DB0)
+    bool autoLoad = true;
     std::string saveDir;              // Spielstandordner (Standard: Benutzer-Datenordner; MENU.md)
     std::vector<int> keysAt;          // Prüfläufe: Esc in Bild n (Paare Bild, VK)
 };
@@ -81,7 +83,7 @@ void usage() {
                  "          [--game <Schauplatz> <Szene> [<Herkunftsszene>] (Intro: --game 40 114)] [--subtitles]\n"
                  "          [--mute] [--music-vol <0-100>] [--sfx-vol <0-100>] [--speech-vol <0-100>]\n"
                  "          [--audio3d] [--audio-dump <datei.wav>]\n"
-                 "          [--play] [--auto-load] [--save-dir <Ordner>] [--key-at <bild> <vk>]\n");
+                 "          [--play] [--auto-load|--no-auto-load] [--save-dir <Ordner>] [--key-at <bild> <vk>]\n");
 }
 
 bool parse(int argc, char** argv, Options& o) {
@@ -115,6 +117,10 @@ bool parse(int argc, char** argv, Options& o) {
         }
         if (a == "--auto-load") {
             o.autoLoad = true;
+            continue;
+        }
+        if (a == "--no-auto-load") {  // entspricht AutoLoadGame=0
+            o.autoLoad = false;
             continue;
         }
         if (!(v = val())) return false;

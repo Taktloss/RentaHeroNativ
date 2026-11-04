@@ -364,4 +364,8 @@
   Gesprächsstufen, Ramil geht, Geldsack aus der Kiste per Schreibtisch.
 - 2026-11-04: Rauchtest `tools/smoke_scenes.py`: startet jedes `changeScene`-Ziel (86) per
   `--game` mit Vorgänger 0; alle laufen ohne Absturz (Loc35 meldet sich wie im Original als 1).
+- 2026-11-04: `AutoLoadGame` jetzt standardmäßig an wie im Original (INI-Vorgabe 1 in
+  `0x00404DB0`): Beenden über das Spielmenü speichert `SaveGameExit.rah`, der nächste Start
+  setzt dort fort; `--no-auto-load` schaltet ab. Spielmenü im Gleiter-Abschnitt per Esc
+  erreichbar, sobald die Eingabe frei ist (vorher wie im Original gesperrt).
 - Nächste Schritte: Menü im Fenster prüfen (Regler ziehen, Namenseingabe); noch nicht portierte Schauplätze: keine.
