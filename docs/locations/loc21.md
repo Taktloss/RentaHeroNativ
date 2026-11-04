@@ -135,3 +135,9 @@ Erzeugt mit `tools/gen_loc_docs.py`; Bedeutung der Flags und Abläufe folgt bei 
 - Probelauf 2026-11-03: alle zehn Szenen aufgebaut; Hebel in 73 (Bohrer fährt los), Bohrhebel
   76 (Schutt 2 → 3), Zunder, Bohrhebel 79 (Schutt 2 → 3) und Weg nach 22/81.
   Offen: Weiche, Wand/Spitzhacke/Stein in 80, Kessel.
+
+## `Sfx_Drip` fehlt in den Daten (2026-11-04)
+
+Das Original lädt `Sfx_Drip` (String in der EXE), aber weder CD noch Common enthalten eine
+solche WAV-Datei (`tools/name_check.py`). Der Puffer bleibt leer, das Tropfen ist also auch
+im Original stumm. Der Port verhält sich genauso.

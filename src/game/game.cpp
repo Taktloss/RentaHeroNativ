@@ -256,7 +256,8 @@ std::unique_ptr<AudioBuffer> Game::loadSfx(std::string_view name) {
     const auto file = scene_.paths().findFile(name, "WAV");
     if (!g_.audio) return nullptr;
     auto b = std::make_unique<AudioBuffer>();
-    // UNVERIFIED: ohne Treffer öffnet das Original den zuletzt probierten Pfad – scheitert ebenso
+    // Ohne Treffer öffnet das Original den zuletzt probierten Pfad – die Datei existiert in keinem
+    // Suchordner, also scheitert das ebenso. Einziger Fall im Spiel: Sfx_Drip (tools/name_check.py)
     b->open(file ? &*file : nullptr, g_.audio, kAudioSfx);
     return b;
 }

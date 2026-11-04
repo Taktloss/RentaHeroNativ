@@ -65,7 +65,7 @@ Loc21::Loc21(GameContext& ctx, int scene, int prevScene) : Game(ctx, 21, scene, 
     door_ = loadSfx("Sfx_Door_Opened");
     wings_ = loadSfx("Sfx_DragonWings");
     explosion_ = loadSfx("Sfx_Explosion_Bass2");
-    drip_ = loadSfx("Sfx_Drip");
+    drip_ = loadSfx("Sfx_Drip");  // so im Original; Datei fehlt in den Daten → stumm (Original-Eigenheit)
     dripTimer_ = std::make_unique<Event>();
     switch (sceneNr_) {
     case 0x47:

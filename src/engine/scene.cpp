@@ -468,7 +468,8 @@ std::unique_ptr<AnimLayer> Scene::loadAnim(std::string_view name) {
     const auto file = paths_.findFile(name, "AVI");
     auto L = std::make_unique<AnimLayer>(g_);
     L->direct = true;
-    // UNVERIFIED: ohne Treffer lädt das Original den zuletzt probierten Pfad – scheitert ebenso
+    // Ohne Treffer lädt das Original den zuletzt probierten Pfad – scheitert ebenso; alle AVI-Namen
+    // des Spielcodes sind vorhanden (tools/name_check.py)
     if (!file || !L->load(*file, colorKey_, nullptr)) return nullptr;
     L->alpha = true;  // +0x198
     L->setPos(0, yOffset_);

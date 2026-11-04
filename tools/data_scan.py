@@ -43,7 +43,7 @@ def scan_characters(cd: Path, common: Path):
     have = {q.name.upper() for q in cd.joinpath("GAME").rglob("*") if q.is_file()}
     if common and common.is_dir():
         have |= {q.name.upper() for q in common.iterdir()}
-    n, miss = 0, []
+    n, miss, nopath = 0, [], []
     for p in cd.joinpath("GAME").rglob("*"):
         if p.suffix.upper() != ".SZN":
             continue
@@ -62,10 +62,41 @@ def scan_characters(cd: Path, common: Path):
             if not sec:
                 continue
             n += 1
+            bg = secs.get(secs["GENERAL"].get("background1", "").upper(), {})
+            w = bg.get("wbuf", "")
+            if not w or w.split("\\")[-1].upper() not in have:
+                nopath.append(p.name)
             fn = secs.get(sec.upper(), {}).get("filename", "")
             if fn.split("\\")[-1].upper() not in have:
                 miss.append((p.name, sec, fn))
-    print(f"Figuren: {n}, Datei fehlt: {miss or 'keine'}")
+    print(f"Figuren: {n}, Datei fehlt: {miss or 'keine'}; "
+          f"Szenen mit Figur ohne Wegkarte: {sorted(set(nopath)) or 'keine'}")
+
+
+def scan_directions(cd: Path, src: Path):
+    """Richtungswerte: SZN-Direction und feste Richtungsargumente im Spielcode (0…7?)."""
+    data = []
+    for p in cd.joinpath("GAME").rglob("*"):
+        if p.suffix.upper() == ".SZN":
+            t = p.read_bytes().decode("latin-1")
+            data += [int(v) for v in re.findall(r"^\s*Direction\s*=\s*(-?\d+)", t, re.M | re.I)]
+    bad, n = [], 0
+    idx = {"setDirection": 0, "setPosDir": 2, "walkTo": 3}
+    for p in sorted(src.glob("*.cpp")):
+        for m in re.finditer(r"\b(setDirection|setPosDir|walkTo)\(([^;]*?)\)\s*;", p.read_text()):
+            a = [x.strip() for x in re.split(r",(?![^(]*\))", m.group(2))]
+            i = idx[m.group(1)]
+            if len(a) <= i:
+                continue
+            try:
+                v = int(a[i], 0)
+            except ValueError:
+                continue  # Variable
+            n += 1
+            if not 0 <= v <= 7:
+                bad.append((p.name, m.group(0)))
+    print(f"Direction in SZN: {min(data)}…{max(data)} ({len(data)} Werte); "
+          f"feste Richtungen im Code: {n}, außerhalb 0…7: {bad or 'keine'}")
 
 
 def scan_code(src: Path):
@@ -97,4 +128,5 @@ if __name__ == "__main__":
     scan_data(cd)
     if len(sys.argv) > 2:
         scan_characters(cd, Path(sys.argv[2]))
+    scan_directions(cd, Path("src/game"))
     scan_code(Path("src/game"))

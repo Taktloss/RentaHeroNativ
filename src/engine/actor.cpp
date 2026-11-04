@@ -249,7 +249,9 @@ void Actor::faceTowards(int x0, int y0, int x1, int y1) {
 
 void Actor::setDirection(int d) {
     dir = d;
-    showFrame(standFrame[static_cast<std::size_t>(d & 7)]);  // UNVERIFIED: d außerhalb 0…7
+    // 0x00435B8A: Original indiziert +0x1A60 ungeprüft. Alle Richtungen in Daten und Code liegen in
+    // 0…7 (tools/data_scan.py); nur ein manipulierter Spielstand käme darüber – Port maskiert.
+    showFrame(standFrame[static_cast<std::size_t>(d & 7)]);
 }
 
 void Actor::turnTo(int d) {
@@ -389,7 +391,9 @@ bool Actor::walkCore(int px, int py, bool fresh) {
         clearRun();
         return true;
     };
-    if (!pathFinder) return jump();  // UNVERIFIED: Original ruft über Zeiger 0
+    // Original ruft über Zeiger 0; jede SZN mit Figur hat eine vorhandene Wegkarte (wBuf, geprüft per
+    // Datenscan) – reiner Port-Schutz
+    if (!pathFinder) return jump();
     if (targetX == 0 && targetY == 0) {
         targetX = sx;
         targetY = sy;
@@ -445,7 +449,7 @@ bool Actor::update(EngineGlobals& g) {
     }
     if (walk) {
         if (footX == targetX && footY == targetY && (targetX != 0 || targetY != 0)) {
-            if (!pathFinder || !pathFinder->next(targetX, targetY)) {  // UNVERIFIED: ohne Wegsucher
+            if (!pathFinder || !pathFinder->next(targetX, targetY)) {  // !pathFinder: Port-Schutz (s. o.)
                 targetX = 0;
                 targetY = 0;
                 arrived = true;
@@ -465,7 +469,9 @@ bool Actor::update(EngineGlobals& g) {
                     if (frame + 1 > lastFrame[d] - firstFrame[d]) n -= 12;
                 }
             }
-            const auto ni = static_cast<std::size_t>(n < 0 ? 0 : (n > 95 ? 95 : n));  // UNVERIFIED: Grenzen
+            // Feste Tabellen (Z. 26/27): n liegt immer in firstFrame[d] … lastFrame[d] ⊂ 0…95 (frame ≤ 10:
+            // ≤ last; 11…13: −12 → ≤ first+2; sonst first/first+1) – die Begrenzung greift nie
+            const auto ni = static_cast<std::size_t>(n < 0 ? 0 : (n > 95 ? 95 : n));
             const double sx = stepX[ni] * zoom * 0.01;
             const double sy = perCor != 100 ? static_cast<double>(stepY[ni] * perCor) * 0.01 * zoom * 0.01
                                             : stepY[ni] * zoom * 0.01;

@@ -43,7 +43,7 @@ Loc14::Loc14(GameContext& ctx, int scene, int prevScene) : Game(ctx, 14, scene, 
         bed_ = loadAnim("S90_Bett");
         woosh_ = loadSfx("Sfx_Woosh");
         hack_ = loadSfx("Sfx_Work_Hack");
-        clang_ = loadSfx("Sfx_ServoMotor_ShortClang_wav");
+        clang_ = loadSfx("Sfx_ServoMotor_ShortClang.wav");  // so im Original (mit Endung, makeFileName lässt sie)
         if (bed_) {  // Port: Original prüft nicht
             AnimCue c;
             c.type = 1;

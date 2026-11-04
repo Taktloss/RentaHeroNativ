@@ -79,6 +79,21 @@ def main():
         else:
             print(f"{f.name}: {len(names)} Namen, alle vorhanden")
     print(f"{missing_total} Namen fehlen ganz")
+    # Töne/Animationen/Musik: Dateiname (mit Endung wie makeFileName) in CD oder Common
+    have = {}
+    for q in list(cd.rglob("*")) + (list(common.iterdir()) if common and common.is_dir() else []):
+        if q.is_file():
+            have.setdefault(q.stem.upper(), set()).add(q.suffix.upper())
+    ext = {"loadSfx": ".WAV", "loadSfxVol": ".WAV", "loadAnim": ".AVI", "playMusic": None}
+    n, miss = 0, []
+    for f in sorted(Path("src/game").glob("*.cpp")):
+        for fn, name in re.findall(r'\b(loadSfx|loadSfxVol|loadAnim|playMusic)\(\s*"([^"]+)"', f.read_text()):
+            n += 1
+            stem, e = (name[:-4], {name[-4:].upper()}) if len(name) > 4 and name[-4] == "." else (name, None)
+            got = have.get(stem.upper())
+            if not got or (e and not (e & got)) or (not e and ext[fn] and ext[fn] not in got):
+                miss.append(f"{f.name}:{name}")
+    print(f"Ton/Animation/Musik: {n} Aufrufe, Datei fehlt: {', '.join(miss) or 'keine'}")
 
 
 if __name__ == "__main__":

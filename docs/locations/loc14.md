@@ -53,3 +53,10 @@ Erzeugt mit `tools/gen_loc_docs.py`; Bedeutung der Flags und Abläufe folgt bei 
   `Loc14_LoveIsBreakingTheNight`, Vollbild `S90_Bett`); Kamin; Cynthia-Gesprächsstufen;
   Ausgang → 12/91 (Cynthia spricht ohne Warten weiter).
 - Probelauf 2026-11-03: Aufwachen aus 89, Klappbett, Ausgang nach 12/91.
+
+## Tonname `Sfx_ServoMotor_ShortClang.wav` (2026-11-04)
+
+Das Original lädt diesen Ton mit Endung (String in der EXE). `CSzene_FindFile` hängt bei einer
+vorhandenen vierstelligen Endung nichts an, die Datei `GAME/COMMONCD/SFX_SERVOMOTOR_SHORTCLANG.WAV`
+wird also gefunden. Im Port stand vorher `_wav` statt `.wav`, der Ton fehlte dadurch.
+Gefunden mit `tools/name_check.py`.

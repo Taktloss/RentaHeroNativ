@@ -27,7 +27,8 @@ void HelpOverlay::setup(Scene* scene, std::function<void()> showHint, bool newRe
 }
 
 std::unique_ptr<Layer> HelpOverlay::loadLayer(const std::optional<FoundFile>& file, int x, int y) {
-    if (!file) return nullptr;  // UNVERIFIED: CSzene_FindPath ohne Treffer – Laden scheitert dann
+    if (!file) return nullptr;  // CSzene_FindPath ohne Treffer → Laden scheitert; HelpIcon/HelpMask/
+                                // HelpMaskR.TCC liegen in Common (Pflicht), tritt im Spiel nicht auf
     auto L = std::make_unique<Layer>();
     if (!L->load(*file, 0, nullptr)) return nullptr;  // Farbschlüssel Renderer+0x04 = Schwarz
     L->z = 1.0;
@@ -85,7 +86,7 @@ void HelpOverlay::redrawIcon() {
 void HelpOverlay::useLeft() {
     textRect_ = {20, 20, 300, 340};
     mask_ = maskLeft_.get();
-    if (mask_) mask_->setPos(0, 0);  // UNVERIFIED: Original prüft die Maske hier nicht
+    if (mask_) mask_->setPos(0, 0);  // Original prüft nicht; Masken liegen in Common – Port-Schutz
 }
 
 void HelpOverlay::useRight() {
