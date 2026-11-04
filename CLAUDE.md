@@ -23,6 +23,9 @@ Ziel: exakt originalgetreues Verhalten (Logik, Timing, Grafik, Ton, Spielstände
   Original-Codec, eigener Maskenleser zusätzlich zu FFmpeg (VIDEO.md).
 - Spielmenü-Dialoge (2026-11-01): Ja/Nein über `SDL_ShowMessageBox`, Namenseingabe beim
   Speichern als Eingabefeld im Spielbild (MENU.md).
+- Windows-Build (2026-11-04): x86_64 für Windows 10/11, Cross-Build unter Linux mit
+  **llvm-mingw** (UCRT, ohne root in `~/.local/opt`), Abhängigkeiten per Skript aus den Quellen;
+  **FFmpeg als DLLs** neben der EXE (LGPL), nur benötigte Decoder/Demuxer (docs/WINDOWS.md).
 - Spielstände (2026-11-01): Speicherort konfigurierbar (`--save-dir`), Standard
   Benutzer-Datenordner; Common-Ordner nur auf Wunsch.
 

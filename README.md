@@ -19,7 +19,8 @@ Details: [docs/PROGRESS.md](docs/PROGRESS.md)
 ## Bauen
 
 Benötigt: CMake ≥ 3.24, ein C++20-Compiler (GCC 13+ oder Clang 17+), **SDL3**, **FFmpeg**
-(libavformat, libavcodec, libswscale, libswresample, libavutil) und **FreeType**.
+(libavformat, libavcodec, libswscale, libavutil) und **FreeType**; optional **libunshield**
+(entpackt die Common-Dateien selbst aus der CD).
 
 Fedora:
 
@@ -31,7 +32,7 @@ Debian/Ubuntu (SDL3 ab Ubuntu 25.04 bzw. Debian 13):
 
 ```bash
 sudo apt install cmake g++ ninja-build libsdl3-dev libavformat-dev libavcodec-dev \
-  libswscale-dev libswresample-dev libavutil-dev libfreetype-dev
+  libswscale-dev libavutil-dev libfreetype-dev libunshield-dev
 ```
 
 Dann:
@@ -43,6 +44,21 @@ cmake --build build
 ```
 
 Ohne SDL3/FFmpeg/FreeType werden nur der Kern und die Tests gebaut.
+
+### Windows (10/11, x86_64)
+
+Gebaut wird unter Linux als Cross-Build mit [llvm-mingw](https://github.com/mstorsjo/llvm-mingw)
+(entpackt nach `~/.local/opt`, kein root nötig):
+
+```bash
+tools/windows/build.sh
+```
+
+Das Skript lädt und baut SDL3, FreeType, FFmpeg (nur die nötigen Teile, als DLLs), unshield und
+zlib. Danach liegen `build-win/dist/` und `build-win/rentahero-win64-<version>.zip` bereit:
+`rentahero.exe` mit DLLs und Lizenztexten. Unter Windows wird es genauso gestartet
+(`rentahero.exe --cd D:\ --play`). Ohne Konsole landen die Meldungen in
+`%APPDATA%\RentaHeroNativ\rentahero-log.txt`. Details: [docs/WINDOWS.md](docs/WINDOWS.md).
 
 ## Spieldaten bereitstellen
 

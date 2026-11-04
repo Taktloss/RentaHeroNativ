@@ -27,6 +27,7 @@
 #include "formats/pe.hpp"
 #include "render/font.hpp"
 #include "video/ffvideo.hpp"
+#include "app/platform.hpp"
 #include "vfs/dirfs.hpp"
 #include "vfs/vfs.hpp"
 #ifdef RAH_HAVE_UNSHIELD
@@ -302,9 +303,7 @@ private:
     int current_ = 99;
 };
 
-}  // namespace
-
-int main(int argc, char** argv) {
+int run(int argc, char** argv) {
     Options opt;
     if (!parse(argc, argv, opt)) {
         usage();
@@ -811,4 +810,13 @@ int main(int argc, char** argv) {
     SDL_DestroyWindow(win);
     SDL_Quit();
     return 0;
+}
+
+}  // namespace
+
+int main(int argc, char** argv) {
+    rah::platformInit();  // Windows: Konsole des Aufrufers oder Logdatei (platform.hpp)
+    const int rc = run(argc, argv);
+    rah::platformExit(rc);
+    return rc;
 }

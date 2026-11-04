@@ -413,5 +413,12 @@
   - Seek-Überlauf nur beim Abspann möglich, der aber nie angesprungen wird. Die Angabe in
     `media.md` dazu war falsch und ist korrigiert.
   - 20 UNVERIFIED übrig.
-- Nächste Schritte: Menü im Fenster prüfen (Regler ziehen, Namenseingabe); Windows-Build (Weg
-  mit Nutzer klären); Durchspielen der ungeprüften Wege.
+- 2026-11-04: **Windows-Build** (Entscheidung Nutzer: llvm-mingw lokal, FFmpeg als DLLs):
+  - `tools/windows/build.sh` baut SDL3, FreeType, FFmpeg (AVI, Cinepak, Indeo 3/5), unshield und
+    zlib aus den Quellen, dann den Port. Ergebnis: `build-win/dist` plus ZIP (3,8 MB).
+  - GUI-Programm mit Konsolen- bzw. Logdatei-Ausgabe und Fehlerfenster (`app/platform.cpp`).
+  - Manifest: UTF-8-Codepage, DPI je Monitor.
+  - Unter Wine geprüft: Tests und Datentests grün, CAB-Entpacken, Szene, Spielstand aus einem
+    Pfad mit Umlauten (docs/WINDOWS.md).
+- Nächste Schritte: Windows-Build auf echtem Windows 10/11 testen (Nutzer); Menü im Fenster prüfen
+  (Regler ziehen, Namenseingabe); Durchspielen der ungeprüften Wege.

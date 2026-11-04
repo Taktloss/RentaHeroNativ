@@ -14,6 +14,7 @@
 # Build-Ausgaben
 /build/
 /out/
+/build-win/
 *.o
 *.obj
 
