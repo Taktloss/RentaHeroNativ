@@ -44,6 +44,7 @@ public:
     bool find(int sx, int sy, int tx, int ty);
     // orig: Rent-A-Hero.exe 0x00444FE0 CPathFinder_Next – nächster Wegpunkt, false bei (0, …)
     bool next(int& x, int& y);
+    int nodesUsed() const { return count_; }  // Port: Knoten der letzten Suche (Messung)
 
 private:
     struct Node {  // 12 Bytes: u8 x, u8 y, u16 parent, i32 g, i32 h
@@ -78,7 +79,8 @@ private:
     int last_ = 0;             // +0x0C zuletzt entnommener Knoten
     int sx_ = 0, sy_ = 0, tx_ = 0, ty_ = 0;  // +0x10…+0x1C Pixel
     // +0x20: 20 Paare; das Original schreibt ohne Grenze weiter (überschreibt +0xC0 ff.) –
-    // Port: wachsende Liste (Abweichung, UNVERIFIED ob im Spiel je > 19 Wegpunkte)
+    // Port: wachsende Liste (Abweichung). Kommt vor: Messung über alle 60 Wegkarten mit Zufallspaaren
+    // (PATHFINDING.md) – S61 in ~0,75 %, S57 selten ≥ 20 Einträge; im Original Heap-Beschädigung
     std::vector<std::array<int, 2>> waypoints_ = std::vector<std::array<int, 2>>(20, {0, 0});
     int read_ = 0;             // +0xC0
     std::vector<Node> pool_;   // +0xC4

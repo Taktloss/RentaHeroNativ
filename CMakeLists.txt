@@ -114,6 +114,10 @@ if(FFMPEG_FOUND)
   target_link_libraries(rah_video PUBLIC rah_core PkgConfig::FFMPEG)
 endif()
 
+# Messwerkzeug Wegsucher (docs/PATHFINDING.md „Messung“)
+add_executable(rah_pathstat tools/pathstat.cpp)
+target_link_libraries(rah_pathstat PRIVATE rah_core)
+
 if(RAH_BUILD_APP)
   find_package(SDL3 CONFIG)
   if(SDL3_FOUND AND FFMPEG_FOUND AND FREETYPE_FOUND)

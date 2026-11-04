@@ -126,7 +126,9 @@ bool PathFinder::lineFree(int x0, int y0, int x1, int y1) const {
 
 std::uint16_t PathFinder::newNode(int x, int y, int g, int h, std::uint16_t parent) {
     const int n = count_;
-    if (n >= kPool) return 0;  // UNVERIFIED: Original schreibt vorher noch in den Pool
+    // Original schreibt vorher noch in den Pool; unerreichbar: höchstens 3643 Knoten je Suche gemessen
+    // (60 Wegkarten, 120000 Zufallssuchen, PATHFINDING.md) bei 72000 Plätzen
+    if (n >= kPool) return 0;
     Node& k = pool_[static_cast<std::size_t>(n)];
     k.x = static_cast<std::uint8_t>(x);
     k.y = static_cast<std::uint8_t>(y);

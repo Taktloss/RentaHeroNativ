@@ -84,8 +84,19 @@ Liste `+0x20` mit 20 Paaren `(x, y)` in Pixeln, Leseindex `+0xC0`, Ende = `(0, 0
 - Sichtlinie `0x00445820` (in Zellen): `n = max(|dx|, |dy|)`, Festkomma 10 Bit,
   Schrittweite `(d * 1024) / n` (Division mit Abschneiden), prüft die Zellen 0 … n−1
   (Endzelle nicht) auf Rasterbyte `≠ 0`.
-- **Keine Obergrenze**: mehr als 19 Wegpunkte überschreiben `+0xC0` und folgende Felder
-  (Original-Fehler; Port: gleiches Speicherlayout nachbilden oder optional begrenzen).
+- **Keine Obergrenze**: Der Schreibindex ist der Leseindex `+0xC0` (`0x0044562F`/`0x0044563C`:
+  `[ESI + [ESI+0xC0]*8 + 0x20/0x24]`). Eintrag 20 (Wegpunkte plus Endmarke ≥ 21) schreibt x nach
+  `+0xC0`; y landet dann bei `+x·8+0x24`, also bis zu etwa 5 KB hinter dem Objekt
+  (Heap-Beschädigung, Original-Fehler).
+
+### Messung (2026-11-04)
+`rah_pathstat RentAHero 2000` (`tools/pathstat.cpp`): Für alle 60 `*_PATH.ZBF` je 2000 Suchen zwischen
+zufälligen freien Pixeln (Raster 4 px, Seed 1999) mit `PathFinder` des Ports:
+- höchstens **3643 Knoten** je Suche (S74; 300 Suchen/Karte: 3643, 2000: 3485 – andere Zufallsfolge),
+  weit unter 72000 → Pool-Grenze unerreichbar;
+- höchstens **24 Wegpunkte** (S61); ≥ 20 Einträge in **S61: 15/2000**, **S57: 1/2000**, sonst nie.
+Der Überlauf ist also im Spiel erreichbar (Schädelinneres, Loc18). Der Port hängt an,
+statt den Speicher zu beschädigen. Den Absturz nachzubilden ist nicht sinnvoll.
 
 ## Port (`engine/pathfinder`)
 Wörtlich: Raster `PathGrid` in `EngineGlobals` (global wie `g_PathGrid`), Knoten-Pool ab 1,

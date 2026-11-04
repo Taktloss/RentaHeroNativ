@@ -91,7 +91,8 @@ bool InventoryBar::add(int id) {
         const auto file = scene_.paths().findFile(name, "A16");
         if (!file) return false;
         auto L = std::make_unique<AnimLayer>(g_);
-        // CAnimLayer Load (Slot 2) + Slot 3; UNVERIFIED: letzter Ladeparameter 0 = Farbschlüssel
+        // CAnimLayer Load (Slot 2) + Slot 3; 0x00441A32 PUSH 0 an der Stelle, an der CSzene_CreateBackground
+        // den Farbschlüssel +0x2D8 übergibt (0x00449E70) → Farbschlüssel 0
         if (!L->load(*file, 0, nullptr)) return false;
         L->renderToSurface();  // 0x00446C90
         // 0x00447F00: Name = Dateiname ohne Pfad und Endung
@@ -261,7 +262,9 @@ void InventoryBar::onAreaEvent(int type) {
             return;
         }
     }
-    // CGame_DescribeItem(+0x420, id). UNVERIFIED: ohne CGame (+0x420 = 0) stürzt das Original ab
+    // CGame_DescribeItem(+0x420, id). +0x420 setzt nur CGame_SetEventProc (0x0043FA4A), CGame_dtor
+    // nullt es (0x004422A8); jeder Schauplatz ruft setEventProc in start() – ohne CGame (Absturz im
+    // Original) gibt es keinen Inventarklick
     if (describe_) describe_(lastClicked_);
 }
 

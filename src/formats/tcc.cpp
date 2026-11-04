@@ -175,7 +175,9 @@ bool A16Anim::next() {
     const std::size_t np = ptr_ + body_;
     ptr_ = np;
     if (np >= data_.size()) return false;
-    if (!decodeAt(np, false)) return false;  // UNVERIFIED: Original prüft den Kopf nicht
+    // Original prüft den Kopf nicht; alle 7465 Bilder der 219 A16-Dateien dekodieren fehlerfrei
+    // (Test decode_all_original_images) – die Prüfung greift nur bei beschädigten Dateien
+    if (!decodeAt(np, false)) return false;
     ++counter_;
     return true;
 }

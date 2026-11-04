@@ -169,7 +169,8 @@ bool Loc01::playWait(AnimLayer* a, unsigned mode, int from, int to) {
 }
 
 void Loc01::stopBackground() {
-    // UNVERIFIED: vtable +0x24 einer statischen Ebene; in Szene 8 ist der Hintergrund ein Video
+    // vtable +0x24 einer statischen Ebene wäre ein anderer Slot – tritt nicht auf: Ereignisse 31…33
+    // gibt es nur in Szene 8, deren Hintergrund FlyWegSelect.avi ist (CAnimLayer, 8.SZN)
     if (auto* a = dynamic_cast<AnimLayer*>(scene_.background())) a->stop(0);
 }
 
