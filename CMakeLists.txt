@@ -117,6 +117,10 @@ if(FFMPEG_FOUND)
   target_link_libraries(rah_video PUBLIC rah_core PkgConfig::FFMPEG)
 endif()
 
+# Indeo-5-Masken über alle Bilder (docs/VIDEO.md)
+add_executable(rah_iv5scan tools/iv5scan.cpp)
+target_link_libraries(rah_iv5scan PRIVATE rah_core)
+
 # Messwerkzeug Wegsucher (docs/PATHFINDING.md „Messung“)
 add_executable(rah_pathstat tools/pathstat.cpp)
 target_link_libraries(rah_pathstat PRIVATE rah_core)

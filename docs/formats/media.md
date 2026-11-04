@@ -26,7 +26,8 @@ Zeit in **Bildnummern bei fest 10 fps** (`STREAM_TIME` = 100 ns, Faktor 1 000 00
   der Ebene, TIMING.md), dann Bild per `IDirectDrawStreamSample::Update` holen.
 - `Next` (`0x0043CA80`): weiter, solange `+0x3CC < +0x3C8`, sonst Ende.
 - `Seek(n)` (`0x0043C9E0`): `n ≤ Länge` → `+0x3CC = n`; dann `IMultiMediaStream::Seek(+0x3CC × 1e6)`
-  (Produkt in 32 Bit, überläuft ab n > 2147 – bei 10 fps erst nach 214 s, kein Video so lang).
+  (Produkt in 32 Bit, überläuft ab n > 2147 – bei 10 fps erst nach 214 s; nur der Abspann
+  `S112_CREDITS.AVI` mit 2905 Bildern ist länger, er wird aber nie per Seek angesprungen, VIDEO.md).
 
 Folge: Das Abspieltempo bestimmt die Ebenen-`fps` aus der SZN, nicht das AVI; die
 Zuordnung Zähler → Zeit setzt 10 fps voraus (alle Daten erfüllen das). Port und genaue

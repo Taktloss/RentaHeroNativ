@@ -43,7 +43,8 @@ bool AviImage::draw(const Target& target, const Rect& rect) {
     case VideoDecoder::Result::Error: return false;
     }
     // Sample schreibt das Bild in sein Rechteck der Oberfläche.
-    // UNVERIFIED: Rechteck abweichender Größe (DirectDraw würde strecken) – hier abgeschnitten.
+    // Rechteck abweichender Größe (DirectDraw würde strecken) – hier abgeschnitten; kommt nicht vor:
+    // renderToSurface nimmt die Videogröße, der direkte Weg nur bei Zoom 100 das Rechteck full = Videogröße
     const Target& t = sampleTarget_;
     const int w = std::min(dec_->width(), sampleRect_.width()), h = std::min(dec_->height(), sampleRect_.height());
     for (int y = 0; y < h; ++y) {

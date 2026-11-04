@@ -149,6 +149,21 @@ Videos (je bis 30 Bilder) pixelgenau gegen den Original-Codec (Prototyp
 `tools/iv5ref/iv5mask.py`); C++-Leser gegen den Prototyp (`tests/test_iv5mask.cpp`,
 `RAH_TEST_COMMON` = installierter `Common`-Ordner).
 
+**Alle Bilder (2026-11-04):** `rah_iv5scan RentAHero <Common>` liest jedes Bild aller
+39 Indeo-5-Videos: 824 deckend, **4149 mit Maske, 0 nicht nachgebildet**, Maskengröße immer gleich
+der Videogröße. `tools/iv5ref/compare_all.sh <arbeitsordner> build/rah_iv5scan RentAHero
+<Common>` (mit `WINEPREFIX`) dekodiert jedes der 21 Videos komplett mit dem Original-Codec
+und vergleicht: **Maske 0 → immer schwarz** (0 Abweichungen bei rund 770 Mio. Pixeln). Von den
+rund 64 Mio. Pixeln mit Maske 1 sind nur 9174 schwarz, das ist echter Bildinhalt (davon 9159 im
+Abspann). Eine falsche Maske würde dort viel Schwarz zeigen, also sind beide Richtungen praktisch
+belegt.
+
+**Weitere Randfälle (Datenscan, 2026-11-04):**
+- Keine der 136 AVIs (124 CD, 12 Common) hat leere Video-Chunks, alle laufen mit 10 fps.
+  Das Verhalten von DirectShow bei Lücken spielt also keine Rolle.
+- Länger als 2147 Bilder (32-Bit-Überlauf in `CImageAvi_Seek`) ist nur `S112_CREDITS.AVI`
+  mit 2905 Bildern. Loc41 spielt ihn linear ab (`playEnd`), es gibt kein Seek.
+
 Werkzeug: `tools/iv5ref/build.sh <ordner>` (clang/lld-link, i686, ohne CRT),
 `python3 -I tools/iv5ref/avi2bin.py <avi> <ordner>/in.bin [bpp] [bilder]`, dann im Ordner
 mit `ir50_32.dll` daneben `wine iv5ref.exe` → `out.bin`;

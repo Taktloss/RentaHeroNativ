@@ -79,7 +79,9 @@ public:
     std::int64_t duration() const override { return duration_; }
 
     void seek(std::int64_t t) override {
-        // UNVERIFIED: negative Zeiten (32-Bit-Überlauf in CImageAvi_Seek) – hier auf 0 begrenzt
+        // Negative Zeiten (32-Bit-Überlauf in CImageAvi_Seek ab Bild 2148) hier auf 0 begrenzt –
+        // unerreichbar: nur S112_CREDITS (2905 Bilder) ist länger, und Loc41 spielt ihn nur linear
+        // (playEnd, kein Bereich/Rückwärts/Lippensync → kein Seek; VIDEO.md)
         const std::int64_t target = av_rescale_q(std::max<std::int64_t>(t, 0), k100ns, tb_);
         av_seek_frame(fmt_, stream_, target, AVSEEK_FLAG_BACKWARD);
         avcodec_flush_buffers(codec_);
@@ -92,7 +94,8 @@ public:
     Result next(std::vector<std::uint16_t>& out) override {
         if (av_rescale_q(nextPts_, tb_, k100ns) >= duration_) return Result::End;  // MS_S_ENDOFSTREAM
         // Ein Update je Bildzeit: alle Bilder mit pts ≤ Bildzeit verbrauchen, das letzte zeigen.
-        // Lücken (leere Chunks) wiederholen das vorige Bild. UNVERIFIED: DirectShow bei leeren Chunks.
+        // Lücken (leere Chunks) wiederholen das vorige Bild – kommt nicht vor: keine der 136 AVIs hat leere
+        // Video-Chunks, alle 10 fps (VIDEO.md); das DirectShow-Verhalten dafür ist daher ohne Belang.
         for (;;) {
             if (!look_) {
                 const int r = decodeOne();
@@ -152,7 +155,8 @@ private:
         const auto r = iv5_.decode(pkt_->data, static_cast<std::size_t>(pkt_->size));
         if (r == Indeo5Mask::Result::Mask && iv5_.width() == width_ && iv5_.height() == height_)
             masks_[pkt_->pts] = iv5_.mask();
-        // UNVERIFIED: nicht nachgebildete Varianten (Kacheln, Schutz) bleiben deckend
+        // Nicht nachgebildete Varianten (Kacheln, Schutz) blieben deckend – kommen nicht vor: alle 4149
+        // Maskenbilder der 21 Videos lesbar und gegen den Original-Codec geprüft (rah_iv5scan, VIDEO.md)
     }
     void applyMask(std::int64_t pts, std::vector<std::uint8_t>& rgb) {
         if (masks_.empty()) return;

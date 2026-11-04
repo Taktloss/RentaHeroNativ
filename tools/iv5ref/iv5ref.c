@@ -57,9 +57,9 @@ static u32 rd(void) { u32 v; memcpy(&v, buf + pos, 4); pos += 4; return v; }
 void start(void) {
     HANDLE f = CreateFileA("in.bin", 0x80000000u, 1, 0, 3, 0x80, 0);
     if (f == (HANDLE)-1) fail("in.bin fehlt");
-    buf = VirtualAlloc(0, 64u << 20, 0x3000, 4);
+    buf = VirtualAlloc(0, 256u << 20, 0x3000, 4);  // größtes Video (Abspann) hat 71 MB
     u32 got = 0;
-    ReadFile(f, buf, 64u << 20, &got, 0);
+    ReadFile(f, buf, 256u << 20, &got, 0);
     CloseHandle(f);
     const u32 bpp = rd();
     const u32 strfLen = rd();

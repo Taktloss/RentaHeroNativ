@@ -404,6 +404,14 @@
   - 24 UNVERIFIED übrig: EAX/Hardware-3D/Mischung (nicht messbar), DirectShow-Randfälle,
     Lesezugriffe außerhalb von Puffern (im Original undefiniert), GDI-Umbruch-Feinheiten
     (nicht in den Daten), Cursor-Auswahl, Dialoggröße.
+- 2026-11-04: Videomessung:
+  - `rah_iv5scan` liest alle Bilder der 39 Indeo-5-Videos: 4149 Bilder mit Maske, keine Variante
+    fehlt.
+  - `tools/iv5ref/compare_all.sh` vergleicht alle 21 transparenten Videos komplett mit dem
+    Original-Codec unter Wine: Maske 0 ist immer schwarz (0 Abweichungen bei rund 770 Mio. Pixeln).
+  - Datenscan: keine leeren Chunks, alle 10 fps.
+  - Seek-Überlauf nur beim Abspann möglich, der aber nie angesprungen wird. Die Angabe in
+    `media.md` dazu war falsch und ist korrigiert.
+  - 20 UNVERIFIED übrig.
 - Nächste Schritte: Menü im Fenster prüfen (Regler ziehen, Namenseingabe); Windows-Build (Weg
-  mit Nutzer klären); Durchspielen der ungeprüften Wege; ggf. DirectShow-Messung (amstream
-  unter Wine mit Indeo-Codec).
+  mit Nutzer klären); Durchspielen der ungeprüften Wege.
