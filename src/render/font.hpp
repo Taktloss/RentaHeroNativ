@@ -30,8 +30,8 @@ public:
     // CreateFontA mit positiver Höhe = Zellenhöhe (usWinAscent + usWinDescent)
     bool open(const std::string& file, int cellHeight, std::string* err = nullptr);
     bool isOpen() const;
-    // GDI tmHeight / tmAscent. UNVERIFIED: Rundung von GDI (hier: Zellenhöhe und
-    // round(Zellenhöhe · usWinAscent / (usWinAscent + usWinDescent)))
+    // GDI tmHeight / tmAscent: Zellenhöhe und round(Zellenhöhe · usWinAscent / (usWinAscent +
+    // usWinDescent)) – Wine-GDI: 15/12 und 12/10 wie hier (abgerundet wäre 12/9; WINEPROBE.md)
     int cellHeight() const;
     int ascent() const;
 

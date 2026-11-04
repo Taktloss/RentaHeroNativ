@@ -53,7 +53,8 @@ bool Font::open(const std::string& file, int cellHeight, std::string* err) {
     if (FT_Init_FreeType(&impl_->lib)) return fail("FreeType nicht initialisiert");
     if (FT_New_Face(impl_->lib, file.c_str(), 0, &impl_->face)) return fail("Schriftdatei nicht lesbar");
     // GDI: positive lfHeight = Zellenhöhe → em = Höhe · unitsPerEm / (usWinAscent + usWinDescent).
-    // UNVERIFIED: GDI rundet auf ganze Pixel-em (hier: nächste ganze Zahl).
+    // Pixel-em auf die nächste ganze Zahl: mit derselben TTF pixelgleich zu Wine-GDI (26 Texte,
+    // Höhe 12 und 15, NONANTIALIASED; tools/fontcmp.cpp, WINEPROBE.md).
     const auto* os2 = static_cast<const TT_OS2*>(FT_Get_Sfnt_Table(impl_->face, FT_SFNT_OS2));
     double cell = os2 && os2->usWinAscent + os2->usWinDescent > 0
                       ? static_cast<double>(os2->usWinAscent + os2->usWinDescent)
@@ -82,7 +83,7 @@ void Font::textOut(Surface565& s, int x, int y, std::string_view text, TextAlign
                    const Rect* clip) const {
     if (!isOpen()) return;
     int pen = x;
-    // UNVERIFIED: Rundung von TA_CENTER (hier x − Breite/2, abgeschnitten)
+    // TA_CENTER: x − floor(Breite/2) – Wine-GDI in allen 39 Messfällen (WINEPROBE.md)
     if (align == TextAlign::Center) pen = x - textWidth(text) / 2;
     else if (align == TextAlign::Right) pen = x - textWidth(text);
     for (unsigned char c : text) {
