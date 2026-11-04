@@ -28,8 +28,8 @@ Belege: `CSzene_Compose` `0x0044B7D0` (bisher `FUN_0044b7d0`), Rechteckliste
   - Fenster `0x0043E330`: Ziel = Client-Bereich ohne oberes/unteres Achtel
     (bei 640×480: y 60…420) plus Rechteck; ist der Client nicht 640×480, wird
     `(0, 0, 640, 420)` gestreckt ausgegeben.
-  - UNVERIFIED: Größe der Oberfläche `Renderer+0x18` (mindestens 640×420, siehe
-    Quellrechteck in `0x0043E330`).
+  - Oberfläche `Renderer+0x18` ist **640×420**, `OFFSCREENPLAIN|SYSTEMMEMORY` (`0x0043DDCD`–`0x0043DDE8`,
+    Fenstermodus gleich `0x0043E01B`–`0x0043E036`); Primärfläche `+0x14` mit Caps 0x200.
 
 ## Rechteckliste (`0x16C` Bytes)
 | Off | Inhalt |

@@ -400,7 +400,7 @@ int main(int argc, char** argv) {
                          file.empty() ? "nicht gefunden" : err.c_str());
     }
 
-    Surface565 surf(640, 420);  // UNVERIFIED: Größe der Szenenoberfläche (COMPOSITOR.md)
+    Surface565 surf(640, 420);  // Renderer+0x18: 0x0043DDE0/0x0043DDE8 (Höhe 0x1A4, Breite 0x280, SYSTEMMEMORY)
     Surface565 screen(kScreenW, kScreenH);
     g.screen = &screen;
     // Hilfetext: Arial 15 normal (0x00440F70)
@@ -684,10 +684,13 @@ int main(int argc, char** argv) {
             const SDL_Keycode k = ev.key.key;
             const int fn = k >= SDLK_F1 && k <= SDLK_F12 ? static_cast<int>(k - SDLK_F1) : -1;
             if ((ev.key.mod & SDL_KMOD_CTRL) && fn >= 0) {
-                // Accelerator-Tabelle 110 (CONTROLS.md); UNVERIFIED: Reihenfolge zu anderen Nachrichten
+                // Accelerator-Tabelle 110 (CONTROLS.md). TranslateAcceleratorA (WinMain 0x00401E00) ruft die
+                // Fensterprozedur mit WM_COMMAND sofort auf und unterdrückt WM_KEYDOWN: Tastendruck und
+                // Befehl sind eine Nachricht (zählt so auch in den 3 Nachrichten je Warteplatz)
                 static constexpr int kAccel[12] = {40093, 40094, 40087, 40088, 40082, 40081,
                                                    40083, 40084, 40085, 40086, 40090, 40091};
-                commands.push_back(kAccel[fn]);
+                ctx.lastCommand = kAccel[fn];
+                return GameContext::kCommand;
             } else if (k == SDLK_ESCAPE) {
                 cs.onKeyDown(0x1B);  // WM_KEYDOWN → 0x0044CE50
             } else if (fn >= 0) {
