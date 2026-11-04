@@ -12,8 +12,10 @@ tools/appimage/build.sh --jobs 8
 tools/appimage/build.sh --no-container   # direkt auf dem Rechner (Ergebnis nur so portabel wie dessen glibc)
 ```
 
-Ergebnis: `build-appimage/RentAHero-<git-describe>-x86_64.AppImage` (Ordner per `.gitignore`
-ausgeschlossen).
+Ergebnis: `build-appimage/RentAHero-<git-describe>-x86_64.AppImage` und derselbe Inhalt als
+einfaches Archiv `build-appimage/rentahero-linux-x86_64-<git-describe>.tar.gz` (`bin/rentahero`,
+`lib/` mit FFmpeg, `share/`; RPATH `$ORIGIN/../lib`, ohne FUSE). Der Ordner ist per `.gitignore`
+ausgeschlossen.
 
 - **Container** `tools/appimage/Containerfile`: Ubuntu 22.04 (glibc 2.35), GCC 12, CMake 3.31.
   Er enthält nur Entwicklerpakete für X11, Wayland, PipeWire/Pulse/ALSA und GL/EGL. Das AppImage

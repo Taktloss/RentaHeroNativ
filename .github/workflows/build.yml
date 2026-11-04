@@ -44,6 +44,11 @@ jobs:
           path: build-appimage/RentAHero-*-x86_64.AppImage
           if-no-files-found: error
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: rentahero-linux-tar
+          path: build-appimage/rentahero-linux-x86_64-*.tar.gz
+          if-no-files-found: error
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:
           name: appimage-logs
@@ -148,7 +153,7 @@ jobs:
     steps:
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
-          pattern: rentahero-{linux-appimage,win64}
+          pattern: rentahero-{linux-appimage,linux-tar,win64}
           path: out
           merge-multiple: true
       - name: Release anlegen
@@ -164,5 +169,6 @@ jobs:
           Source Port von „Rent-A-Hero“ (neo Software, 1999). **Die Originaldaten (CDs) sind nicht
           enthalten** und werden im Startmenü gewählt.
           - Linux: `RentAHero-*-x86_64.AppImage` (glibc ≥ 2.35), ausführbar machen und starten.
+          - Linux ohne AppImage: `rentahero-linux-x86_64-*.tar.gz` entpacken, `bin/rentahero` starten.
           - Windows 10/11: `rentahero-win64-*.zip` entpacken, `rentahero.exe` starten.
           EOT

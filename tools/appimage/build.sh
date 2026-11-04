@@ -139,3 +139,17 @@ ARCH=x86_64 APPIMAGE_EXTRACT_AND_RUN=1 "$SRC/appimagetool-1.9.1-x86_64.AppImage"
     --runtime-file "$SRC/runtime-20251108-x86_64" "$A" "$out" > "$B/appimagetool.log" 2>&1 \
     || { tail -20 "$B/appimagetool.log"; exit 1; }
 echo "AppImage: $out ($(du -h "$out" | cut -f1))"
+
+# Dasselbe als einfaches Archiv (ohne AppImage): rentahero-<ver>/bin, lib, share
+T="$B/tar/rentahero-$RAH_VERSION"
+rm -rf "$B/tar"; mkdir -p "$T"
+cp -a "$A/usr/bin" "$A/usr/lib" "$A/usr/share" "$T/"
+cp "$root/LICENSE" "$T/LICENSE.txt"
+cat > "$T/README.txt" <<EOT
+Rent-A-Hero (Port) $RAH_VERSION für Linux x86_64 (glibc >= 2.35)
+Start: bin/rentahero  – die Originaldaten (CDs) sind nicht enthalten, Auswahl im Startmenü.
+Lizenzen: LICENSE.txt, share/doc/rentahero/
+EOT
+tgz="$B/rentahero-linux-x86_64-$RAH_VERSION.tar.gz"
+tar -C "$B/tar" --owner=0 --group=0 -czf "$tgz" "rentahero-$RAH_VERSION"
+echo "Archiv: $tgz ($(du -h "$tgz" | cut -f1))"
