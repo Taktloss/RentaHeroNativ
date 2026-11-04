@@ -354,6 +354,9 @@
   Reihenfolge → 41/112. 142 Tests.
 - 2026-11-04: Loc41 (Schlusssequenz/Abspann, Szene 112) und Loc28 (Endavin, Szenen 31/32/35)
   portiert. 144 Tests.
+- 2026-11-04: Loc29 (Kneipe, Szene 33) und Loc30 (Kerker, Szene 34) portiert. Kette geprüft:
+  28/32 → Kneipe → Krug → Kerker → Fenster 35 → zurück → Gitter → Flucht 28/31 → 10/66. 145 Tests.
+  **Damit sind alle Schauplätze portiert.**
   128 Tests.
-- Nächste Schritte: Menü im Fenster prüfen (Regler ziehen, Namenseingabe); noch nicht portierte Schauplätze: Loc29, Loc30; Ramil-Pfad (Sprungziel 1004) in Loc10 prüfen;
+- Nächste Schritte: Menü im Fenster prüfen (Regler ziehen, Namenseingabe); noch nicht portierte Schauplätze: keine; Ramil-Pfad (Sprungziel 1004) in Loc10 prüfen;
   Hinweis-Countdown/`Hints_Select`.
