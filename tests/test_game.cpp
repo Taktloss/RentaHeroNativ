@@ -572,6 +572,48 @@ TEST(loc29_and_loc30_build_without_data) {
     CHECK(c.sceneNumber() == 34);
 }
 
+TEST(game_hint_tick_and_set_hint) {
+    Rig r(10);
+    Loc28 a(*r.ctx, 31, 30);  // Szene 31 ohne Verkleidungsteile → 28_031_A, 20 min
+    a.tick();
+    CHECK(a.hintName() && std::string(a.hintName()) == "28_031_A");
+    CHECK(a.hintCountdown() == 1200000);  // erster Tick zieht 0 ab
+    r.clock += 5000;
+    a.tick();  // dt < 5001 → nichts
+    CHECK(a.hintCountdown() == 1200000);
+    r.clock += 1;
+    a.tick();
+    CHECK(a.hintCountdown() == 1200000 - 5001);
+    // gleicher Name: Countdown läuft weiter; anderer Name: neu
+    a.setHint("28_031_A", 7);
+    CHECK(a.hintCountdown() == 1200000 - 5001);
+    a.setHint("X", 7);
+    CHECK(a.hintCountdown() == 7 && std::string(a.hintName()) == "X");
+    r.clock += 5001;
+    a.tick();  // Hints_Select setzt wieder 28_031_A (anderer Name) → 1200000, dann − 5001
+    CHECK(a.hintCountdown() == 1200000 - 5001);
+    a.setHint(nullptr, 0);
+    CHECK(a.hintName() == nullptr && a.hintCountdown() == 0);
+    Loc30 b(*r.ctx, 34, 33);  // keine Hinweisbedingung
+    b.tick();
+    CHECK(b.hintName() == nullptr && b.hintCountdown() == 0);
+}
+
+TEST(game_hint_countdown_expires_to_minus_one) {
+    Rig r(10);
+    Loc28 a(*r.ctx, 31, 30);
+    a.tick();
+    a.setHint("28_031_A", 0);  // gleicher Name, läuft weiter
+    for (int i = 0; i < 240; ++i) {
+        r.clock += 5001;
+        a.tick();
+    }
+    CHECK(a.hintCountdown() == -1);
+    r.clock += 5001;
+    a.tick();  // −1 bleibt (nur > 0 zählt herunter)
+    CHECK(a.hintCountdown() == -1);
+}
+
 TEST(loc41_builds_without_data) {
     Rig r(10);
     Loc41 a(*r.ctx, 112, 105);

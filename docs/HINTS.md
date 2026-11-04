@@ -5,6 +5,12 @@ Belege: `CGame_Tick` `0x00440B80`, `Hints_Select` `0x004448D0`, `CGame_SetHint`
 Hilfe-Objekt `CSzene+0x9F8` (= `CGame+0x0C`), `CHelp_IconOn` `0x004414A0` /
 `CHelp_IconOff` `0x004414B0`.
 
+## Port
+`Game::tick`/`setHint`/`showHint`/`selectHint` (`src/game/game.cpp`); `CGame_Tick` läuft in
+`main.cpp` nach `CSzene_DispatchEvents`, nicht bei offenem Spielmenü. `CGame_ctor` (`0x0043F4D0`)
+setzt `+0x10`/`+0x14`/`+0x18` auf 0. Tests `game_hint_*`; Probelauf Szene 6 (`04_006_A`, 1 s):
+Symbol erscheint, Klick zeigt den Text.
+
 ## Ablauf
 - `CGame_Tick` frühestens alle 5001 ms (TIMING.md): `Hints_Select`, dann – wenn ein
   Hinweis gesetzt ist (`CGame+0x18`) und der Countdown `CGame+0x10 > 0` –

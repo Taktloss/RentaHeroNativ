@@ -472,9 +472,10 @@ int main(int argc, char** argv) {
 
     // WinMain: 0x004410C0(…), 0x00441110("HelpIcon.tcc"), CSzene+0x9F8 = Hilfe
     HelpOverlay help(g);
-    help.setup(&scene, [&help, &opt] {
-        // CGame_ShowHint: Hinweis gesetzt und Countdown abgelaufen (Betrachter: --hint)
-        if (!opt.hint.empty()) help.show(opt.hint);
+    help.setup(&scene, [&help, &opt, &ctx] {
+        // CGame_ShowHint 0x00440C40 des aktuellen Schauplatzes; Betrachter ohne Spiel: --hint
+        if (ctx.current) ctx.current->showHint();
+        else if (!opt.hint.empty()) help.show(opt.hint);
     }, true);
     {
         const std::string icon = "HelpIcon.tcc";
@@ -691,6 +692,8 @@ int main(int argc, char** argv) {
         // Statustext und Löschen schreiben auch außerhalb davon in den Bildschirm
         showScreen();
         cs.dispatchEvents();
+        // Schritt 6: CGame_Tick (0x00440B80), nicht bei offenem Spielmenü
+        if (game && !g.gameMenuOpen && ctx.current) ctx.current->tick();
         if (game) {
             const int before = ctx.current ? ctx.current->location() * 1000 + ctx.current->sceneNumber() : -1;
             // Schritt 7. Port: nicht bei offenem Menü (g_CurGame wäre die Menüklasse; im Original

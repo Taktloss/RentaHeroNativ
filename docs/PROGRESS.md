@@ -203,7 +203,7 @@
   wirkt ohne SINGLELINE nicht (Statustext und Hilfe oben, umgebrochen): `drawTextWordBreak`.
   TCC-Ebenen ohne Alpha füllen jetzt ihre Ebenenoberfläche (Bild-Slot 3). Betrachter:
   `--hint <HLP>`, `--click x y`. 68 Tests grün.
-  Offen: Hinweis-Countdown/`Hints_Select` (gehören zu `CGame`), Tastatur `0x0044CE50`.
+  Offen: Tastatur `0x0044CE50`.
 - 2026-10-28: Intro (Loc40). Vollbildobjekt `CSzene+0x5DC` (`SetModal`, `CGame_LoadAnim`,
   AVI direkt auf den Bildschirm, VIDEO.md); Sprache/Untertitel (`docs/SPEECH.md`,
   `engine/speech`: ohne Ton Timer-Weg des Originals, Dauer nach Textlänge); `CGame`-Gerüst
@@ -357,6 +357,7 @@
 - 2026-11-04: Loc29 (Kneipe, Szene 33) und Loc30 (Kerker, Szene 34) portiert. Kette geprüft:
   28/32 → Kneipe → Krug → Kerker → Fenster 35 → zurück → Gitter → Flucht 28/31 → 10/66. 145 Tests.
   **Damit sind alle Schauplätze portiert.**
-  128 Tests.
-- Nächste Schritte: Menü im Fenster prüfen (Regler ziehen, Namenseingabe); noch nicht portierte Schauplätze: keine; Ramil-Pfad (Sprungziel 1004) in Loc10 prüfen;
-  Hinweis-Countdown/`Hints_Select`.
+- 2026-11-04: Hinweissystem portiert: `CGame_Tick` (0x00440B80), `CGame_SetHint` (0x00440BE0),
+  `CGame_ShowHint` (0x00440C40), `Hints_Select` (0x004448D0); Klick auf das Symbol zeigt den
+  Hinweis des aktuellen Schauplatzes. 147 Tests.
+- Nächste Schritte: Menü im Fenster prüfen (Regler ziehen, Namenseingabe); noch nicht portierte Schauplätze: keine; Ramil-Pfad (Sprungziel 1004) in Loc10 prüfen.

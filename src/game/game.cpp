@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "game/game.hpp"
 
+#include <cstring>
+
 #include <cstdio>
 
 #include "core/strings.hpp"
@@ -369,6 +371,117 @@ void processLocationChange(GameContext& ctx) {
     if (switchLocation(ctx)) return;
     // orig: 0x004487A0 CSzene_Clear, 0x0043EC60 – Port: Szene leeren
     ctx.scene.reset();
+}
+
+}  // namespace rah
+
+namespace rah {
+
+void Game::tick() {
+    const std::uint32_t now = ctx_.g.now();  // timeGetTime
+    std::int32_t dt = 0;
+    if (hintTickTime_ != 0) {
+        dt = static_cast<std::int32_t>(now - hintTickTime_);
+        if (dt < 0x1389) return;
+    }
+    hintTickTime_ = now;
+    selectHint();
+    if (hintCountdown_ > 0 && hintName_) {
+        hintCountdown_ -= dt;
+        if (hintCountdown_ < 0) {
+            hintCountdown_ = -1;
+            if (ctx_.help) ctx_.help->iconOn();  // CHelp_IconOn 0x004414A0
+        }
+    }
+}
+
+void Game::setHint(const char* name, int ms) {
+    if (!name) {
+        if (ctx_.help) ctx_.help->iconOff();  // CHelp_IconOff 0x004414B0
+        hintName_ = nullptr;
+        hintCountdown_ = 0;
+        return;
+    }
+    if (hintCountdown_ == 0) {
+        hintCountdown_ = ms;
+    } else if (hintName_ && std::strcmp(hintName_, name) != 0) {  // lstrcmpA
+        // Original: neuer Name → Countdown neu; ein sichtbares Symbol bleibt dabei an
+        hintName_ = name;
+        hintCountdown_ = ms;
+        return;
+    }
+    hintName_ = name;
+}
+
+void Game::showHint() {
+    if (hintName_ && hintCountdown_ == -1 && ctx_.help) ctx_.help->show(hintName_);  // CHelp_Show
+}
+
+void Game::selectHint() {
+    const auto S = [this](std::size_t off) { return ctx_.state.at(off); };
+    const auto inv = [this](int id) {
+        InventoryBar* bar = scene_.inventory();
+        return bar && bar->has(id);
+    };
+    const auto zelda = [&] {  // Szenen 7, 46, 1007
+        if (S(0x3E9C) != 0 && S(0x3E94) != 0 && S(0x3EC4) != 0 && !inv(0x0D)) {
+            setHint("01_046_A", 300000);
+            return true;
+        }
+        return false;
+    };
+    switch (sceneNr_) {
+    case 6:
+        if (S(0x3ED0) == 1) return setHint("04_006_A", 1000);
+        if (S(0x3ED4) != 0) return setHint("04_006_B", 300000);
+        break;
+    case 7:
+    case 0x2E:
+    case 0x3EF:
+        if (zelda()) return;
+        break;
+    case 0x1B:
+        if (S(0x3E8C) != 0) return setHint("06_027_A", 300000);
+        break;
+    case 0x1F:
+        if (!inv(1) || !inv(3) || !inv(4) || !inv(0x0E)) return setHint("28_031_A", 1200000);
+        break;
+    case 0x28:
+        if (S(0x3F48) != 0 && (S(0x3F54) == 0 || S(0x3F54) == 1)) return setHint("10_040_A", 600000);
+        break;
+    case 0x29:
+        if (S(0x3F30) != 0 && (S(0x3F5C) == 1 || S(0x3F5C) == 2)) return setHint("10_041_A", 300000);
+        break;
+    case 0x34:
+        if (S(0x3F30) != 0) return setHint("07_052_A", 300000);
+        break;
+    case 0x3D:
+        if (S(0x3FE0) == 0) return setHint("18_061_A", 600000);
+        break;
+    case 0x46:
+        if (S(0x3FEC) != 0) return setHint("20_070_A", 600000);
+        break;
+    case 0x49:
+        if (S(0x4038) == 0) return setHint("21_073_A", 600000);
+        break;
+    case 0x5B:
+        if (S(0x3F74) == 2) return setHint("12_091_A", 1200000);
+        break;
+    case 0x5F:
+        if (S(0x40B4) != 0) return setHint("27_095_A", 600000);
+        break;
+    case 100:
+        if (S(0x3F14) == 0) return setHint("08_100_A", 300000);
+        break;
+    case 0x69:
+        if (S(0x4090) == 1) return setHint("25_105_A", 300000);
+        break;
+    case 0x439:
+        return setHint("22_081_A", 1200000);
+    default:
+        break;
+    }
+    setHint(nullptr, 0);
 }
 
 }  // namespace rah

@@ -109,6 +109,15 @@ public:
     AudioStream* musicStream() const { return music_; }
     void setMusic(AudioStream* m) { music_ = m; }
     int hintCountdown() const { return hintCountdown_; }
+    const char* hintName() const { return hintName_; }
+    // orig: Rent-A-Hero.exe 0x00440B80 CGame_Tick – frühestens alle 5001 ms (HINTS.md)
+    void tick();
+    // orig: Rent-A-Hero.exe 0x00440BE0 CGame_SetHint
+    void setHint(const char* name, int ms);
+    // orig: Rent-A-Hero.exe 0x00440C40 CGame_ShowHint
+    void showHint();
+    // orig: Rent-A-Hero.exe 0x004448D0 Hints_Select
+    void selectHint();
     // +0x04 (Game_SwitchLocation: 1, wenn die Figur aus dem Spielstand gesetzt wurde)
     void setRestored(int v) { restored_ = v; }
     int location() const { return location_; }
@@ -191,6 +200,8 @@ protected:
     int restored_ = 0;
     // +0x10 Hinweis-Countdown (GetViewObjects lädt state[Szene], Save_Write schreibt zurück; HINTS.md)
     int hintCountdown_ = 0;
+    std::uint32_t hintTickTime_ = 0;  // +0x14 timeGetTime() des letzten Ticks
+    const char* hintName_ = nullptr;  // +0x18 HLP-Name (Zeiger auf Literal wie im Original)
     std::unique_ptr<Speech> speech_;  // +0x70
 
 private:
