@@ -5,7 +5,9 @@ Liest alle .SZN/.INI unter <cd>/GAME und meldet: Filename-Werte unter 3 Zeichen,
 fps-Bereich, Hex-Schreibweisen. Dazu die Z-Argumente fester Werte im portierten Spielcode
 (setPosZ/moveTo/tweenTo/setZ und die Hilfsfunktionen moveWait/enableAt/sabStand).
 
-Aufruf: python3 -I tools/data_scan.py <cd-ordner>
+Mit Common-Ordner zusätzlich: Figurendateien aller SZN vorhanden.
+
+Aufruf: python3 -I tools/data_scan.py <cd-ordner> [<common-ordner>]
 """
 import re
 import sys
@@ -36,6 +38,36 @@ def scan_data(cd: Path):
     print(f"Hex-/unlesbare Werte: {hexv or 'keine'}")
 
 
+def scan_characters(cd: Path, common: Path):
+    """Figuren-Sektionen ([GENERAL] Character1/2 → Filename) gegen CD und Common-Ordner."""
+    have = {q.name.upper() for q in cd.joinpath("GAME").rglob("*") if q.is_file()}
+    if common and common.is_dir():
+        have |= {q.name.upper() for q in common.iterdir()}
+    n, miss = 0, []
+    for p in cd.joinpath("GAME").rglob("*"):
+        if p.suffix.upper() != ".SZN":
+            continue
+        secs, cur = {}, None
+        for line in p.read_bytes().decode("latin-1").splitlines():
+            m = re.match(r"^\s*\[([^\]]+)\]", line)
+            if m:
+                cur = m.group(1).upper()
+                secs.setdefault(cur, {})
+                continue
+            m = re.match(r"^\s*(\w+)\s*=\s*(.*?)\s*$", line)
+            if m and cur:
+                secs[cur].setdefault(m.group(1).lower(), m.group(2))
+        for k in ("character1", "character2"):
+            sec = secs.get("GENERAL", {}).get(k)
+            if not sec:
+                continue
+            n += 1
+            fn = secs.get(sec.upper(), {}).get("filename", "")
+            if fn.split("\\")[-1].upper() not in have:
+                miss.append((p.name, sec, fn))
+    print(f"Figuren: {n}, Datei fehlt: {miss or 'keine'}")
+
+
 def scan_code(src: Path):
     out, n = [], 0
     for p in sorted(src.glob("*.cpp")):
@@ -63,4 +95,6 @@ def scan_code(src: Path):
 if __name__ == "__main__":
     cd = Path(sys.argv[1] if len(sys.argv) > 1 else "RentAHero")
     scan_data(cd)
+    if len(sys.argv) > 2:
+        scan_characters(cd, Path(sys.argv[2]))
     scan_code(Path("src/game"))

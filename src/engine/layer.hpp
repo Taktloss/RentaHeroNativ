@@ -99,7 +99,7 @@ public:
     virtual void setPos(int nx, int ny);
     // orig: Rent-A-Hero.exe 0x00446F10 – nur x setzen (gleich → nichts), aktiv → dirty, Bereich nachführen
     void setX(int nx) {
-        if (nx == static_cast<int>(x)) return;  // UNVERIFIED: Vergleich int mit double +0x10 (Ghidra: int)
+        if (static_cast<double>(nx) == x) return;  // 0x00446F10: FILD nx, FCOM double [+0x10] (Gleitkommavergleich)
         x = nx;
         if (active) dirty = true;
         refreshArea();

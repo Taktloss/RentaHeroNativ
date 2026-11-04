@@ -42,10 +42,12 @@ void fireEvent(EngineGlobals& g, Event& e, int type) {
     e.pending = false;
 }
 
+// orig: Rent-A-Hero.exe 0x0043F160 CEvent_dtor – 0x0043F220 (Stopp); nur mit Timer (+0x18 ≠ 0):
+// Timer freigeben, +0x18 = 0 und alle 10 Plätze von g_TimerEvents (0x0047E614) mit this → 0
 Event::~Event() {
-    if (!timerOwner) return;
+    if (!timerOwner) return;  // timerOwner wird genau mit hasTimer (+0x18) gesetzt
     for (auto& slot : timerOwner->timerEvents) {
-        if (slot == this) slot = nullptr;  // UNVERIFIED: Abmelden im Original-Dtor
+        if (slot == this) slot = nullptr;  // 0x0043F193…0x0043F1A5
     }
     std::erase(timerOwner->runningTimers, this);
 }

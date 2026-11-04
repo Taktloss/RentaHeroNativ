@@ -270,7 +270,8 @@ bool Scene::loadSzn(const IniFile& szn, unsigned loadMask) {
         }
         const bool fresh = !slot;
         Actor* a = createActor(n, paths_.findPath(c.filename), fresh);
-        if (!a) continue;  // UNVERIFIED: Original arbeitet mit Zeiger 0 weiter
+        if (!a) continue;  // Original arbeitet mit Zeiger 0 weiter; alle 67 Figurendateien vorhanden
+                           // (tools/data_scan.py mit Common) – Port-Schutz ohne Common-Ordner
         if (c.sfxLeft) {
             const auto r = c.sfxRight ? paths_.findPath(*c.sfxRight) : std::nullopt;
             const auto al = c.sfxAlt ? paths_.findPath(*c.sfxAlt) : std::nullopt;
@@ -304,7 +305,10 @@ bool Scene::loadSzn(const IniFile& szn, unsigned loadMask) {
 }
 
 bool Scene::createBackground(const std::optional<FoundFile>& file) {
-    background_ = nullptr;  // UNVERIFIED: ob 0x00449E70 den alten löscht – Port: bleibt im Besitz
+    // Original löscht den alten Hintergrund (0x00449E98: vtable[0](1)). Schauplätze, die Hintergründe
+    // tauschen, setzen +0x5C0 vorher auf 0 (z. B. Loc04). Port: bleibt in ownedBackgrounds_ –
+    // nur Speicher, nicht sichtbar.
+    background_ = nullptr;
     if (!file) return false;
     // CLayer_Load setzt bei AVI +0x1BC → Ebene verwerfen, als CAnimLayer neu laden (VIDEO.md)
     std::unique_ptr<Layer> bg;
@@ -476,7 +480,8 @@ AnimLayer* Scene::setModal(AnimLayer* obj) {
     AnimLayer* old = modal_;
     modal_ = obj;
     if (!obj) {
-        if (old) old->stop(0);  // UNVERIFIED: Original ruft Slot 9 ohne Nullprüfung
+        if (old) old->stop(0);  // 0x0044A346: Original ruft Slot 9 ohne Nullprüfung (Port-Schutz; der
+                                // Spielcode übergibt nur geladene Animationen, tools/name_check.py)
         invalidateAll();
     }
     return old;

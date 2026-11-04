@@ -207,7 +207,9 @@ void InventoryBar::leave(bool left) {
         redraw_ = true;
     }
     if (hovered_ != -1) {
-        // Slot 9 = CAnimLayer_Stop(0). UNVERIFIED: Original prüft die Ebene nicht
+        // Slot 9 = CAnimLayer_Stop(0). Original prüft die Ebene nicht. Leer werden kann der Platz durch
+        // die Eigenheit in remove() (+0x414 rückt nicht mit): überfahrener letzter Gegenstand, davor
+        // einer entfernt → Original ruft über Zeiger 0 (Absturz). Port: Absturzschutz (Abweichung).
         if (auto& L = entries_[static_cast<std::size_t>(hovered_)].layer) L->stop(0);
         redraw_ = true;
         hovered_ = -1;
@@ -239,7 +241,7 @@ void InventoryBar::onAreaEvent(int type) {
     Entry& e = entries_[static_cast<std::size_t>(i)];
     if (type == 0x0D) {
         if (hovered_ == -1) {
-            if (e.layer) {  // UNVERIFIED: Original prüft die Ebene nicht
+            if (e.layer) {  // Original prüft nicht; i < count_ hat immer eine Ebene (add() legt nur mit an)
                 e.layer->ended = false;
                 e.layer->start(13);  // 0x00443240: Schleife
             }
