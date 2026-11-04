@@ -4,7 +4,7 @@
 set -e
 here=$(dirname "$0"); out=${1:-.}
 llvm-dlltool -m i386 -d "$here/../iv5ref/kernel32.def" -l "$out/kernel32.lib" -k
-for p in ddprobe fontprobe; do
-  clang --target=i686-pc-windows-msvc -O1 -ffreestanding -fno-stack-protector -fno-builtin -c "$here/$p.c" -o "$out/$p.obj"
+for p in ddprobe fontprobe dsprobe; do
+  clang --target=i686-pc-windows-msvc -O1 -ffreestanding -fno-stack-protector -fno-builtin -msse2 -c "$here/$p.c" -o "$out/$p.obj"
   lld-link /nologo /subsystem:console /entry:start /nodefaultlib /out:"$out/$p.exe" "$out/$p.obj" "$out/kernel32.lib"
 done

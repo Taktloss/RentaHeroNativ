@@ -58,3 +58,14 @@ Windows wird erwartet, dass Ausdehnung und Zeichnen dieselben Glyphbreiten verwe
 hier nicht messbar (UNVERIFIED). Der Port bleibt bei der gezeichneten Breite.
 Mit Liberation Sans statt Wines `arial.ttf` unterscheiden sich die Glyphen leicht
 (andere Datei, anderes Hinting). Das ist eine Frage der Schriftdatei, nicht der Darstellungsregeln.
+
+## DirectSound (`dsprobe.exe`)
+
+| Messung | Wine | Folge |
+|---|---|---|
+| `GetCaps` | `dwMaxHw3DAllBuffers = dwFreeHw3DAllBuffers = 0`, keine Hardware-Mischpuffer | Das Original schaltet 3D nur bei freien Hardware-3D-Puffern ein (AUDIO.md, `+0x74`). Unter Wine läuft es also **ohne 3D und ohne EAX**, wie der Port standardmäßig (ohne `--audio3d`). |
+| statischer 3D-Puffer wie das Original (Flags 0xE2 + 0x10, 22 050 Hz mono 16 Bit) | wird angelegt; Vorgaben: Mindestabstand 1, Höchstabstand 10⁹, Modus NORMAL (0), Kegel 360/360, Position 0 | wie `--audio3d` im Port (`audio/mixer.cpp`) |
+| Listener (Primärpuffer `PRIMARYBUFFER\|CTRL3D`) | Abstandsfaktor 1, Abfall 1, Doppler 1, Blick (0, 0, 1), oben (0, 1, 0) | wie AUDIO.md („Listener im Ursprung, Blick +z“) |
+
+Nicht messbar unter Wine: EAX-1.0-Vorgabe und Hall der Karte, Panorama und Abstandsverhalten
+von Hardware-3D (`audio.cpp`, `mixer.cpp` bleiben UNVERIFIED).

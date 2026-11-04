@@ -134,8 +134,9 @@ void Mixer::mix(std::int16_t* out, int count) {
         for (auto& [id, v] : voices_) {
             if (!v.playing) continue;
             const Wave& w = *v.wave;
-            // UNVERIFIED (3D-Option): DirectSound3D-Standardwerte – Mindestabstand 1, Abfall 1 →
-            // Dämpfung 1/Abstand; Panorama nach Azimut (sin = x / √(x² + z²)), Gegenkanal leiser
+            // 3D-Option: DirectSound3D-Vorgaben Mindestabstand 1, Abfall 1, Modus NORMAL, Listener im
+            // Ursprung (Wine-Messung dsprobe, WINEPROBE.md) → Dämpfung 1/Abstand. UNVERIFIED: Panorama
+            // der Hardware nach Azimut (sin = x / √(x² + z²)), Gegenkanal leiser
             double gl = 1.0, gr = 1.0, sendGain = 0.0;
             if (v.is3d) {
                 const double d = std::sqrt(double{v.x} * v.x + double{v.y} * v.y + double{v.z} * v.z);
