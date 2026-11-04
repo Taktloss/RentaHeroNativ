@@ -154,6 +154,14 @@ void GameOverlay::changed(const std::string& label) {
 }
 
 bool GameOverlay::handleEvent(const SDL_Event& ev) {
+    // Tab gedrückt halten: Hotspots (HOTSPOTS.md). Das Original wertet VK_TAB nicht aus
+    // (0x0044CE50/0x0044CF00), das Spiel bekommt die Taste deshalb nicht
+    if ((ev.type == SDL_EVENT_KEY_DOWN || ev.type == SDL_EVENT_KEY_UP) && ev.key.key == SDLK_TAB && !open_ &&
+        s_.hotspotKey) {
+        hotspots_ = ev.type == SDL_EVENT_KEY_DOWN;
+        return true;
+    }
+    if (ev.type == SDL_EVENT_WINDOW_FOCUS_LOST) hotspots_ = false;
     if (ev.type == SDL_EVENT_KEY_DOWN && (ev.key.mod & SDL_KMOD_ALT) && !(ev.key.mod & SDL_KMOD_CTRL)) {
         const SDL_Keycode k = ev.key.key;
         if (k == SDLK_F || k == SDLK_C || k == SDLK_D || k == SDLK_I || k == SDLK_O || k == SDLK_RETURN || k == SDLK_KP_ENTER) {
@@ -203,16 +211,48 @@ bool GameOverlay::handleEvent(const SDL_Event& ev) {
     }
 }
 
+void GameOverlay::drawHotspots(const std::vector<HotspotView>& hs) {
+    // Bild → Fenster: windowToFrame ist in beiden Darstellungswegen linear
+    float ax = 0, ay = 0, bx = 0, by = 0;
+    p_.windowToFrame(0, 0, &ax, &ay);
+    p_.windowToFrame(100, 100, &bx, &by);
+    if (bx == ax || by == ay) return;
+    const float kx = 100.0f / (bx - ax), ky = 100.0f / (by - ay);
+    const auto win = [&](float fx, float fy) { return ImVec2((fx - ax) * kx, (fy - ay) * ky); };
+    ImDrawList* dl = ImGui::GetBackgroundDrawList();
+    const ImU32 fill = IM_COL32(255, 196, 64, 80), edge = IM_COL32(255, 210, 110, 200);
+    for (const HotspotView& h : hs) {
+        float x0 = 1e9f, y0 = 1e9f, x1 = -1e9f, y1 = -1e9f;
+        for (const SDL_FRect& c : h.cells) {
+            dl->AddRectFilled(win(c.x, c.y), win(c.x + c.w, c.y + c.h), fill);
+            x0 = std::min(x0, c.x), y0 = std::min(y0, c.y);
+            x1 = std::max(x1, c.x + c.w), y1 = std::max(y1, c.y + c.h);
+        }
+        if (h.cells.empty()) continue;
+        const ImVec2 a = win(x0, y0), b = win(x1, y1);
+        dl->AddRect(a, b, edge, 3.0f, 1.5f);
+        if (h.label.empty()) continue;
+        const ImVec2 ts = ImGui::CalcTextSize(h.label.c_str());
+        const float pad = 4.0f;
+        ImVec2 p((a.x + b.x - ts.x) * 0.5f, (a.y + b.y - ts.y) * 0.5f);
+        dl->AddRectFilled(ImVec2(p.x - pad, p.y - pad * 0.5f), ImVec2(p.x + ts.x + pad, p.y + ts.y + pad * 0.5f),
+                          IM_COL32(25, 18, 8, 215), 4.0f);
+        dl->AddText(p, IM_COL32(255, 232, 170, 255), h.label.c_str());
+    }
+}
+
 void GameOverlay::present(SDL_Surface** grab) {
     const bool showToast = !toast_.empty() && SDL_GetTicks() < toastUntil_;
     if (!showToast) toast_.clear();
-    if (!open_ && !showToast) {
+    const bool showHot = (forceHotspots_ || (hotspots_ && s_.hotspotKey)) && hotspotSrc_;
+    if (!open_ && !showToast && !showHot) {
         p_.present(false, grab);
         return;
     }
     p_.imguiNewFrame();
     ImGui::NewFrame();
     const ImGuiViewport* vp = ImGui::GetMainViewport();
+    if (showHot) drawHotspots(hotspotSrc_());
     if (showToast) {
         ImGui::SetNextWindowPos(ImVec2(vp->WorkPos.x + 12, vp->WorkPos.y + 12));
         ImGui::SetNextWindowBgAlpha(0.75f);

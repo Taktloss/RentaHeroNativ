@@ -49,6 +49,7 @@ Pixelart ist es nicht. Daraus folgt:
   | Alt+I | Ganzzahlig skalieren / Fenster füllen (4:3) |
   | Alt+Enter | Vollbild |
   | Alt+O | Overlay „Bild“ mit allen Einstellungen. Esc schließt es. |
+  | Tab (halten) | Hotspots der Szene anzeigen (HOTSPOTS.md) |
 
   Jede Änderung wird oben links 2,5 s lang eingeblendet und in `launcher.ini` gespeichert
   (`Filter`, `Crt`, `Deband`, `IntegerScale`, `Fullscreen`). Das Spiel läuft dabei weiter.

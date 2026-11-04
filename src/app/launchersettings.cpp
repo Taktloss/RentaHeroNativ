@@ -49,6 +49,7 @@ bool loadLauncherSettings(const std::filesystem::path& file, LauncherSettings& s
     s.fullscreen = ini.getInt(kSection, "Fullscreen", 0) != 0;
     s.skipIntro = ini.getInt(kSection, "SkipIntro", 0) != 0;
     s.fixWalkJump = ini.getInt(kSection, "FixWalkJump", 0) != 0;
+    s.hotspotKey = ini.getInt(kSection, "HotspotKey", 1) != 0;
     s.display.filter = ini.getString(kSection, "Filter", "original");
     s.display.crt = ini.getString(kSection, "Crt", "off");
     s.display.deband = ini.getInt(kSection, "Deband", 0) != 0;
@@ -77,6 +78,7 @@ bool saveLauncherSettings(const std::filesystem::path& file, const LauncherSetti
         << "Fullscreen=" << int(s.fullscreen) << '\n'
         << "SkipIntro=" << int(s.skipIntro) << '\n'
         << "FixWalkJump=" << int(s.fixWalkJump) << '\n'
+        << "HotspotKey=" << int(s.hotspotKey) << '\n'
         << "Filter=" << s.display.filter << '\n'
         << "Crt=" << s.display.crt << '\n'
         << "Deband=" << int(s.display.deband) << '\n'

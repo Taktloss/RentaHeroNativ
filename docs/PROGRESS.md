@@ -447,5 +447,8 @@
   linken Rand): Das Original verhält sich genauso. Unter Wine ist das Wegraster gleich und der Held
   springt ohne Weg ans Ziel (PATHFINDING.md). Kein Port-Fehler. Nutzerwunsch: Korrektur als Schalter
   `--fix-walk-jump` / `FixWalkJump` (Standard aus).
+- 2026-11-04: **Hotspots mit Tab** (HOTSPOTS.md): Solange Tab gedrückt ist, werden alle anklickbaren
+  Stellen markiert (über `CSzene_HitTest`, als ImGui-Overlay). Abschaltbar über `HotspotKey`;
+  Tab ist im Original frei (am Disassembly geprüft).
 - Nächste Schritte: Startmenü und Windows-Build auf echtem Windows 10/11 testen (Nutzer);
   Spielmenü im Fenster prüfen (Regler ziehen, Namenseingabe); Durchspielen der ungeprüften Wege.

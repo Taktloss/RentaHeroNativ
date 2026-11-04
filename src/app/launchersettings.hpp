@@ -22,6 +22,7 @@ struct LauncherSettings {
     bool fullscreen = false;
     bool skipIntro = false;  // Port-Option, Standard aus (originalgetreu: Intro bei Neues Spiel)
     bool fixWalkJump = false;  // Port-Korrektur, Standard aus (PATHFINDING.md)
+    bool hotspotKey = true;    // Port: Tab gedrückt halten zeigt die Hotspots (Tab ist im Original frei)
     DisplaySettings display;  // Bildfilter (FILTERS.md)
 };
 

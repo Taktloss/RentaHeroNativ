@@ -4,7 +4,9 @@
 #pragma once
 
 #include <filesystem>
+#include <functional>
 #include <string>
+#include <vector>
 
 #include <SDL3/SDL.h>
 
@@ -23,6 +25,12 @@ bool displayControls(DisplaySettings& d, bool filtersAvailable, bool* fullscreen
 // Bild-Einstellungen übernehmen; Fehler als Text (leer: in Ordnung)
 std::string applyDisplay(Presenter& p, const DisplaySettings& d);
 
+// Ein Hotspot der aktuellen Szene für die Anzeige mit Tab: Zellen (4×4) in Bildkoordinaten 640×480
+struct HotspotView {
+    std::string label;  // UTF-8, leer: ohne Beschriftung
+    std::vector<SDL_FRect> cells;
+};
+
 // Alt-Tasten und Overlay während des Spiels
 class GameOverlay {
 public:
@@ -34,6 +42,9 @@ public:
     void present(SDL_Surface** grab = nullptr);
     void toast(std::string text);
     bool open() const { return open_; }
+    // Hotspots der aktuellen Szene (Tab, docs/HOTSPOTS.md); force: immer zeigen (Prüfung)
+    void setHotspotSource(std::function<std::vector<HotspotView>()> f) { hotspotSrc_ = std::move(f); }
+    void forceHotspots(bool on) { forceHotspots_ = on; }
 
 private:
     void changed(const std::string& label);
@@ -44,6 +55,9 @@ private:
     bool open_ = false;
     std::string toast_;
     std::uint64_t toastUntil_ = 0;
+    void drawHotspots(const std::vector<HotspotView>& hs);
+    std::function<std::vector<HotspotView>()> hotspotSrc_;
+    bool hotspots_ = false, forceHotspots_ = false;
 };
 
 }  // namespace rah

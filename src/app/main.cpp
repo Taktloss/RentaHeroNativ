@@ -13,6 +13,7 @@
 #include <deque>
 #include <filesystem>
 #include <fstream>
+#include <map>
 #include <optional>
 #include <string>
 #include <vector>
@@ -84,6 +85,7 @@ struct Options {
     std::string loadPath;             // --load: diesen Spielstand statt Neues Spiel (Startmenü)
     bool skipIntro = false;           // Port-Option: Neues Spiel ohne Intro (LAUNCHER.md)
     bool fixWalkJump = false;         // Port-Korrektur: Klick ohne Weg → stehen bleiben (PATHFINDING.md)
+    bool showHotspots = false;        // Prüfung: Hotspots immer zeigen wie mit Tab (HOTSPOTS.md)
     bool fullscreen = false;
     std::string filter, crt;          // --filter / --crt (sonst launcher.ini)
     bool deband = false, noIntegerScale = false;
@@ -104,7 +106,7 @@ void usage() {
                  "          [--mute] [--music-vol <0-100>] [--sfx-vol <0-100>] [--speech-vol <0-100>]\n"
                  "          [--audio3d] [--audio-dump <datei.wav>]\n"
                  "          [--play] [--auto-load|--no-auto-load] [--save-on-close] [--save-dir <Ordner>] [--key-at <bild> <vk>]\n"
-                 "          [--load <spielstand.rah>] [--skip-intro] [--fix-walk-jump] [--fullscreen]\n"
+                 "          [--load <spielstand.rah>] [--skip-intro] [--fix-walk-jump] [--show-hotspots] [--fullscreen]\n"
                  "          [--filter <original|smooth|sharp|fsr|xbr|xbrz|hq2x|hq4x|scalefx>] [--crt <off|lottes|geom>]\n"
                  "          [--deband] [--no-integer-scale] [--renderer <gl|sdl>] [--shot <fenster.bmp>] [--sdl-key-at <bild> <alt+f>]\n"
                  "Ohne Argumente: Startmenü (Datenquelle, Spielstände, Optionen; docs/LAUNCHER.md)\n");
@@ -153,6 +155,10 @@ bool parse(int argc, char** argv, Options& o) {
         }
         if (a == "--fix-walk-jump") {
             o.fixWalkJump = true;
+            continue;
+        }
+        if (a == "--show-hotspots") {
+            o.showHotspots = true;
             continue;
         }
         if (a == "--fullscreen") {
@@ -606,6 +612,39 @@ int run(int argc, char** argv) {
     }
     // Alt-Tasten und Bild-Overlay (FILTERS.md); Änderungen landen in launcher.ini
     GameOverlay overlay(win, *presenter, ls, iniFile);
+    // Hotspots für Tab (HOTSPOTS.md): die Szene im 4×4-Raster mit derselben Trefferprüfung wie ein
+    // Klick abtasten (CSzene_HitTest 0x0044C3C0) – zeigt also genau, was anklickbar ist
+    overlay.forceHotspots(opt.showHotspots);
+    overlay.setHotspotSource([&]() {
+        std::vector<HotspotView> out;
+        if (g.gameMenuOpen || (game && !ctx.current)) return out;
+        Scene& cs = ctx.curScene();
+        const Area* skip[2] = {nullptr, nullptr};
+        for (int i = 0; i < 2; ++i)
+            if (Actor* a = cs.actor(i)) skip[i] = a->area;  // Figuren selbst nicht markieren
+        std::map<const Area*, std::size_t> index;
+        for (int y = 0; y < 360; y += 4) {
+            const Area* run = nullptr;
+            int runX = 0;
+            const auto flush = [&](int xEnd) {
+                if (!run) return;
+                auto [it, fresh] = index.try_emplace(run, out.size());
+                if (fresh) out.push_back({cp1252ToUtf8(run->text), {}});
+                out[it->second].cells.push_back(
+                    {static_cast<float>(runX), static_cast<float>(y + 60), static_cast<float>(xEnd - runX), 4.0f});
+            };
+            for (int x = 0; x <= 640; x += 4) {
+                const Area* a = x < 640 ? cs.hitTest(x + 2, y + 2) : nullptr;
+                if (a == skip[0] || a == skip[1]) a = nullptr;
+                if (a != run) {
+                    flush(x);
+                    run = a;
+                    runX = x;
+                }
+            }
+        }
+        return out;
+    });
 
     // WinMain: 0x004410C0(…), 0x00441110("HelpIcon.tcc"), CSzene+0x9F8 = Hilfe
     HelpOverlay help(g);
@@ -854,10 +893,12 @@ int run(int argc, char** argv) {
                     SDL_PushEvent(&kev);
                     continue;
                 }
-                kev.type = SDL_EVENT_KEY_DOWN;
-                kev.key.windowID = SDL_GetWindowID(win);
-                kev.key.down = true;
                 std::string k = name;
+                const bool up = k.rfind("up:", 0) == 0;  // up:tab – Taste loslassen
+                if (up) k = k.substr(3);
+                kev.type = up ? SDL_EVENT_KEY_UP : SDL_EVENT_KEY_DOWN;
+                kev.key.windowID = SDL_GetWindowID(win);
+                kev.key.down = !up;
                 for (const char* mod : {"alt+", "shift+", "ctrl+"})
                     if (k.rfind(mod, 0) == 0) {
                         kev.key.mod |= mod[0] == 'a' ? SDL_KMOD_LALT : mod[0] == 's' ? SDL_KMOD_LSHIFT : SDL_KMOD_LCTRL;
