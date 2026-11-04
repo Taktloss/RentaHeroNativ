@@ -441,5 +441,7 @@
   FFmpeg als .so im AppImage, appimagetool 1.9.1/type2-runtime 20251108 mit Prüfsumme.
   Geprüft auf Fedora 44: Startmenü, Bildfilter, Intro-Video bildgleich mit dem normalen Build.
   Repository nach GitHub (privat) hochgeladen.
+- 2026-11-04: **GitHub Actions** (`.github/workflows/build.yml`, CI.md): AppImage und Windows-Paket
+  bei jedem Push, Tests auch auf echtem Windows (windows-2025), Release-Entwurf bei Tags `v*`.
 - Nächste Schritte: Startmenü und Windows-Build auf echtem Windows 10/11 testen (Nutzer);
   Spielmenü im Fenster prüfen (Regler ziehen, Namenseingabe); Durchspielen der ungeprüften Wege.

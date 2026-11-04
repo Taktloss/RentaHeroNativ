@@ -1,0 +1,160 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Automatischer Bau: Linux-AppImage und Windows-Paket, Tests unter Linux und echtem Windows,
+# bei Tags v* ein Release-Entwurf. Ohne Originaldaten (docs/CI.md).
+name: build
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  LLVM_MINGW_VER: '20261006'
+  LLVM_MINGW_SHA256: 5f9c6ed95b2d4bdb2869a488c5fd5857fbdabcf288a0aa3eb1da43f6a08d8ab4
+
+jobs:
+  appimage:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - name: Abhängigkeiten aus dem Cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            build-appimage/src
+            build-appimage/deps
+          key: appimage-${{ hashFiles('tools/deps/sources.sh', 'tools/appimage/build.sh', 'tools/appimage/Containerfile') }}
+      - name: AppImage bauen (Docker, Ubuntu 22.04)
+        run: tools/appimage/build.sh --jobs "$(nproc)"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: rentahero-linux-appimage
+          path: build-appimage/RentAHero-*-x86_64.AppImage
+          if-no-files-found: error
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: appimage-logs
+          path: |
+            build-appimage/tests.log
+            build-appimage/appimagetool.log
+          if-no-files-found: ignore
+
+  windows:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - name: Werkzeuge
+        run: sudo apt-get update -q && sudo apt-get install -y -q ninja-build pkg-config
+      - name: llvm-mingw aus dem Cache
+        id: llvm
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.local/opt/llvm-mingw-${{ env.LLVM_MINGW_VER }}-ucrt-ubuntu-22.04-x86_64
+          key: llvm-mingw-${{ env.LLVM_MINGW_VER }}
+      - name: llvm-mingw herunterladen (Prüfsumme fest)
+        if: steps.llvm.outputs.cache-hit != 'true'
+        run: |
+          n=llvm-mingw-$LLVM_MINGW_VER-ucrt-ubuntu-22.04-x86_64
+          curl -fsSL -o "$RUNNER_TEMP/$n.tar.xz" \
+            "https://github.com/mstorsjo/llvm-mingw/releases/download/$LLVM_MINGW_VER/$n.tar.xz"
+          echo "$LLVM_MINGW_SHA256  $RUNNER_TEMP/$n.tar.xz" | sha256sum -c -
+          mkdir -p ~/.local/opt && tar -xJf "$RUNNER_TEMP/$n.tar.xz" -C ~/.local/opt
+      - name: Abhängigkeiten aus dem Cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            build-win/src
+            build-win/deps
+          key: win-${{ env.LLVM_MINGW_VER }}-${{ hashFiles('tools/deps/sources.sh', 'tools/windows/build.sh', 'cmake/llvm-mingw.cmake') }}
+      - name: Windows-Paket bauen
+        run: |
+          export LLVM_MINGW=~/.local/opt/llvm-mingw-$LLVM_MINGW_VER-ucrt-ubuntu-22.04-x86_64
+          tools/windows/build.sh --jobs "$(nproc)"
+      - name: Testprogramm zusammenstellen
+        run: |
+          mkdir -p wintest
+          cp build-win/port/rah_tests.exe build-win/dist/*.dll wintest/
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: rentahero-win64
+          path: build-win/rentahero-win64-*.zip
+          if-no-files-found: error
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: rentahero-win64-dist
+          path: build-win/dist
+          retention-days: 3
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: rah-tests-win64
+          path: wintest
+          retention-days: 3
+
+  windows-test:
+    needs: windows
+    runs-on: windows-2025
+    timeout-minutes: 15
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: rah-tests-win64
+          path: wintest
+      - name: Tests unter Windows
+        working-directory: wintest
+        run: .\rah_tests.exe
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: rentahero-win64-dist
+          path: dist
+      - name: Startmenü-Bilder (ohne GPU, darf scheitern)
+        continue-on-error: true
+        timeout-minutes: 3
+        shell: pwsh
+        run: |
+          $env:RAH_LAUNCHER_SHOT = "$PWD\shot"
+          $p = Start-Process -FilePath dist\rentahero.exe -PassThru
+          if (-not $p.WaitForExit(90000)) { $p.Kill(); throw "Zeitüberschreitung" }
+          Get-ChildItem shot-*.bmp
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: windows-launcher-shots
+          path: shot-*.bmp
+          if-no-files-found: ignore
+          retention-days: 7
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [appimage, windows, windows-test]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: rentahero-{linux-appimage,win64}
+          path: out
+          merge-multiple: true
+      - name: Release-Entwurf anlegen
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          ls -l out
+          gh release create "$GITHUB_REF_NAME" out/* --repo "$GITHUB_REPOSITORY" --draft \
+            --title "Rent-A-Hero (Port) $GITHUB_REF_NAME" --generate-notes

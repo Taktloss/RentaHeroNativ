@@ -86,6 +86,9 @@ Programm wie unten beschrieben direkt.
 `build-appimage/RentAHero-<version>-x86_64.AppImage`, die auf Linux-Systemen mit glibc ≥ 2.35 läuft
 (docs/APPIMAGE.md).
 
+**Automatischer Bau:** GitHub Actions baut bei jedem Push AppImage und Windows-Paket und testet
+unter Linux und Windows. Bei Tags `v*` entsteht ein Release-Entwurf (docs/CI.md).
+
 **Bildfilter:** Standard sind die Original-Pixel. Zur Wahl stehen außerdem Sharp-Bilinear, AMD FSR 1,
 xBR, xBRZ, HQ2x/HQ4x, ScaleFX und Entbänderung; für Retro-Flair gibt es CRT-Lottes und CRT-Geom.
 Einstellen lässt sich das im Startmenü oder im Spiel: Alt+F wechselt den Filter, Alt+C den
