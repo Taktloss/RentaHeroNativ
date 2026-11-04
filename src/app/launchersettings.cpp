@@ -48,6 +48,12 @@ bool loadLauncherSettings(const std::filesystem::path& file, LauncherSettings& s
     s.saveOnClose = ini.getInt(kSection, "SaveOnClose", 0) != 0;
     s.fullscreen = ini.getInt(kSection, "Fullscreen", 0) != 0;
     s.skipIntro = ini.getInt(kSection, "SkipIntro", 0) != 0;
+    s.display.filter = ini.getString(kSection, "Filter", "original");
+    s.display.crt = ini.getString(kSection, "Crt", "off");
+    s.display.deband = ini.getInt(kSection, "Deband", 0) != 0;
+    s.display.integerScale = ini.getInt(kSection, "IntegerScale", 1) != 0;
+    if (!findFilter(scalerFilters(), s.display.filter)) s.display.filter = "original";
+    if (!findFilter(crtFilters(), s.display.crt)) s.display.crt = "off";
     return true;
 }
 
@@ -68,7 +74,11 @@ bool saveLauncherSettings(const std::filesystem::path& file, const LauncherSetti
         << "SpeechVolume=" << s.speechVol << '\n'
         << "SaveOnClose=" << int(s.saveOnClose) << '\n'
         << "Fullscreen=" << int(s.fullscreen) << '\n'
-        << "SkipIntro=" << int(s.skipIntro) << '\n';
+        << "SkipIntro=" << int(s.skipIntro) << '\n'
+        << "Filter=" << s.display.filter << '\n'
+        << "Crt=" << s.display.crt << '\n'
+        << "Deband=" << int(s.display.deband) << '\n'
+        << "IntegerScale=" << int(s.display.integerScale) << '\n';
     return static_cast<bool>(out);
 }
 

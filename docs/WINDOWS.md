@@ -26,6 +26,8 @@ tools/windows/build.sh            # [--jobs N]; LLVM_MINGW=<pfad> optional
 | unshield | 1.6.2 (eigenes MD5) | statisch | MIT |
 | zlib | 1.3.1 | statisch | zlib |
 | Dear ImGui | 1.92.9b (eingebunden, `third_party/imgui`) | statisch | MIT |
+| stb_image | 2.30 (`third_party/stb`) | statisch | MIT/Public Domain |
+| libretro-Shader | Commit `1aaabbeb` (eingebettet, FILTERS.md) | im Programm | MIT, GPL-2+/3, LGPL-2.1+, PD |
 | libc++/libunwind | aus llvm-mingw | DLLs | Apache-2.0 mit LLVM-Ausnahme |
 
 Dieselben Versionen wie der Linux-Build (Fedora 44). Lizenztexte und die configure-Zeile von

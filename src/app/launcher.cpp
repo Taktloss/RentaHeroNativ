@@ -15,8 +15,8 @@
 #include "game/savegame.hpp"
 #include "imgui.h"
 #include "imgui_impl_sdl3.h"
-#include "imgui_impl_sdlrenderer3.h"
 #include "imgui_stdlib.h"
+#include "app/ui.hpp"
 #include "render/font.hpp"
 #include "vfs/vfs.hpp"
 #ifdef RAH_HAVE_UNSHIELD
@@ -103,55 +103,11 @@ std::vector<SaveEntry> scanSaves(const std::string& dir, SaveEntry& exitSave) {
     return v;
 }
 
-// Ausgleich an das Spiel: dunkles Holz/Messing statt ImGui-Blau
-void applyStyle(float scale) {
-    ImGuiStyle& st = ImGui::GetStyle();
-    ImGui::StyleColorsDark(&st);
-    st.WindowRounding = 0;
-    st.FrameRounding = 4;
-    st.GrabRounding = 4;
-    st.TabRounding = 4;
-    st.FramePadding = ImVec2(10, 6);
-    st.ItemSpacing = ImVec2(10, 8);
-    st.WindowPadding = ImVec2(20, 16);
-    ImVec4* c = st.Colors;
-    const ImVec4 bg(0.10f, 0.08f, 0.06f, 1), panel(0.16f, 0.12f, 0.09f, 1), brass(0.78f, 0.58f, 0.25f, 1),
-        brassHi(0.90f, 0.70f, 0.32f, 1), brassLo(0.55f, 0.40f, 0.17f, 1);
-    c[ImGuiCol_WindowBg] = bg;
-    c[ImGuiCol_ChildBg] = panel;
-    c[ImGuiCol_PopupBg] = panel;
-    c[ImGuiCol_Border] = ImVec4(0.35f, 0.27f, 0.16f, 1);
-    c[ImGuiCol_Text] = ImVec4(0.95f, 0.91f, 0.82f, 1);
-    c[ImGuiCol_TextDisabled] = ImVec4(0.58f, 0.52f, 0.44f, 1);
-    c[ImGuiCol_FrameBg] = ImVec4(0.22f, 0.17f, 0.12f, 1);
-    c[ImGuiCol_FrameBgHovered] = ImVec4(0.30f, 0.23f, 0.15f, 1);
-    c[ImGuiCol_FrameBgActive] = ImVec4(0.36f, 0.27f, 0.17f, 1);
-    c[ImGuiCol_Button] = brassLo;
-    c[ImGuiCol_ButtonHovered] = brass;
-    c[ImGuiCol_ButtonActive] = brassHi;
-    c[ImGuiCol_Header] = ImVec4(0.45f, 0.32f, 0.15f, 1);
-    c[ImGuiCol_HeaderHovered] = brassLo;
-    c[ImGuiCol_HeaderActive] = brass;
-    c[ImGuiCol_Tab] = ImVec4(0.22f, 0.17f, 0.12f, 1);
-    c[ImGuiCol_TabHovered] = brass;
-    c[ImGuiCol_TabSelected] = brassLo;
-    c[ImGuiCol_TabSelectedOverline] = brassHi;
-    c[ImGuiCol_CheckMark] = brassHi;
-    c[ImGuiCol_SliderGrab] = brass;
-    c[ImGuiCol_SliderGrabActive] = brassHi;
-    c[ImGuiCol_TitleBg] = panel;
-    c[ImGuiCol_TitleBgActive] = panel;
-    c[ImGuiCol_PlotHistogram] = brass;
-    c[ImGuiCol_TableHeaderBg] = ImVec4(0.22f, 0.17f, 0.12f, 1);
-    c[ImGuiCol_TableRowBgAlt] = ImVec4(1, 1, 1, 0.03f);
-    st.ScaleAllSizes(scale);
-}
-
 const ImVec4 kOk(0.55f, 0.85f, 0.45f, 1), kBad(0.95f, 0.45f, 0.35f, 1), kWarn(0.95f, 0.78f, 0.35f, 1);
 
 class Launcher {
 public:
-    Launcher(SDL_Window* w, LauncherSettings& s, const LauncherEnv& e) : win_(w), s_(s), env_(e) {}
+    Launcher(SDL_Window* w, Presenter& p, LauncherSettings& s, const LauncherEnv& e) : win_(w), p_(p), s_(s), env_(e) {}
 
     // Ein Bild; liefert eine Wahl, sobald gestartet/beendet wird
     std::optional<LaunchChoice> frame();
@@ -195,6 +151,7 @@ private:
     void extractPopup();
 
     SDL_Window* win_;
+    Presenter& p_;
     LauncherSettings& s_;
     const LauncherEnv& env_;
     DataCheck check_;
@@ -511,8 +468,18 @@ void Launcher::tabOptions() {
     ImGui::Checkbox("Beim Schließen des Fensters automatisch speichern", &s_.saveOnClose);
     ImGui::SetItemTooltip("Port-Option: wie „Beenden“ im Spielmenü (SaveGameExit.rah).");
 
-    ImGui::SeparatorText("Anzeige");
-    ImGui::Checkbox("Vollbild", &s_.fullscreen);
+    ImGui::SeparatorText("Bild");
+    const bool wasFull = s_.fullscreen;
+    if (displayControls(s_.display, p_.supportsFilters(), &s_.fullscreen)) {
+        if (wasFull != s_.fullscreen) SDL_SetWindowFullscreen(win_, s_.fullscreen);
+        const std::string err = applyDisplay(p_, s_.display);
+        if (!err.empty()) message_ = displayLabel(s_.display) + ": " + err;
+    }
+    ImGui::TextDisabled("Im Spiel: Alt+F Filter, Alt+C CRT, Alt+D Entbänderung, Alt+I Skalierung,\n"
+                        "Alt+Enter Vollbild, Alt+O Bild-Einstellungen.");
+    ImGui::PushTextWrapPos(ImGui::GetFontSize() * 40);
+    ImGui::TextDisabled("Ausgabe: %s", p_.info().c_str());
+    ImGui::PopTextWrapPos();
 
     ImGui::SeparatorText("Spielstand-Ordner");
     bool custom = !s_.saveDir.empty();
@@ -620,27 +587,10 @@ std::optional<LaunchChoice> Launcher::frame() {
 
 }  // namespace
 
-LaunchChoice runLauncher(SDL_Window* win, SDL_Renderer* ren, LauncherSettings& s, const LauncherEnv& env) {
-    IMGUI_CHECKVERSION();
-    ImGui::CreateContext();
-    ImGuiIO& io = ImGui::GetIO();
-    io.IniFilename = nullptr;  // kein imgui.ini
-    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard | ImGuiConfigFlags_NavEnableGamepad;
-    const float scale = std::max(1.0f, SDL_GetWindowDisplayScale(win));
-    applyStyle(scale);
-    ImGui::GetStyle().FontSizeBase = 17.0f * scale;
-    if (const std::string f = Font::findSystemFont(false, false); !f.empty()) {
-        ImFontConfig cfg;
-        cfg.OversampleH = 2;
-        io.Fonts->AddFontFromFileTTF(f.c_str(), 17.0f * scale, &cfg);
-    } else {
-        io.Fonts->AddFontDefault();
-    }
-    ImGui_ImplSDL3_InitForSDLRenderer(win, ren);
-    ImGui_ImplSDLRenderer3_Init(ren);
+LaunchChoice runLauncher(SDL_Window* win, Presenter& p, LauncherSettings& s, const LauncherEnv& env) {
     SDL_StartTextInput(win);
-
-    Launcher l(win, s, env);
+    p.clearFrame();
+    Launcher l(win, p, s, env);
     std::optional<LaunchChoice> result;
     // Prüfmodus: jeden Reiter einmal als <präfix>-<n>.bmp speichern, dann beenden
     const char* shot = SDL_getenv("RAH_LAUNCHER_SHOT");
@@ -657,19 +607,18 @@ LaunchChoice runLauncher(SDL_Window* win, SDL_Renderer* ren, LauncherSettings& s
                 if (ev.type == SDL_EVENT_QUIT || ev.type == SDL_EVENT_WINDOW_CLOSE_REQUESTED) l.requestQuit();
             } while (SDL_PollEvent(&ev));
         }
-        ImGui_ImplSDLRenderer3_NewFrame();
-        ImGui_ImplSDL3_NewFrame();
+        p.imguiNewFrame();
         ImGui::NewFrame();
         result = l.frame();
         ImGui::Render();
-        SDL_SetRenderDrawColor(ren, 26, 20, 15, 255);
-        SDL_RenderClear(ren);
-        ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), ren);
-        if (shot && shotFrame % 4 == 3) {
-            if (SDL_Surface* px = SDL_RenderReadPixels(ren, nullptr)) {
+        SDL_Surface* grab = nullptr;
+        const bool doShot = shot && shotFrame % 4 == 3;
+        p.present(true, doShot ? &grab : nullptr);
+        if (doShot) {
+            if (grab) {
                 const std::string f = std::string(shot) + "-" + std::to_string(shotFrame / 4) + ".bmp";
-                SDL_SaveBMP(px, f.c_str());
-                SDL_DestroySurface(px);
+                SDL_SaveBMP(grab, f.c_str());
+                SDL_DestroySurface(grab);
             }
             if (shotFrame / 4 == 2) {
                 if (const char* a = SDL_getenv("RAH_LAUNCHER_AUTO")) {
@@ -681,12 +630,8 @@ LaunchChoice runLauncher(SDL_Window* win, SDL_Renderer* ren, LauncherSettings& s
             }
         }
         ++shotFrame;
-        SDL_RenderPresent(ren);
     }
     SDL_StopTextInput(win);
-    ImGui_ImplSDLRenderer3_Shutdown();
-    ImGui_ImplSDL3_Shutdown();
-    ImGui::DestroyContext();
     return *result;
 }
 

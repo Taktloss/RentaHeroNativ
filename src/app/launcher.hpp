@@ -8,6 +8,7 @@
 #include <SDL3/SDL.h>
 
 #include "app/launchersettings.hpp"
+#include "app/present/presenter.hpp"
 
 namespace rah {
 
@@ -26,6 +27,7 @@ struct LauncherEnv {
 
 // Zeigt das Menü im vorhandenen Fenster, bis gestartet oder beendet wird. Speichert die
 // Einstellungen bei jedem Start in env.iniFile. Danach ist das Fenster wieder frei für das Spiel.
-LaunchChoice runLauncher(SDL_Window* win, SDL_Renderer* ren, LauncherSettings& s, const LauncherEnv& env);
+// ImGui-Kontext (uiCreate) und presenter.imguiInit() muss der Aufrufer schon eingerichtet haben.
+LaunchChoice runLauncher(SDL_Window* win, Presenter& p, LauncherSettings& s, const LauncherEnv& env);
 
 }  // namespace rah

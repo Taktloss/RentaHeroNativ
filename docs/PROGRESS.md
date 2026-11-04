@@ -429,5 +429,12 @@
   - ImGui 1.92.9b in `third_party/imgui`. Prüfmodus `RAH_LAUNCHER_SHOT`/`_AUTO`.
   - Linux und Wine: alle Startwege geprüft (docs/LAUNCHER.md). CP1252-Umwandlung nach
     `render/font` verschoben; `std::chrono::clock_cast` fehlt in libc++.
+- 2026-11-04: **Bildfilter** (Entscheidung Nutzer: OpenGL 3.3 + GLSL, Alt-Tasten + Overlay):
+  - Neue Darstellung `src/app/present/` mit SDL_Renderer als Ersatzweg.
+  - libretro-Presets (Sharp-Bilinear, FSR 1, xBR, xBRZ, HQ2x/4x, ScaleFX, CRT-Lottes/-Geom,
+    Entbänderung) unverändert eingebettet, eigener Preset-Leser mit mehreren Durchgängen.
+  - Alt+F/C/D/I/Enter/O, ImGui-Overlay im Spiel, Auswahl in `launcher.ini`.
+  - Linux und Wine geprüft (FILTERS.md). Neue Prüfschalter `--shot`, `--sdl-key-at`,
+    `--renderer sdl`.
 - Nächste Schritte: Startmenü und Windows-Build auf echtem Windows 10/11 testen (Nutzer);
   Spielmenü im Fenster prüfen (Regler ziehen, Namenseingabe); Durchspielen der ungeprüften Wege.

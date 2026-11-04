@@ -30,6 +30,10 @@ Ziel: exakt originalgetreues Verhalten (Logik, Timing, Grafik, Ton, Spielstände
   Version) im selben Fenster; Datenquelle, Fortsetzen/Neu/Laden, Optionen, Intro überspringen
   (Option, Standard aus). Erscheint beim Start **ohne Argumente**; mit Argumenten wie bisher
   direkt (docs/LAUNCHER.md).
+- Bildfilter (2026-11-04): Darstellung mit **OpenGL 3.3 + GLSL** (Fallback: SDL_Renderer ohne
+  Filter); Filter FSR 1, Sharp-Bilinear, xBRZ/HQx/xBR, ScaleFX, CRT-Shader. Umschalten im Spiel
+  mit Alt-Tasten (Alt+F Filter, Alt+C CRT, Alt+Enter Vollbild) und ImGui-Overlay (Alt+O), Auswahl
+  in `launcher.ini`. Standard: Original-Pixel (docs/FILTERS.md).
 - Spielstände (2026-11-01): Speicherort konfigurierbar (`--save-dir`), Standard
   Benutzer-Datenordner; Common-Ordner nur auf Wunsch.
 

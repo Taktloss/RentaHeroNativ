@@ -115,6 +115,17 @@ cp "$SRC/freetype/docs/FTL.TXT" "$L/FreeType-FTL.txt"
 cp "$SRC/unshield/LICENSE" "$L/unshield-MIT.txt"
 cp "$SRC/zlib/LICENSE" "$L/zlib.txt"
 cp "$root/third_party/imgui/LICENSE.txt" "$L/DearImGui-MIT.txt"
+# Eingebettete libretro-Shader: Lizenzköpfe der Dateien (MIT/GPL/LGPL/Public Domain) und stb_image
+{
+    cat "$root/third_party/libretro-shaders/VERSION.txt"
+    for f in $(cd "$root/third_party/libretro-shaders" && find . -name '*.glsl' | sort); do
+        printf '\n===== %s =====\n' "${f#./}"
+        # Kopf bis zur ersten Codezeile (#if/#define/uniform …)
+        awk '/^[ \t]*(#if|#ifdef|#define|#pragma|uniform|varying|attribute|precision)/{exit} {print}' \
+            "$root/third_party/libretro-shaders/$f" | head -90
+    done
+} > "$L/libretro-shaders.txt"
+sed -n '/^ALTERNATIVE A/,$p' "$root/third_party/stb/stb_image.h" > "$L/stb_image.txt"
 cp "$LLVM_MINGW/LICENSE.TXT" "$L/llvm-mingw-libc++-libunwind.txt"
 cat > "$D/THIRD-PARTY.txt" <<EOT
 Rent-A-Hero (Port) – mitgelieferte Bibliotheken (Lizenztexte in licenses/)
@@ -128,6 +139,8 @@ FreeType 2.14.3 (FreeType License): Portions of this software are copyright © T
   Project (www.freetype.org). All rights reserved. Statisch.
 unshield 1.6.2 (MIT), statisch.  zlib 1.3.1 (zlib-Lizenz), statisch.
 Dear ImGui 1.92.9b (MIT), statisch (Startmenü).
+stb_image 2.30 (MIT/Public Domain), statisch. libretro-Shader (Bildfilter, eingebettet):
+  Lizenzköpfe in licenses/libretro-shaders.txt (MIT, GPL-2.0+, LGPL-2.1+, GPL-3.0, Public Domain).
 libc++/libunwind aus llvm-mingw (Apache-2.0 mit LLVM-Ausnahme) als DLLs.
 EOT
 ver=$(git -C "$root" describe --always --dirty 2>/dev/null || echo unbekannt)

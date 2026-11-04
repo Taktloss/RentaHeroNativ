@@ -16,7 +16,7 @@ eingerichtet (`rah.ini`, DATAPATHS.md) und startet direkt mit Auftrag 3 bzw. Aut
 |---|---|
 | Spielen | **Fortsetzen** (`SaveGameExit.rah`, mit Datum), **Neues Spiel** mit „Intro überspringen“, Liste der Spielstände `SaveGame00…08.rah` (Name aus dem Kopf wie im Spielmenü, Datei-Datum), Laden per Knopf oder Doppelklick, Beenden |
 | Datenquelle | CD-Quellen (Ordner, `.iso`, `.cue`; beliebig viele, z. B. CD1 + CD2) über die nativen SDL-Dialoge oder eingetippt; Prüfung; Common: aus `SETUP/DATA1.CAB` entpacken (Standard) oder vorhandenen Ordner angeben |
-| Optionen | Lautstärken Musik/Effekte/Sprache (0–100), Stumm, 3D-Ton (`--audio3d`), Untertitel, Intro überspringen, Speichern beim Schließen, Vollbild, Spielstand-Ordner |
+| Optionen | Lautstärken Musik/Effekte/Sprache (0–100), Stumm, 3D-Ton (`--audio3d`), Untertitel, Intro überspringen, Speichern beim Schließen, Bild (Filter, CRT, Entbänderung, Skalierung, Vollbild; FILTERS.md), Spielstand-Ordner |
 
 - **Prüfung** (`checkDataSources`, `launchersettings.cpp`): Die Quellen werden wie beim
   Spielstart eingebunden. Danach wird geprüft, ob alle 35 Ordner unter `GAME/` vorhanden sind
@@ -33,7 +33,8 @@ eingerichtet (`rah.ini`, DATAPATHS.md) und startet direkt mit Auftrag 3 bzw. Aut
 `<Benutzer-Datenordner>/launcher.ini` liegt unter Linux in `~/.local/share/RentaHeroNativ/`, unter
 Windows in `%APPDATA%\RentaHeroNativ\`. Die Datei ist UTF-8 und hat den Abschnitt `[Launcher]` mit
 den Schlüsseln `Source1…16`, `Common`, `SaveDir`, `SubTitles`, `Mute`, `Audio3D`,
-`MusicVolume`, `SfxVolume`, `SpeechVolume`, `SaveOnClose`, `Fullscreen` und `SkipIntro`.
+`MusicVolume`, `SfxVolume`, `SpeechVolume`, `SaveOnClose`, `Fullscreen`, `SkipIntro`, `Filter`, `Crt`,
+`Deband` und `IntegerScale`.
 Gespeichert wird bei jedem Start und beim Beenden. ImGui legt kein eigenes `imgui.ini` an.
 
 Ändert man die Lautstärke im Spielmenü, wird das nicht zurückgeschrieben. Der Port speichert

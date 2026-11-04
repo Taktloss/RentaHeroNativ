@@ -130,6 +130,14 @@ target_link_libraries(rah_iv5scan PRIVATE rah_core)
 add_executable(rah_pathstat tools/pathstat.cpp)
 target_link_libraries(rah_pathstat PRIVATE rah_core)
 
+# Shader-Presets lesen, Filterliste, Einstellungen (ohne GL; auch für die Tests)
+include(cmake/embed.cmake)
+rah_embed_dir(${CMAKE_CURRENT_BINARY_DIR}/shaders_embedded.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/third_party/libretro-shaders "*.glsl" "*.glslp" "*.png")
+add_library(rah_filters STATIC src/app/present/preset.cpp src/app/present/filters.cpp
+  src/app/launchersettings.cpp ${CMAKE_CURRENT_BINARY_DIR}/shaders_embedded.cpp)
+target_link_libraries(rah_filters PUBLIC rah_core)
+
 if(RAH_BUILD_APP)
   find_package(SDL3 CONFIG)
   if(SDL3_FOUND AND FFMPEG_FOUND AND FREETYPE_FOUND)
@@ -138,7 +146,8 @@ if(RAH_BUILD_APP)
     add_library(rah_imgui STATIC
       ${IMGUI_DIR}/imgui.cpp ${IMGUI_DIR}/imgui_draw.cpp ${IMGUI_DIR}/imgui_tables.cpp
       ${IMGUI_DIR}/imgui_widgets.cpp ${IMGUI_DIR}/imgui_stdlib.cpp
-      ${IMGUI_DIR}/backends/imgui_impl_sdl3.cpp ${IMGUI_DIR}/backends/imgui_impl_sdlrenderer3.cpp)
+      ${IMGUI_DIR}/backends/imgui_impl_sdl3.cpp ${IMGUI_DIR}/backends/imgui_impl_sdlrenderer3.cpp
+      ${IMGUI_DIR}/backends/imgui_impl_opengl3.cpp)
     target_include_directories(rah_imgui SYSTEM PUBLIC ${IMGUI_DIR} ${IMGUI_DIR}/backends)
     target_compile_definitions(rah_imgui PUBLIC IMGUI_DISABLE_OBSOLETE_FUNCTIONS)
     target_link_libraries(rah_imgui PUBLIC SDL3::SDL3)
@@ -147,15 +156,19 @@ if(RAH_BUILD_APP)
       target_compile_options(rah_imgui PRIVATE -w)
     endif()
 
-    add_executable(rentahero src/app/main.cpp src/app/platform.cpp src/app/launcher.cpp
-      src/app/launchersettings.cpp)
+    # Bildfilter-Darstellung (OpenGL, eingebettete libretro-Shader; docs/FILTERS.md)
+    add_library(rah_present STATIC src/app/present/gl.cpp src/app/present/presenter.cpp src/app/ui.cpp)
+    target_include_directories(rah_present SYSTEM PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/third_party/stb)
+    target_link_libraries(rah_present PUBLIC rah_filters rah_imgui rah_font SDL3::SDL3)
+
+    add_executable(rentahero src/app/main.cpp src/app/platform.cpp src/app/launcher.cpp)
     if(WIN32)
       # GUI-Programm (kein Konsolenfenster), Manifest: UTF-8-Codepage, DPI (docs/WINDOWS.md)
       enable_language(RC)
       target_sources(rentahero PRIVATE src/app/rentahero.rc)
       set_target_properties(rentahero PROPERTIES WIN32_EXECUTABLE TRUE)
     endif()
-    target_link_libraries(rentahero PRIVATE rah_core rah_font rah_video rah_imgui SDL3::SDL3)
+    target_link_libraries(rentahero PRIVATE rah_core rah_font rah_video rah_present rah_imgui SDL3::SDL3)
     if(UNSHIELD_FOUND)
       target_link_libraries(rentahero PRIVATE rah_install)
       target_compile_definitions(rentahero PRIVATE RAH_HAVE_UNSHIELD=1)
@@ -187,9 +200,9 @@ if(RAH_BUILD_TESTS)
     tests/test_actor.cpp
     tests/test_iv5mask.cpp
     tests/test_launcher.cpp
-    src/app/launchersettings.cpp
+    tests/test_filters.cpp
   )
-  target_link_libraries(rah_tests PRIVATE rah_core)
+  target_link_libraries(rah_tests PRIVATE rah_core rah_filters)
   if(FFMPEG_FOUND)
     target_sources(rah_tests PRIVATE tests/test_ffvideo.cpp)
     target_link_libraries(rah_tests PRIVATE rah_video)

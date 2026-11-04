@@ -8,6 +8,7 @@
 
 #include <cstdio>
 #include <cstdlib>
+#include <cstring>
 #include <array>
 #include <deque>
 #include <filesystem>
@@ -29,6 +30,8 @@
 #include "video/ffvideo.hpp"
 #include "app/launcher.hpp"
 #include "app/platform.hpp"
+#include "app/present/presenter.hpp"
+#include "app/ui.hpp"
 #include "vfs/dirfs.hpp"
 #include "vfs/vfs.hpp"
 #ifdef RAH_HAVE_UNSHIELD
@@ -81,6 +84,11 @@ struct Options {
     std::string loadPath;             // --load: diesen Spielstand statt Neues Spiel (Startmenü)
     bool skipIntro = false;           // Port-Option: Neues Spiel ohne Intro (LAUNCHER.md)
     bool fullscreen = false;
+    std::string filter, crt;          // --filter / --crt (sonst launcher.ini)
+    bool deband = false, noIntegerScale = false;
+    std::string renderer;             // --renderer sdl: ohne OpenGL (Prüfung des Ersatzwegs)
+    std::string shot;                 // --shot <datei.bmp>: Fensterbild (mit Filter) am Ende
+    std::vector<std::pair<int, std::string>> sdlKeysAt;  // --sdl-key-at <bild> alt+f: SDL-Taste einspeisen
     std::vector<int> keysAt;          // Prüfläufe: Esc in Bild n (Paare Bild, VK)
 };
 
@@ -96,6 +104,8 @@ void usage() {
                  "          [--audio3d] [--audio-dump <datei.wav>]\n"
                  "          [--play] [--auto-load|--no-auto-load] [--save-on-close] [--save-dir <Ordner>] [--key-at <bild> <vk>]\n"
                  "          [--load <spielstand.rah>] [--skip-intro] [--fullscreen]\n"
+                 "          [--filter <original|smooth|sharp|fsr|xbr|xbrz|hq2x|hq4x|scalefx>] [--crt <off|lottes|geom>]\n"
+                 "          [--deband] [--no-integer-scale] [--renderer <gl|sdl>] [--shot <fenster.bmp>] [--sdl-key-at <bild> <alt+f>]\n"
                  "Ohne Argumente: Startmenü (Datenquelle, Spielstände, Optionen; docs/LAUNCHER.md)\n");
 }
 
@@ -144,6 +154,14 @@ bool parse(int argc, char** argv, Options& o) {
             o.fullscreen = true;
             continue;
         }
+        if (a == "--deband") {
+            o.deband = true;
+            continue;
+        }
+        if (a == "--no-integer-scale") {
+            o.noIntegerScale = true;
+            continue;
+        }
         if (a == "--no-auto-load") {  // entspricht AutoLoadGame=0
             o.autoLoad = false;
             continue;
@@ -166,6 +184,11 @@ bool parse(int argc, char** argv, Options& o) {
         else if (a == "--speech-vol") o.speechVol = std::atoi(v);
         else if (a == "--save-dir") o.saveDir = v;
         else if (a == "--load") o.loadPath = v;
+        else if (a == "--filter") o.filter = v;
+        else if (a == "--crt") o.crt = v;
+        else if (a == "--renderer") o.renderer = v;
+        else if (a == "--shot") o.shot = v;
+        else if (a == "--sdl-key-at" && i + 1 < argc) o.sdlKeysAt.emplace_back(std::atoi(v), argv[++i]);
         else if (a == "--key-at" && i + 1 < argc) {
             o.keysAt.push_back(std::atoi(v));
             o.keysAt.push_back(static_cast<int>(std::strtol(argv[++i], nullptr, 0)));
@@ -286,35 +309,80 @@ int run(int argc, char** argv) {
         usage();
         return 2;
     }
+    // Benutzer-Datenordner: launcher.ini (Startmenü, Bildfilter), Install, Spielstände
+    std::string prefDir;
+    if (char* pref = SDL_GetPrefPath(nullptr, "RentaHeroNativ")) {
+        prefDir = pref;
+        SDL_free(pref);
+    }
+    const std::filesystem::path iniFile = std::filesystem::path(prefDir) / "launcher.ini";
+    LauncherSettings ls;
+    loadLauncherSettings(iniFile, ls);
+    if (argc > 1) {
+        // Mit Argumenten: Bild-Einstellungen aus launcher.ini, Schalter haben Vorrang
+        if (!opt.filter.empty()) ls.display.filter = opt.filter;
+        if (!opt.crt.empty()) ls.display.crt = opt.crt;
+        if (opt.deband) ls.display.deband = true;
+        if (opt.noIntegerScale) ls.display.integerScale = false;
+        ls.fullscreen = opt.fullscreen;
+    }
+
+    // Fenster und Ausgabe (OpenGL mit Bildfiltern, sonst SDL_Renderer; FILTERS.md)
     SDL_Window* win = nullptr;
-    SDL_Renderer* ren = nullptr;
-    if (argc <= 1) {
-        // Start ohne Argumente: Startmenü im Spielfenster (Entscheidung Nutzer, LAUNCHER.md)
+    std::unique_ptr<Presenter> presenter;
+    auto openWindow = [&](bool hidden) -> bool {
         if (!SDL_Init(SDL_INIT_VIDEO)) {
             std::fprintf(stderr, "SDL_Init: %s\n", SDL_GetError());
-            return 1;
+            return false;
         }
-        if (!SDL_CreateWindowAndRenderer("Rent-A-Hero", kScreenW * 2, kScreenH * 2, SDL_WINDOW_RESIZABLE, &win, &ren)) {
+        const bool tryGl = opt.renderer != "sdl";
+        SDL_WindowFlags flags = SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIGH_PIXEL_DENSITY | (hidden ? SDL_WINDOW_HIDDEN : 0);
+        if (tryGl) flags |= SDL_WINDOW_OPENGL;
+        win = SDL_CreateWindow("Rent-A-Hero", kScreenW * 2, kScreenH * 2, flags);
+        if (!win) {
             std::fprintf(stderr, "Fenster: %s\n", SDL_GetError());
+            return false;
+        }
+        std::string log;
+        presenter = Presenter::create(win, tryGl, &log);
+        if (!presenter) {
+            std::fprintf(stderr, "Ausgabe: %s\n", log.c_str());
+            return false;
+        }
+        if (!log.empty()) std::fprintf(stderr, "%s – Darstellung ohne Bildfilter\n", log.c_str());
+        if (opt.debug) std::fprintf(stderr, "[debug] Ausgabe: %s\n", presenter->info().c_str());
+        if (const std::string e = applyDisplay(*presenter, ls.display); !e.empty())
+            std::fprintf(stderr, "Bildfilter %s: %s\n", displayLabel(ls.display).c_str(), e.c_str());
+        if (ls.fullscreen && !hidden) SDL_SetWindowFullscreen(win, true);
+        uiCreate(win);
+        presenter->imguiInit();
+        return true;
+    };
+    auto closeWindow = [&] {
+        if (presenter) {
+            presenter->imguiShutdown();
+            uiDestroy();
+            presenter.reset();
+        }
+        if (win) SDL_DestroyWindow(win);
+        win = nullptr;
+    };
+    if (argc <= 1) {
+        // Start ohne Argumente: Startmenü im Spielfenster (Entscheidung Nutzer, LAUNCHER.md)
+        if (!openWindow(false)) {
             SDL_Quit();
             return 1;
         }
         LauncherEnv env;
-        if (char* pref = SDL_GetPrefPath(nullptr, "RentaHeroNativ")) {
-            env.defaultSaveDir = pref;
-            SDL_free(pref);
-        }
-        env.iniFile = std::filesystem::path(env.defaultSaveDir) / "launcher.ini";
-        env.installDir = std::filesystem::path(env.defaultSaveDir) / "Install";
+        env.defaultSaveDir = prefDir;
+        env.iniFile = iniFile;
+        env.installDir = std::filesystem::path(prefDir) / "Install";
 #ifdef RAH_HAVE_UNSHIELD
         env.canExtract = true;
 #endif
-        LauncherSettings ls;
-        loadLauncherSettings(env.iniFile, ls);
-        const LaunchChoice c = runLauncher(win, ren, ls, env);
+        const LaunchChoice c = runLauncher(win, *presenter, ls, env);
         if (c.kind == LaunchChoice::Quit) {
-            SDL_DestroyRenderer(ren);
-            SDL_DestroyWindow(win);
+            closeWindow();
             SDL_Quit();
             return 0;
         }
@@ -525,17 +593,12 @@ int run(int argc, char** argv) {
         if (c != cursors.get()) cursors.set(c);
     };
 
-    const SDL_WindowFlags flags = SDL_WINDOW_RESIZABLE | (opt.hidden ? SDL_WINDOW_HIDDEN : 0);
-    if (!win && !SDL_CreateWindowAndRenderer("Rent-A-Hero", kScreenW * 2, kScreenH * 2, flags, &win, &ren)) {
-        std::fprintf(stderr, "Fenster: %s\n", SDL_GetError());
+    if (!win && !openWindow(opt.hidden)) {
         SDL_Quit();
         return 1;
     }
-    if (opt.fullscreen && !opt.hidden) SDL_SetWindowFullscreen(win, true);
-    SDL_SetRenderLogicalPresentation(ren, kScreenW, kScreenH, SDL_LOGICAL_PRESENTATION_INTEGER_SCALE);
-    SDL_Texture* tex =
-        SDL_CreateTexture(ren, SDL_PIXELFORMAT_RGB565, SDL_TEXTUREACCESS_STREAMING, kScreenW, kScreenH);
-    SDL_SetTextureScaleMode(tex, SDL_SCALEMODE_NEAREST);
+    // Alt-Tasten und Bild-Overlay (FILTERS.md); Änderungen landen in launcher.ini
+    GameOverlay overlay(win, *presenter, ls, iniFile);
 
     // WinMain: 0x004410C0(…), 0x00441110("HelpIcon.tcc"), CSzene+0x9F8 = Hilfe
     HelpOverlay help(g);
@@ -613,10 +676,8 @@ int run(int argc, char** argv) {
     ctx.postQuit = [&quit] { quit = true; };  // PostQuitMessage(0)
     ctx.leftButtonDown = [] { return (SDL_GetMouseState(nullptr, nullptr) & SDL_BUTTON_LMASK) != 0; };
     auto showScreen = [&] {
-        SDL_UpdateTexture(tex, nullptr, screen.pixels.data(), kScreenW * 2);
-        SDL_RenderClear(ren);
-        SDL_RenderTexture(ren, tex, nullptr, nullptr);
-        SDL_RenderPresent(ren);
+        presenter->setFrame(screen.pixels.data(), kScreenW, kScreenH);
+        overlay.present();
     };
     // MessageBoxA(hWnd, text, titel, MB_YESNO) als System-Dialog (Entscheidung Nutzer)
     ctx.askYesNo = [&](const std::string& text, const std::string& title) {
@@ -684,6 +745,9 @@ int run(int argc, char** argv) {
         }
         SDL_Event ev;
         if (!SDL_PollEvent(&ev)) return GameContext::kNoMessage;
+        // Port: Alt-Tasten und Bild-Overlay (FILTERS.md); das Original sieht davon nur WM_SYSKEYDOWN
+        // bzw. Mausnachrichten, die es nicht auswertet
+        if (overlay.handleEvent(ev)) return GameContext::kMessage;
         if (ev.type == SDL_EVENT_QUIT && game && opt.saveOnClose && ctx.save.request == 0) {
             // Port-Option --save-on-close: wie GameMenu „Beenden“ (Auftrag 4, Save_Process am Ende
             // von Game_Idle). Nur außerhalb von Wartestellen (wie GameMenu_Open, Tiefe 0) und mit
@@ -732,7 +796,7 @@ int run(int argc, char** argv) {
         // DOWN usw. – SDL zählt die Klicks mit (clicks gerade = DBLCLK).
         const bool down = ev.type == SDL_EVENT_MOUSE_BUTTON_DOWN;
         if (down && (ev.button.button == SDL_BUTTON_LEFT || ev.button.button == SDL_BUTTON_RIGHT)) {
-            SDL_ConvertEventToRenderCoordinates(ren, &ev);
+            presenter->windowToFrame(ev.button.x, ev.button.y, &ev.button.x, &ev.button.y);
             Actor* hero = cs.actor(0);
             if (ev.button.button == SDL_BUTTON_LEFT && ev.button.clicks % 2 == 0 && hero) {
                 hero->setRun();  // WM_LBUTTONDBLCLK: CActor_SetRun, kein Klick
@@ -744,7 +808,7 @@ int run(int argc, char** argv) {
         }
         // WM_MOUSEMOVE → OnMouseMove 0x00402790 → CSzene_MouseMove (MOUSE.md); Zeiger folgen
         if (ev.type == SDL_EVENT_MOUSE_MOTION) {
-            SDL_ConvertEventToRenderCoordinates(ren, &ev);
+            presenter->windowToFrame(ev.motion.x, ev.motion.y, &ev.motion.x, &ev.motion.y);
             mouseMove(static_cast<int>(ev.motion.x), static_cast<int>(ev.motion.y));
         }
         return GameContext::kMessage;
@@ -767,6 +831,33 @@ int run(int argc, char** argv) {
                 if (vk >= 40000) commands.push_back(vk);  // Befehls-ID direkt (Ctrl-Kürzel)
                 else ctx.curScene().onKeyDown(vk);
                 opt.keysAt[k] = -1;
+            }
+        for (const auto& [f, name] : opt.sdlKeysAt)
+            if (frame == f) {
+                // Prüfung des Overlays: Tastendruck über die SDL-Ereignisschlange (wie echt)
+                SDL_Event kev{};
+                if (name.rfind("click:", 0) == 0) {
+                    // Linksklick an Fensterkoordinaten (Punkte) – prüft die Umrechnung ins Spielbild
+                    kev.type = SDL_EVENT_MOUSE_BUTTON_DOWN;
+                    kev.button.windowID = SDL_GetWindowID(win);
+                    kev.button.button = SDL_BUTTON_LEFT;
+                    kev.button.down = true;
+                    kev.button.clicks = 1;
+                    std::sscanf(name.c_str() + 6, "%f,%f", &kev.button.x, &kev.button.y);
+                    SDL_PushEvent(&kev);
+                    continue;
+                }
+                kev.type = SDL_EVENT_KEY_DOWN;
+                kev.key.windowID = SDL_GetWindowID(win);
+                kev.key.down = true;
+                std::string k = name;
+                for (const char* mod : {"alt+", "shift+", "ctrl+"})
+                    if (k.rfind(mod, 0) == 0) {
+                        kev.key.mod |= mod[0] == 'a' ? SDL_KMOD_LALT : mod[0] == 's' ? SDL_KMOD_LSHIFT : SDL_KMOD_LCTRL;
+                        k = k.substr(std::strlen(mod));
+                    }
+                kev.key.key = SDL_GetKeyFromName(k.c_str());
+                SDL_PushEvent(&kev);
             }
         if (frame == 2 && opt.walkX >= 0 && cs.actor(0)) cs.actor(0)->walkTo(opt.walkX, opt.walkY, 0, -1);
         pollTimers(g);  // Port: Timer im Hauptthread je Schleifendurchlauf (TIMING.md)
@@ -811,6 +902,16 @@ int run(int argc, char** argv) {
         ctx.releaseRetired();
     }
     if (!opt.dump.empty()) writePpm(screen, opt.dump);
+    if (!opt.shot.empty()) {
+        // Fensterbild mit Bildfilter (Prüfung der Darstellung, FILTERS.md)
+        presenter->setFrame(screen.pixels.data(), kScreenW, kScreenH);
+        SDL_Surface* grab = nullptr;
+        overlay.present(&grab);
+        if (grab) {
+            SDL_SaveBMP(grab, opt.shot.c_str());
+            SDL_DestroySurface(grab);
+        }
+    }
     ctx.pumpMessage = nullptr;  // kein Verteilen mehr beim Abbau
     ctx.idle = nullptr;
     ctx.current.reset();  // vor Hilfe und Szene abbauen (CGame_dtor greift auf beide zu)
@@ -833,9 +934,7 @@ int run(int argc, char** argv) {
     g.audio = nullptr;
     audio.reset();
 
-    SDL_DestroyTexture(tex);
-    SDL_DestroyRenderer(ren);
-    SDL_DestroyWindow(win);
+    closeWindow();
     SDL_Quit();
     return 0;
 }

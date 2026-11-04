@@ -6,6 +6,8 @@
 #include <string>
 #include <vector>
 
+#include "app/present/filters.hpp"
+
 namespace rah {
 
 struct LauncherSettings {
@@ -19,6 +21,7 @@ struct LauncherSettings {
     bool saveOnClose = false;
     bool fullscreen = false;
     bool skipIntro = false;  // Port-Option, Standard aus (originalgetreu: Intro bei Neues Spiel)
+    DisplaySettings display;  // Bildfilter (FILTERS.md)
 };
 
 // launcher.ini (UTF-8, Abschnitt [Launcher]); fehlende Datei → Standardwerte, false

@@ -82,6 +82,12 @@ laden. Die Optionen umfassen Lautstärke, Untertitel, Vollbild, „Intro übersp
 Spielstand-Ordner. Details: [docs/LAUNCHER.md](docs/LAUNCHER.md). Mit Argumenten startet das
 Programm wie unten beschrieben direkt.
 
+**Bildfilter:** Standard sind die Original-Pixel. Zur Wahl stehen außerdem Sharp-Bilinear, AMD FSR 1,
+xBR, xBRZ, HQ2x/HQ4x, ScaleFX und Entbänderung; für Retro-Flair gibt es CRT-Lottes und CRT-Geom.
+Einstellen lässt sich das im Startmenü oder im Spiel: Alt+F wechselt den Filter, Alt+C den
+CRT-Shader, Alt+O öffnet das Overlay, Alt+Enter schaltet auf Vollbild. Dafür braucht es OpenGL 3.3.
+Details: [docs/FILTERS.md](docs/FILTERS.md).
+
 ```bash
 # mit CD-Images
 ./build/rentahero --cd "Rent a Hero CD1.cue" --cd "Rent a Hero CD2.cue" --play
