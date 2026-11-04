@@ -35,6 +35,16 @@ In `CActor_WalkCore` (SCRIPTING.md), wenn Wegkarte und Wegsucher vorhanden:
    (`+0x1AE0/+0x1AE4` ≠ 0) und schlägt die Suche fehl, zweiter Versuch vom bisherigen
    Zwischenziel aus. Kein Weg → `0x00434AE0(x, y, 1)` und Ereignis 0x29
    (`CActor_SetPosition` mit `force = 1`, ACTOR.md: **die Figur springt direkt ans Ziel**).
+   **Am Original gemessen (2026-11-04, Loc10 Szene 38):** Klick auf (3, 150) am linken Rand.
+   Die ganze Zeile ist gesperrt, links durch `blockRect(0, 0, 170, 190)` (Busch), sonst durch die
+   Wegkarte. Das Ziel bleibt deshalb (3, 150), und `PathNearestFree` findet keinen freien
+   Nachbarn. Rodrigo steht 0,3 s später ohne zu laufen bei (3, 147), hinter dem Busch am Rand,
+   und ist kaum zu sehen. Klickt man woanders, kommt er wieder heraus. Ein Klick bei y = 171
+   wird dagegen nach rechts auf (172, 171) eingerastet, und er läuft dorthin.
+   - Port und Original verhalten sich gleich. Das Raster `0x0047E64C` wurde aus dem
+     Prozessspeicher unter Wine gelesen und ist Zelle für Zelle gleich; Fußpunkt und Zwischenziel
+     stehen bei `+0x15D0/+0x15D4` bzw. `+0x1AE0/+0x1AE4`.
+   - Es handelt sich also um einen **Original-Fehler**, der Port bildet ihn nach.
 4. Wegpunkte mit `CPathFinder_Next` (`0x00444FE0`) abholen (der erste ist der Start
    und wird verworfen); Richtung zum nächsten Wegpunkt mit `CActor_FaceTowards`.
 
