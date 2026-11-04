@@ -24,7 +24,7 @@ class AudioManager;
 class AudioBuffer;
 class AnimLayer;
 class Scene;
-class Surface565;
+struct Surface565;
 class VideoDecoder;
 struct FoundFile;
 

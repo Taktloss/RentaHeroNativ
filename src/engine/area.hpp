@@ -3,6 +3,7 @@
 // 0x0047D77C (docs/AREAS.md).
 #pragma once
 
+#include <algorithm>
 #include <array>
 #include <cstdint>
 #include <memory>
