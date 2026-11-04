@@ -371,4 +371,8 @@
 - 2026-11-04: Port-Option `--save-on-close` (Standard aus): Fenster schließen speichert wie
   „Beenden“ nach `SaveGameExit.rah`. Geprüft per SIGINT: ohne Option unverändert, mit Option
   geschrieben und beim nächsten Start geladen.
+- 2026-11-04: Common-Dateien und EXE werden ohne `--common` beim ersten Start selbst aus
+  `SETUP/DATA1.CAB` entpackt (libunshield, `src/vfs/install.cpp`), auch direkt aus den
+  BIN/CUE-Images; Abgleich mit `install.sha256` gleich. README auf `--play` ohne `--common`
+  umgestellt. 150 Tests.
 - Nächste Schritte: Menü im Fenster prüfen (Regler ziehen, Namenseingabe); noch nicht portierte Schauplätze: keine.

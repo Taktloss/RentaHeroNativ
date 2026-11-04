@@ -29,6 +29,9 @@
 #include "video/ffvideo.hpp"
 #include "vfs/dirfs.hpp"
 #include "vfs/vfs.hpp"
+#ifdef RAH_HAVE_UNSHIELD
+#include "vfs/install.hpp"
+#endif
 
 using namespace rah;
 
@@ -316,11 +319,39 @@ int main(int argc, char** argv) {
             return 1;
         }
     }
-    // Im Spiel ist Common Pflicht (Rodrigo, Musik, Inventar); ohne ihn fehlt der Held stillschweigend
+    // Im Spiel ist Common Pflicht (Rodrigo, Musik, Inventar); ohne --common selbst aus
+    // SETUP/DATA1.CAB in den Benutzer-Datenordner entpacken (Entscheidung Nutzer, DATAPATHS.md)
     if ((opt.gameLoc >= 0 || opt.play) && opt.common.empty()) {
+#ifdef RAH_HAVE_UNSHIELD
+        std::filesystem::path dest;
+        if (char* pref = SDL_GetPrefPath(nullptr, "RentaHeroNativ")) {
+            dest = std::filesystem::path(pref) / "Install";
+            SDL_free(pref);
+        }
+        if (dest.empty()) {
+            std::fprintf(stderr, "Benutzer-Datenordner nicht verfügbar: --common <Ordner> angeben\n");
+            return 1;
+        }
+        if (!installComplete(dest)) {
+            std::fprintf(stderr, "Entpacke Rent-A-Hero.exe und Common aus SETUP/DATA1.CAB nach %s …\n",
+                         dest.string().c_str());
+            std::string err;
+            const bool ok = installFromCab(cd, dest, &err, [](int i, int n) {
+                if (i % 13 == 0 || i == n) std::fprintf(stderr, "  %d/%d\n", i, n);
+            });
+            if (!ok) {
+                std::fprintf(stderr, "Entpacken fehlgeschlagen: %s\n"
+                                     "Alternativ den installierten Common-Ordner mit --common angeben.\n",
+                             err.c_str());
+                return 1;
+            }
+        }
+        opt.common = (dest / "Common").string();
+#else
         std::fprintf(stderr, "Fehlt: --common <Ordner>. Ohne den Common-Ordner gibt es weder Rodrigo noch\n"
-                             "Musik und Inventar (Entpacken: siehe README, Abschnitt „Spieldaten bereitstellen“).\n");
+                             "Musik und Inventar (Port ohne libunshield gebaut, kein Entpacken möglich).\n");
         return 1;
+#endif
     }
     std::unique_ptr<DirFileSystem> common;
     if (!opt.common.empty()) {

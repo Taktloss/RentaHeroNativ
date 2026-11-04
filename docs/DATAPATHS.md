@@ -69,6 +69,13 @@ CD-Wechsel und wird im Port nicht gebraucht.
   installierten `Common`-Ordner an; (b) Entpacken beim ersten Start mit `libunshield`
   (MIT-Lizenz, GPL-kompatibel, unterstützt IS5). Prüfung über `docs/manifests/install.sha256`.
   Spielstände in einen eigenen Benutzerordner.
+  **Umgesetzt (2026-11-04):** `src/vfs/install.cpp`. Ohne `--common` wird `SETUP/DATA1.CAB` aus der
+  Datenquelle (Ordner, ISO oder BIN/CUE) nach `<Benutzer-Datenordner>/Install/.cab/DATA1.CAB`
+  kopiert (libunshield leitet aus dem Namen die Teilarchive ab, daher genau dieser Name),
+  entpackt (`unshield_file_save` prüft die MD5-Summen) und gelöscht. Ergebnis
+  `Install/Rent-A-Hero.exe` und `Install/Common/` (129 Dateien), Markierung `.rah-install-ok`.
+  Abgleich mit `docs/manifests/install.sha256`: alle 130 Dateien gleich (`Uninst.isu` legt nur
+  das Setup an).
 - Windows-Dateisystem ist case-insensitiv; die CD-Daten sind großgeschrieben, die
   Namen im Code gemischt (`Loc05`, `hlp`). Port: case-insensitive Suche
   (Verzeichnis-Index beim Start).

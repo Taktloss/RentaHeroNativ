@@ -46,39 +46,33 @@ Ohne SDL3/FFmpeg/FreeType werden nur der Kern und die Tests gebaut.
 
 ## Spieldaten bereitstellen
 
-Du brauchst zwei Dinge:
+Du brauchst nur die CD-Inhalte: entweder die Images direkt (`.cue`/`.bin` im Format
+MODE2/2352 oder `.iso`, beide CDs angeben) oder einen Ordner, in den du den Inhalt beider CDs
+zusammenkopiert hast.
 
-1. **Die CD-Inhalte.** Entweder die Images direkt (`.cue`/`.bin` im Format MODE2/2352 oder
-   `.iso`, beide CDs angeben) oder einen Ordner, in den du den Inhalt beider CDs
-   zusammenkopiert hast.
-2. **Den Ordner `Common`** (Musik, Inventar, Rodrigo-Animationen …). Er steckt im
-   Installationsarchiv auf CD 1. Das Entpacken ist im Port noch nicht eingebaut, deshalb
-   vorerst mit [unshield](https://github.com/twogood/unshield):
-
-   ```bash
-   sudo dnf install unshield        # bzw. sudo apt install unshield
-   unshield -d rah-setup x /pfad/zur/CD1/SETUP/DATA1.CAB
-   # Ergebnis: rah-setup/Ausf_hrbare_Programmdateien/Common
-   ```
-
-   Alternativ geht der `Common`-Ordner einer vorhandenen Installation (auch unter Wine).
+Den Ordner `Common` (Musik, Inventar, Rodrigo-Animationen …) und `Rent-A-Hero.exe` (Texte der
+Dialoge) entpackt der Port beim ersten Start selbst aus `SETUP/DATA1.CAB` auf CD 1, in den
+Benutzer-Datenordner (Linux: `~/.local/share/RentaHeroNativ/Install/`, einmalig rund 160 MB).
+Dafür wird beim Bauen `libunshield` gebraucht (`unshield-devel` bzw. `libunshield-dev`).
+Alternativ gibst du mit `--common <Ordner>` den `Common`-Ordner einer vorhandenen Installation
+an (auch unter Wine).
 
 ## Starten
 
 ```bash
-COMMON="rah-setup/Ausf_hrbare_Programmdateien/Common"
-
 # mit CD-Images
-./build/rentahero --cd "Rent a Hero CD1.cue" --cd "Rent a Hero CD2.cue" --common "$COMMON" --game 40 114
+./build/rentahero --cd "Rent a Hero CD1.cue" --cd "Rent a Hero CD2.cue" --play
 
 # oder mit zusammenkopiertem CD-Ordner
-./build/rentahero --cd RentAHero --common "$COMMON" --game 40 114
+./build/rentahero --cd RentAHero --play
 ```
 
-`--play` startet wie das Original: „Neues Spiel“ (Intro), mit `--auto-load` stattdessen den
-Spielstand vom letzten Beenden (`SaveGameExit.rah`). Spielstände liegen im Benutzer-Datenordner
-(Linux: `~/.local/share/RentaHeroNativ/`); `--save-dir <Ordner>` wählt einen anderen, z. B. den
-Common-Ordner einer Original-Installation, um deren Spielstände zu nutzen.
+`--play` startet wie das Original: mit dem Spielstand vom letzten „Beenden“ im Spielmenü
+(`SaveGameExit.rah`), sonst „Neues Spiel“ (Intro). `--no-auto-load` startet immer neu.
+`--save-on-close` speichert auch beim Schließen des Fensters (Abweichung vom Original, Standard
+aus). Spielstände liegen im Benutzer-Datenordner (Linux: `~/.local/share/RentaHeroNativ/`);
+`--save-dir <Ordner>` wählt einen anderen, z. B. den Common-Ordner einer Original-Installation,
+um deren Spielstände zu nutzen. Im Spiel öffnet Esc das Spielmenü (Laden, Speichern, Optionen).
 
 `--game 40 114` startet ebenfalls mit dem Intro. Einzelne Schauplätze lassen sich direkt starten mit
 `--game <Schauplatz> <Szene> [<Herkunftsszene>]`. Die Herkunftsszene bestimmt, wo Rodrigo
