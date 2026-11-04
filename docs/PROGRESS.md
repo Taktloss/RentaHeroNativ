@@ -391,5 +391,19 @@
     an (PATHFINDING.md).
   - Rest (35): fast nur DirectDraw-, GDI- und EAX-Feinheiten (Gruppe C, Messung unter Wine
     nötig), dazu Speicherzugriffe außerhalb von Puffern, die das Original undefiniert lässt.
-- Nächste Schritte: Menü im Fenster prüfen (Regler ziehen, Namenseingabe); Gruppe C per
-  Wine-Messprogramm; Windows-Build (Weg mit Nutzer klären); Durchspielen der ungeprüften Wege.
+- 2026-11-04: Wine-Messprogramme `tools/wineprobe/` (ddprobe, fontprobe, dsprobe; i686 ohne CRT)
+  plus `rah_fontcmp`, Ergebnisse in `docs/WINEPROBE.md`:
+  - DirectDraw: Lock- und BltFast-Rechteckregeln. **Port angeglichen:** leere Quelle bei
+    BltFast schlägt fehl, umgedrehtes Lock-Rechteck ebenfalls.
+  - DirectDraw: Pitch intern (das Original nutzt `lPitch`); gestrecktes Blt im Spiel unerreichbar.
+  - GDI-BitBlt 24→16 schneidet ab, ohne Dithering.
+  - Schrift mit derselben TTF pixelgleich zu Wine-GDI, Metriken gleich, TA_CENTER = floor(Breite/2).
+  - DirectSound unter Wine ohne Hardware-3D → Original ohne 3D/EAX; DS3D-Vorgaben wie im Port.
+  - Am Binary: Szenenoberfläche 640×420 (`0x0043DDE0`). **Port angeglichen:**
+    Strg+F-Kürzel als eine Nachricht wie `TranslateAcceleratorA`.
+  - 24 UNVERIFIED übrig: EAX/Hardware-3D/Mischung (nicht messbar), DirectShow-Randfälle,
+    Lesezugriffe außerhalb von Puffern (im Original undefiniert), GDI-Umbruch-Feinheiten
+    (nicht in den Daten), Cursor-Auswahl, Dialoggröße.
+- Nächste Schritte: Menü im Fenster prüfen (Regler ziehen, Namenseingabe); Windows-Build (Weg
+  mit Nutzer klären); Durchspielen der ungeprüften Wege; ggf. DirectShow-Messung (amstream
+  unter Wine mit Indeo-Codec).
