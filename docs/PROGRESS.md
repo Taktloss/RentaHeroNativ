@@ -360,4 +360,6 @@
 - 2026-11-04: Hinweissystem portiert: `CGame_Tick` (0x00440B80), `CGame_SetHint` (0x00440BE0),
   `CGame_ShowHint` (0x00440C40), `Hints_Select` (0x004448D0); Klick auf das Symbol zeigt den
   Hinweis des aktuellen Schauplatzes. 147 Tests.
-- Nächste Schritte: Menü im Fenster prüfen (Regler ziehen, Namenseingabe); noch nicht portierte Schauplätze: keine; Ramil-Pfad (Sprungziel 1004) in Loc10 prüfen.
+- 2026-11-04: Loc04 Ramil-Pfad (Vorgänger 1004) im Probelauf geprüft: Ramil kommt, neun
+  Gesprächsstufen, Ramil geht, Geldsack aus der Kiste per Schreibtisch.
+- Nächste Schritte: Menü im Fenster prüfen (Regler ziehen, Namenseingabe); noch nicht portierte Schauplätze: keine.

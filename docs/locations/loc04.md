@@ -94,3 +94,5 @@ Ebene `SetPosZ(223, 122, 18, 72)` → `MoveTo(465, 100, –, 125)`, `RodRaus`, �
 (`0x0044B6A6`) statt vtable `+0x18`. Eine Figur in der Ebenenliste wird so nur animiert und
 bewegt (Tween), nicht gelaufen. fps 0 ohne Tween: kein Update (Disassembly; Ghidras
 Dekompilat zeigt das falsch).
+
+- Probelauf 2026-11-04 (`--game 4 6 1004`): Ramil-Besuch komplett, danach Geldsack per Schreibtisch.
