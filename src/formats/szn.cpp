@@ -20,7 +20,7 @@ std::optional<std::string> optString(const IniFile& f, const std::string& sec, c
 }  // namespace
 
 LayerKind layerKindFromName(std::string_view n) {
-    if (n.size() < 3) return LayerKind::Unknown;  // UNVERIFIED: Verhalten bei < 3 Zeichen
+    if (n.size() < 3) return LayerKind::Unknown;  // Port-Schutz: kein Dateiname < 3 Zeichen in den Daten (tools/data_scan.py)
     const std::string_view e = n.substr(n.size() - 3);
     if (e == "BMP" || e == "bmp") return LayerKind::Bmp;
     if (e == "TCC" || e == "tcc") return LayerKind::Tcc;

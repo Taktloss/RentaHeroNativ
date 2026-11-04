@@ -43,7 +43,7 @@ Loc27::Loc27(GameContext& ctx, int scene, int prevScene) : Game(ctx, 27, scene, 
     InventoryBar* bar = scene_.inventory();
     const bool helmHere = (bar && bar->has(kHelm)) || flag(kHelmDropped) != 0;
     if (sceneNr_ == kScene96) {
-        if (prevScene_ == kFromLoad) flag(kPitSeen) = 1;  // UNVERIFIED: Herkunft 1001
+        if (prevScene_ == kFromLoad) flag(kPitSeen) = 1;  // 0x0042B038: CMP [+0x30], 0x3E9 → 0x4094 = 1
         if (flag(kPitSeen) != 0 && flag(kTalk) > 3) flag(kTalk) = 1;
         scene_.load("S96", helmHere ? 2 : 0);  // CSzene_Load(DAT_004753CC, maske)
         getViewObjects();

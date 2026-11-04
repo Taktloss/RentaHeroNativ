@@ -62,14 +62,14 @@ void markEvent(EngineGlobals& g, Event& e, int type) {
 // Stufe = min((fps − 1) / 5, 3), Ganzzahldivision (fps ≤ 0 → Stufe 0 bzw. negativ → 0)
 int stageOf(int fps) {
     const int st = (fps - 1) / 5;
-    return st > 3 ? 3 : st < 0 ? 0 : st;  // UNVERIFIED: fps < 0 kommt nicht vor (Index wäre negativ)
+    return st > 3 ? 3 : st < 0 ? 0 : st;  // fps in den Daten 0…20 (tools/data_scan.py), < 0 kommt nicht vor
 }
 
 }  // namespace
 
 void Scene::moveZ(unsigned oldZ, unsigned newZ) {
     // Zähler je Z (+0x300) und Grenzen +0x2F8/+0x2FC, Vergleiche vorzeichenlos (jbe/jae)
-    auto cnt = [this](unsigned z) -> short& { return zCount_[z & 0xFFu]; };  // UNVERIFIED: Z > 255
+    auto cnt = [this](unsigned z) -> short& { return zCount_[z & 0xFFu]; };  // Z immer 1…255 (Daten und Spielcode, tools/data_scan.py)
     --cnt(oldZ);
     ++cnt(newZ);
     if (newZ > static_cast<unsigned>(zMax_)) zMax_ = static_cast<int>(newZ);
@@ -250,7 +250,7 @@ bool Scene::loadSzn(const IniFile& szn, unsigned loadMask) {
         const int zi = ftol(L->z);
         if (zMax_ < zi) zMax_ = zi;
         if (zi < zMin_) zMin_ = zi;
-        if (zi >= 0 && zi < 256) ++zCount_[static_cast<std::size_t>(zi)];  // UNVERIFIED: Z außerhalb 0…255
+        if (zi >= 0 && zi < 256) ++zCount_[static_cast<std::size_t>(zi)];  // Z immer 1…255 (tools/data_scan.py)
         if (l.zoomVal != 100) L->setZoom(l.zoomVal);
     }
     for (const SznArea& a : d.areas) {
@@ -630,7 +630,7 @@ bool Scene::compose(bool force) {
     }
     // 11. Z-Stufen von hinten nach vorn; Figuren-Z vorübergehend mitzählen
     const ZMap* zmap = depth_;
-    const auto zslot = [this](unsigned z) -> short* { return z < 256 ? &zCount_[z] : nullptr; };  // UNVERIFIED: Z > 255
+    const auto zslot = [this](unsigned z) -> short* { return z < 256 ? &zCount_[z] : nullptr; };  // Z immer 1…255 (Daten und Spielcode, tools/data_scan.py)
     for (std::size_t i = 0; i < 2; ++i)
         if (short* c = zslot(zc[i])) ++*c;
     // Reihenfolge: z0 ≤ z1 → erst Figur 1, dann Figur 0
@@ -951,7 +951,7 @@ bool Scene::insertLayer(Layer* l) {
         if (slot) continue;
         slot = l;
         const int z = static_cast<int>(l->z);  // __ftol
-        if (z >= 0 && z < 256) ++zCount_[static_cast<std::size_t>(z)];  // UNVERIFIED: Z außerhalb 0…255
+        if (z >= 0 && z < 256) ++zCount_[static_cast<std::size_t>(z)];  // Z immer 1…255 (tools/data_scan.py)
         if (Area* a = addArea(&l->name, nullptr, 0)) a->attach(*l);
         return true;
     }

@@ -184,7 +184,8 @@ void Loc22::placeCrystal(int item) {
             if (stones_[i]->area) stones_[i]->area->setEvent(kSlot0 + i);
         }
         // Steinscheibe dreht sich je nach Kristall um ein Sechstel (Tabelle +0xF8/+0x110)
-        // UNVERIFIED: Gegenstände außerhalb 17…22 lesen im Original fremde Felder; hier nicht erreichbar
+        // Gegenstände außerhalb 17…22 würden im Original fremde Felder lesen; nicht erreichbar: nur die
+        // Ereignisse 0x11…0x16 führen hierher, registriert für genau diese Gegenstände (setCrystalEvents)
         const int k = item - 0x11;
         if (k >= 0 && k < 6) playRange(bigStone_, 11, turnFrom_[k], turnTo_[k]);
         flag(off) = item;

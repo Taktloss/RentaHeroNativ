@@ -28,7 +28,7 @@ public:
                           std::size_t maxLen = 256) const;
     // GetPrivateProfileIntA: Standard nur, wenn der Schlüssel fehlt; sonst dezimal wie atoi
     // (Leerraum, Vorzeichen, Ziffern bis zum ersten Nicht-Ziffer-Zeichen; keine Ziffer → 0).
-    // UNVERIFIED: Hex-Präfixe ("0x") – kommen in den Daten nicht vor (tests/test_ini.cpp).
+    // Hex-Präfixe ("0x") kommen in den Daten nicht vor (tools/data_scan.py, tests/test_ini.cpp).
     int getInt(std::string_view section, std::string_view key, int def) const;
 
     // Für Prüfungen: Sektionen/Schlüssel, die mehrfach vorkommen (es gilt jeweils der erste).

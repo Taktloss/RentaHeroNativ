@@ -53,7 +53,7 @@ Erzeugt mit `tools/gen_loc_docs.py`; Bedeutung der Flags und Abläufe folgt bei 
 | Offset | Start | Bedeutung |
 |---|---:|---|
 | `0x3E90` | 0 | Megophias hat vom Helm erzählt (`096_ROD_23`; liest Loc16) |
-| `0x4094` | 0 | Grube gesehen (Loc26) → zweite Gesprächsreihe (`096_*_20…22`); Herkunft 1001 setzt es (UNVERIFIED) |
+| `0x4094` | 0 | Grube gesehen (Loc26) → zweite Gesprächsreihe (`096_*_20…22`); Herkunft 1001 setzt es (`0x0042B038`) |
 | `0x4098` | 0 | nach `096_MEG_19`: Weg nach 98 frei, Ausgang 96 → 95 erlaubt |
 | `0x40A8` | 0 | Boden zweimal untersucht: Fenster N öffnet den Geheimgang (`S95_EnterSecretRoom`) |
 | `0x40AC` | 1 | 1: Boden gesperrt, erst Fenster N (`095_ROD_01`), dann 2 |

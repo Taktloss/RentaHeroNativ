@@ -82,8 +82,8 @@ void Game::getViewObjects() {
     hero_ = scene_.actor(0);    // +0x1C = CSzene+0x5E0
     second_ = scene_.actor(1);  // +0x58 = CSzene+0x5E4
     scene_.setSceneNumber(sceneNr_);  // CSzene+0x5D4 = +0x2C
-    // +0x10 = state[+0x2C], nur bei Szene ≠ 0 (gamestate.md); Wert −1 (Symbol sofort) folgt mit den
-    // Hinweisen. UNVERIFIED: Szenennummer außerhalb 0…3999 (Original liest ungeprüft)
+    // +0x10 = state[+0x2C], nur bei Szene ≠ 0 (gamestate.md); −1 = Hinweis abgelaufen (HINTS.md).
+    // Original liest ungeprüft; höchste Szenennummer im Spiel ist 2013, die Grenze greift nie.
     if (sceneNr_ > 0 && sceneNr_ < 4000) hintCountdown_ = ctx_.state.at(static_cast<std::size_t>(sceneNr_) * 4);
 }
 
