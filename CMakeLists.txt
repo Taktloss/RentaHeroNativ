@@ -110,8 +110,9 @@ endif()
 if(UNSHIELD_FOUND)
   add_library(rah_install STATIC src/vfs/install.cpp)
   target_link_libraries(rah_install PUBLIC rah_core PkgConfig::UNSHIELD)
-  if(WIN32)
-    # statische libunshield (tools/windows/build.sh): ihr .pc nennt zlib nicht
+  option(RAH_UNSHIELD_STATIC "statische libunshield (Windows-/AppImage-Build), zlib dazu linken" ${WIN32})
+  if(RAH_UNSHIELD_STATIC)
+    # statische libunshield (tools/windows/build.sh, tools/appimage): ihr .pc nennt zlib nicht
     find_package(ZLIB REQUIRED)
     target_link_libraries(rah_install PUBLIC ZLIB::ZLIB)
   endif()

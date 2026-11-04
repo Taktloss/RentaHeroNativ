@@ -15,6 +15,7 @@
 /build/
 /out/
 /build-win/
+/build-appimage/
 *.o
 *.obj
 

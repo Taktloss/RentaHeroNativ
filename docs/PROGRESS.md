@@ -436,5 +436,10 @@
   - Alt+F/C/D/I/Enter/O, ImGui-Overlay im Spiel, Auswahl in `launcher.ini`.
   - Linux und Wine geprüft (FILTERS.md). Neue Prüfschalter `--shot`, `--sdl-key-at`,
     `--renderer sdl`.
+- 2026-11-04: **Linux-AppImage** (`tools/appimage/build.sh`, APPIMAGE.md): Bau im Ubuntu-22.04-
+  Container, Abhängigkeiten aus den Quellen (gemeinsam mit Windows: `tools/deps/sources.sh`),
+  FFmpeg als .so im AppImage, appimagetool 1.9.1/type2-runtime 20251108 mit Prüfsumme.
+  Geprüft auf Fedora 44: Startmenü, Bildfilter, Intro-Video bildgleich mit dem normalen Build.
+  Repository nach GitHub (privat) hochgeladen.
 - Nächste Schritte: Startmenü und Windows-Build auf echtem Windows 10/11 testen (Nutzer);
   Spielmenü im Fenster prüfen (Regler ziehen, Namenseingabe); Durchspielen der ungeprüften Wege.

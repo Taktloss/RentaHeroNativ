@@ -66,3 +66,6 @@ FFmpeg legt das Skript nach `dist/licenses/` bzw. `dist/THIRD-PARTY.txt`.
 
 **Nicht geprüft:** echtes Windows 10/11, also Fenster, Ton (WASAPI), Eingabe, DPI und die
 Meldungsfenster. Das muss auf einem echten Rechner getestet werden.
+
+Quellen, Prüfsummen, FFmpeg-Optionen und Lizenzsammlung teilt sich das Skript mit dem
+Linux-AppImage: `tools/deps/sources.sh` (APPIMAGE.md).

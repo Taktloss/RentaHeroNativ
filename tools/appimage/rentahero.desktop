@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Rent-A-Hero (Port)
+Comment=Quelloffener Source Port von Rent-A-Hero (benötigt die Original-CDs)
+Exec=rentahero
+Icon=rentahero
+Terminal=false
+Categories=Game;AdventureGame;

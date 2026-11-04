@@ -82,6 +82,10 @@ laden. Die Optionen umfassen Lautstärke, Untertitel, Vollbild, „Intro übersp
 Spielstand-Ordner. Details: [docs/LAUNCHER.md](docs/LAUNCHER.md). Mit Argumenten startet das
 Programm wie unten beschrieben direkt.
 
+**Linux-AppImage:** `tools/appimage/build.sh` baut im Container (podman/docker) eine einzelne Datei
+`build-appimage/RentAHero-<version>-x86_64.AppImage`, die auf Linux-Systemen mit glibc ≥ 2.35 läuft
+(docs/APPIMAGE.md).
+
 **Bildfilter:** Standard sind die Original-Pixel. Zur Wahl stehen außerdem Sharp-Bilinear, AMD FSR 1,
 xBR, xBRZ, HQ2x/HQ4x, ScaleFX und Entbänderung; für Retro-Flair gibt es CRT-Lottes und CRT-Geom.
 Einstellen lässt sich das im Startmenü oder im Spiel: Alt+F wechselt den Filter, Alt+C den
