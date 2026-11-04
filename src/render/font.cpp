@@ -202,4 +202,42 @@ void drawTextWordBreak(const Font& font, Surface565& s, const Rect& r, std::stri
     }
 }
 
+// Texte der EXE (CP1252) für SDL (UTF-8) und zurück (Eingabefeld)
+std::string cp1252ToUtf8(std::string_view in) {
+    std::string out;
+    for (unsigned char c : in) {
+        const char32_t u = cp1252ToUnicode(c);
+        if (u < 0x80) out.push_back(static_cast<char>(u));
+        else if (u < 0x800) {
+            out.push_back(static_cast<char>(0xC0 | (u >> 6)));
+            out.push_back(static_cast<char>(0x80 | (u & 0x3F)));
+        } else {
+            out.push_back(static_cast<char>(0xE0 | (u >> 12)));
+            out.push_back(static_cast<char>(0x80 | ((u >> 6) & 0x3F)));
+            out.push_back(static_cast<char>(0x80 | (u & 0x3F)));
+        }
+    }
+    return out;
+}
+
+std::string utf8ToCp1252(std::string_view in) {
+    std::string out;
+    for (std::size_t i = 0; i < in.size();) {
+        const auto b = static_cast<unsigned char>(in[i]);
+        char32_t u = b;
+        std::size_t n = 1;
+        if (b >= 0xF0) u = b & 0x07, n = 4;
+        else if (b >= 0xE0) u = b & 0x0F, n = 3;
+        else if (b >= 0xC0) u = b & 0x1F, n = 2;
+        for (std::size_t k = 1; k < n && i + k < in.size(); ++k) u = (u << 6) | (static_cast<unsigned char>(in[i + k]) & 0x3F);
+        i += n;
+        for (int c = 0x20; c < 0x100; ++c)
+            if (cp1252ToUnicode(static_cast<unsigned char>(c)) == u) {
+                out.push_back(static_cast<char>(c));
+                break;
+            }
+    }
+    return out;
+}
+
 }  // namespace rah

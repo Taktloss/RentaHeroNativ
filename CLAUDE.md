@@ -26,6 +26,10 @@ Ziel: exakt originalgetreues Verhalten (Logik, Timing, Grafik, Ton, Spielstände
 - Windows-Build (2026-11-04): x86_64 für Windows 10/11, Cross-Build unter Linux mit
   **llvm-mingw** (UCRT, ohne root in `~/.local/opt`), Abhängigkeiten per Skript aus den Quellen;
   **FFmpeg als DLLs** neben der EXE (LGPL), nur benötigte Decoder/Demuxer (docs/WINDOWS.md).
+- Startmenü/Setup (2026-11-04): Port-eigenes Menü mit **Dear ImGui** (eingebunden, feste
+  Version) im selben Fenster; Datenquelle, Fortsetzen/Neu/Laden, Optionen, Intro überspringen
+  (Option, Standard aus). Erscheint beim Start **ohne Argumente**; mit Argumenten wie bisher
+  direkt (docs/LAUNCHER.md).
 - Spielstände (2026-11-01): Speicherort konfigurierbar (`--save-dir`), Standard
   Benutzer-Datenordner; Common-Ordner nur auf Wunsch.
 

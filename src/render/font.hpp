@@ -64,5 +64,8 @@ std::vector<std::string> wrapText(const Font& font, std::string_view cp1252, int
 
 // Codepage 1252 → Unicode (ANSI-Codepage des deutschen Windows)
 char32_t cp1252ToUnicode(unsigned char c);
+// Texte der EXE (CP1252) für SDL (UTF-8) und zurück; nicht darstellbare Zeichen entfallen
+std::string cp1252ToUtf8(std::string_view in);
+std::string utf8ToCp1252(std::string_view in);
 
 }  // namespace rah

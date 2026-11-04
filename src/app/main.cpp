@@ -27,6 +27,7 @@
 #include "formats/pe.hpp"
 #include "render/font.hpp"
 #include "video/ffvideo.hpp"
+#include "app/launcher.hpp"
 #include "app/platform.hpp"
 #include "vfs/dirfs.hpp"
 #include "vfs/vfs.hpp"
@@ -77,6 +78,9 @@ struct Options {
     // Spielmenü nach SaveGameExit.rah (Auftrag 4), wenn Speichern gerade möglich ist
     bool saveOnClose = false;
     std::string saveDir;              // Spielstandordner (Standard: Benutzer-Datenordner; MENU.md)
+    std::string loadPath;             // --load: diesen Spielstand statt Neues Spiel (Startmenü)
+    bool skipIntro = false;           // Port-Option: Neues Spiel ohne Intro (LAUNCHER.md)
+    bool fullscreen = false;
     std::vector<int> keysAt;          // Prüfläufe: Esc in Bild n (Paare Bild, VK)
 };
 
@@ -90,7 +94,9 @@ void usage() {
                  "          [--game <Schauplatz> <Szene> [<Herkunftsszene>] (Intro: --game 40 114)] [--subtitles]\n"
                  "          [--mute] [--music-vol <0-100>] [--sfx-vol <0-100>] [--speech-vol <0-100>]\n"
                  "          [--audio3d] [--audio-dump <datei.wav>]\n"
-                 "          [--play] [--auto-load|--no-auto-load] [--save-on-close] [--save-dir <Ordner>] [--key-at <bild> <vk>]\n");
+                 "          [--play] [--auto-load|--no-auto-load] [--save-on-close] [--save-dir <Ordner>] [--key-at <bild> <vk>]\n"
+                 "          [--load <spielstand.rah>] [--skip-intro] [--fullscreen]\n"
+                 "Ohne Argumente: Startmenü (Datenquelle, Spielstände, Optionen; docs/LAUNCHER.md)\n");
 }
 
 bool parse(int argc, char** argv, Options& o) {
@@ -130,6 +136,14 @@ bool parse(int argc, char** argv, Options& o) {
             o.saveOnClose = true;
             continue;
         }
+        if (a == "--skip-intro") {
+            o.skipIntro = true;
+            continue;
+        }
+        if (a == "--fullscreen") {
+            o.fullscreen = true;
+            continue;
+        }
         if (a == "--no-auto-load") {  // entspricht AutoLoadGame=0
             o.autoLoad = false;
             continue;
@@ -151,6 +165,7 @@ bool parse(int argc, char** argv, Options& o) {
         else if (a == "--sfx-vol") o.sfxVol = std::atoi(v);
         else if (a == "--speech-vol") o.speechVol = std::atoi(v);
         else if (a == "--save-dir") o.saveDir = v;
+        else if (a == "--load") o.loadPath = v;
         else if (a == "--key-at" && i + 1 < argc) {
             o.keysAt.push_back(std::atoi(v));
             o.keysAt.push_back(static_cast<int>(std::strtol(argv[++i], nullptr, 0)));
@@ -202,44 +217,6 @@ void present(const Surface565& s, const Rect& r, Surface565& screen) {
             screen.row(sy)[x] = s.row(y)[x];
         }
     }
-}
-
-// Texte der EXE (CP1252) für SDL (UTF-8) und zurück (Eingabefeld)
-std::string cp1252ToUtf8(std::string_view in) {
-    std::string out;
-    for (unsigned char c : in) {
-        const char32_t u = cp1252ToUnicode(c);
-        if (u < 0x80) out.push_back(static_cast<char>(u));
-        else if (u < 0x800) {
-            out.push_back(static_cast<char>(0xC0 | (u >> 6)));
-            out.push_back(static_cast<char>(0x80 | (u & 0x3F)));
-        } else {
-            out.push_back(static_cast<char>(0xE0 | (u >> 12)));
-            out.push_back(static_cast<char>(0x80 | ((u >> 6) & 0x3F)));
-            out.push_back(static_cast<char>(0x80 | (u & 0x3F)));
-        }
-    }
-    return out;
-}
-
-std::string utf8ToCp1252(std::string_view in) {
-    std::string out;
-    for (std::size_t i = 0; i < in.size();) {
-        const auto b = static_cast<unsigned char>(in[i]);
-        char32_t u = b;
-        std::size_t n = 1;
-        if (b >= 0xF0) u = b & 0x07, n = 4;
-        else if (b >= 0xE0) u = b & 0x0F, n = 3;
-        else if (b >= 0xC0) u = b & 0x1F, n = 2;
-        for (std::size_t k = 1; k < n && i + k < in.size(); ++k) u = (u << 6) | (static_cast<unsigned char>(in[i + k]) & 0x3F);
-        i += n;
-        for (int c = 0x20; c < 0x100; ++c)
-            if (cp1252ToUnicode(static_cast<unsigned char>(c)) == u) {
-                out.push_back(static_cast<char>(c));
-                break;
-            }
-    }
-    return out;
 }
 
 void writePpm(const Surface565& screen, const std::string& path) {
@@ -305,9 +282,57 @@ private:
 
 int run(int argc, char** argv) {
     Options opt;
-    if (!parse(argc, argv, opt)) {
+    if (argc > 1 && !parse(argc, argv, opt)) {
         usage();
         return 2;
+    }
+    SDL_Window* win = nullptr;
+    SDL_Renderer* ren = nullptr;
+    if (argc <= 1) {
+        // Start ohne Argumente: Startmenü im Spielfenster (Entscheidung Nutzer, LAUNCHER.md)
+        if (!SDL_Init(SDL_INIT_VIDEO)) {
+            std::fprintf(stderr, "SDL_Init: %s\n", SDL_GetError());
+            return 1;
+        }
+        if (!SDL_CreateWindowAndRenderer("Rent-A-Hero", kScreenW * 2, kScreenH * 2, SDL_WINDOW_RESIZABLE, &win, &ren)) {
+            std::fprintf(stderr, "Fenster: %s\n", SDL_GetError());
+            SDL_Quit();
+            return 1;
+        }
+        LauncherEnv env;
+        if (char* pref = SDL_GetPrefPath(nullptr, "RentaHeroNativ")) {
+            env.defaultSaveDir = pref;
+            SDL_free(pref);
+        }
+        env.iniFile = std::filesystem::path(env.defaultSaveDir) / "launcher.ini";
+        env.installDir = std::filesystem::path(env.defaultSaveDir) / "Install";
+#ifdef RAH_HAVE_UNSHIELD
+        env.canExtract = true;
+#endif
+        LauncherSettings ls;
+        loadLauncherSettings(env.iniFile, ls);
+        const LaunchChoice c = runLauncher(win, ren, ls, env);
+        if (c.kind == LaunchChoice::Quit) {
+            SDL_DestroyRenderer(ren);
+            SDL_DestroyWindow(win);
+            SDL_Quit();
+            return 0;
+        }
+        opt.cd = ls.sources;
+        opt.common = c.common;
+        opt.saveDir = ls.saveDir;
+        opt.subtitles = ls.subtitles;
+        opt.mute = ls.mute;
+        opt.audio3d = ls.audio3d;
+        opt.musicVol = ls.musicVol;
+        opt.sfxVol = ls.sfxVol;
+        opt.speechVol = ls.speechVol;
+        opt.saveOnClose = ls.saveOnClose;
+        opt.fullscreen = ls.fullscreen;
+        opt.skipIntro = ls.skipIntro;
+        opt.play = true;
+        opt.autoLoad = false;  // die Wahl im Menü ersetzt AutoLoadGame
+        if (c.kind != LaunchChoice::NewGame) opt.loadPath = c.savePath;
     }
 
     Vfs cd;
@@ -500,14 +525,13 @@ int run(int argc, char** argv) {
         if (c != cursors.get()) cursors.set(c);
     };
 
-    SDL_Window* win = nullptr;
-    SDL_Renderer* ren = nullptr;
     const SDL_WindowFlags flags = SDL_WINDOW_RESIZABLE | (opt.hidden ? SDL_WINDOW_HIDDEN : 0);
-    if (!SDL_CreateWindowAndRenderer("Rent-A-Hero", kScreenW * 2, kScreenH * 2, flags, &win, &ren)) {
+    if (!win && !SDL_CreateWindowAndRenderer("Rent-A-Hero", kScreenW * 2, kScreenH * 2, flags, &win, &ren)) {
         std::fprintf(stderr, "Fenster: %s\n", SDL_GetError());
         SDL_Quit();
         return 1;
     }
+    if (opt.fullscreen && !opt.hidden) SDL_SetWindowFullscreen(win, true);
     SDL_SetRenderLogicalPresentation(ren, kScreenW, kScreenH, SDL_LOGICAL_PRESENTATION_INTEGER_SCALE);
     SDL_Texture* tex =
         SDL_CreateTexture(ren, SDL_PIXELFORMAT_RGB565, SDL_TEXTUREACCESS_STREAMING, kScreenW, kScreenH);
@@ -559,7 +583,11 @@ int run(int argc, char** argv) {
     if (opt.play) {
         // WinMain: Auftrag 3 (Neues Spiel), mit AutoLoadGame und SaveGameExit.rah Auftrag 1
         ctx.save.request = 3;
-        if (opt.autoLoad) {
+        ctx.save.skipIntro = opt.skipIntro;
+        if (!opt.loadPath.empty()) {
+            ctx.save.path = opt.loadPath;
+            ctx.save.request = 1;
+        } else if (opt.autoLoad) {
             ctx.save.path = ctx.save.dir_ + "SaveGameExit.rah";
             if (std::filesystem::exists(ctx.save.path)) ctx.save.request = 1;
         }

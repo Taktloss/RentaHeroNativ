@@ -25,6 +25,7 @@ tools/windows/build.sh            # [--jobs N]; LLVM_MINGW=<pfad> optional
 | FFmpeg | 8.1.3: nur AVI-Demuxer, Decoder `cinepak`/`indeo3`/`indeo5`, swscale, `--enable-small`, ohne x86-Assembler (`nasm` fehlt) | **DLLs** | LGPL-2.1+ |
 | unshield | 1.6.2 (eigenes MD5) | statisch | MIT |
 | zlib | 1.3.1 | statisch | zlib |
+| Dear ImGui | 1.92.9b (eingebunden, `third_party/imgui`) | statisch | MIT |
 | libc++/libunwind | aus llvm-mingw | DLLs | Apache-2.0 mit LLVM-Ausnahme |
 
 Dieselben Versionen wie der Linux-Build (Fedora 44). Lizenztexte und die configure-Zeile von

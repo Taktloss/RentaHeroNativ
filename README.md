@@ -75,6 +75,13 @@ an (auch unter Wine).
 
 ## Starten
 
+**Am einfachsten:** `rentahero` ohne Argumente starten (unter Windows per Doppelklick). Dann
+erscheint das Startmenü. Dort gibt man unter „Datenquelle“ einmalig die beiden CDs an, als Ordner,
+`.iso` oder `.cue`, und kann dann fortsetzen, ein neues Spiel beginnen oder einen Spielstand
+laden. Die Optionen umfassen Lautstärke, Untertitel, Vollbild, „Intro überspringen“ und den
+Spielstand-Ordner. Details: [docs/LAUNCHER.md](docs/LAUNCHER.md). Mit Argumenten startet das
+Programm wie unten beschrieben direkt.
+
 ```bash
 # mit CD-Images
 ./build/rentahero --cd "Rent a Hero CD1.cue" --cd "Rent a Hero CD2.cue" --play

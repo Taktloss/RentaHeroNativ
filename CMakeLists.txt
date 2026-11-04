@@ -133,14 +133,29 @@ target_link_libraries(rah_pathstat PRIVATE rah_core)
 if(RAH_BUILD_APP)
   find_package(SDL3 CONFIG)
   if(SDL3_FOUND AND FFMPEG_FOUND AND FREETYPE_FOUND)
-    add_executable(rentahero src/app/main.cpp src/app/platform.cpp)
+    # Dear ImGui v1.92.9b (MIT, unverändert eingebunden) für das Startmenü (docs/LAUNCHER.md)
+    set(IMGUI_DIR ${CMAKE_CURRENT_SOURCE_DIR}/third_party/imgui)
+    add_library(rah_imgui STATIC
+      ${IMGUI_DIR}/imgui.cpp ${IMGUI_DIR}/imgui_draw.cpp ${IMGUI_DIR}/imgui_tables.cpp
+      ${IMGUI_DIR}/imgui_widgets.cpp ${IMGUI_DIR}/imgui_stdlib.cpp
+      ${IMGUI_DIR}/backends/imgui_impl_sdl3.cpp ${IMGUI_DIR}/backends/imgui_impl_sdlrenderer3.cpp)
+    target_include_directories(rah_imgui SYSTEM PUBLIC ${IMGUI_DIR} ${IMGUI_DIR}/backends)
+    target_compile_definitions(rah_imgui PUBLIC IMGUI_DISABLE_OBSOLETE_FUNCTIONS)
+    target_link_libraries(rah_imgui PUBLIC SDL3::SDL3)
+    set_target_properties(rah_imgui PROPERTIES COMPILE_WARNING_AS_ERROR OFF)
+    if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+      target_compile_options(rah_imgui PRIVATE -w)
+    endif()
+
+    add_executable(rentahero src/app/main.cpp src/app/platform.cpp src/app/launcher.cpp
+      src/app/launchersettings.cpp)
     if(WIN32)
       # GUI-Programm (kein Konsolenfenster), Manifest: UTF-8-Codepage, DPI (docs/WINDOWS.md)
       enable_language(RC)
       target_sources(rentahero PRIVATE src/app/rentahero.rc)
       set_target_properties(rentahero PROPERTIES WIN32_EXECUTABLE TRUE)
     endif()
-    target_link_libraries(rentahero PRIVATE rah_core rah_font rah_video SDL3::SDL3)
+    target_link_libraries(rentahero PRIVATE rah_core rah_font rah_video rah_imgui SDL3::SDL3)
     if(UNSHIELD_FOUND)
       target_link_libraries(rentahero PRIVATE rah_install)
       target_compile_definitions(rentahero PRIVATE RAH_HAVE_UNSHIELD=1)
@@ -171,6 +186,8 @@ if(RAH_BUILD_TESTS)
     tests/test_audio.cpp
     tests/test_actor.cpp
     tests/test_iv5mask.cpp
+    tests/test_launcher.cpp
+    src/app/launchersettings.cpp
   )
   target_link_libraries(rah_tests PRIVATE rah_core)
   if(FFMPEG_FOUND)

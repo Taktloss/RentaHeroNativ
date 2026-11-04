@@ -420,5 +420,14 @@
   - Manifest: UTF-8-Codepage, DPI je Monitor.
   - Unter Wine geprüft: Tests und Datentests grün, CAB-Entpacken, Szene, Spielstand aus einem
     Pfad mit Umlauten (docs/WINDOWS.md).
-- Nächste Schritte: Windows-Build auf echtem Windows 10/11 testen (Nutzer); Menü im Fenster prüfen
-  (Regler ziehen, Namenseingabe); Durchspielen der ungeprüften Wege.
+- 2026-11-04: **Startmenü/Setup** (Entscheidung Nutzer: Dear ImGui, ohne Argumente):
+  - `src/app/launcher.cpp` mit den Reitern Spielen (Fortsetzen/Neu/Spielstände), Datenquelle
+    (Quellen, Prüfung 35 Spielordner + CAB, Common entpacken oder angeben) und Optionen.
+  - Einstellungen in `launcher.ini`.
+  - Neue Schalter `--load`, `--skip-intro` (Port-Option, Standard aus: Loc 1/S7, Herkunft 5),
+    `--fullscreen`.
+  - ImGui 1.92.9b in `third_party/imgui`. Prüfmodus `RAH_LAUNCHER_SHOT`/`_AUTO`.
+  - Linux und Wine: alle Startwege geprüft (docs/LAUNCHER.md). CP1252-Umwandlung nach
+    `render/font` verschoben; `std::chrono::clock_cast` fehlt in libc++.
+- Nächste Schritte: Startmenü und Windows-Build auf echtem Windows 10/11 testen (Nutzer);
+  Spielmenü im Fenster prüfen (Regler ziehen, Namenseingabe); Durchspielen der ungeprüften Wege.

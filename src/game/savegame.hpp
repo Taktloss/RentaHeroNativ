@@ -26,6 +26,8 @@ struct SaveGlobals {
     int x = 0, y = 0, dir = 0;        // 0x0047D758 / 0x0047D75C / 0x0047D760
     // Spielstandordner mit abschließendem '/': Original g_CommonPath 0x0047D278; Port: --save-dir
     std::string dir_;
+    // Port-Option (Startmenü, --skip-intro; Standard aus): Neues Spiel ohne Intro (LAUNCHER.md)
+    bool skipIntro = false;
 };
 
 // strcpy in den 30-Byte-Namenspuffer (NUL mitkopiert, Rest bleibt)

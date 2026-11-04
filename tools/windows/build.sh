@@ -114,6 +114,7 @@ cp "$SRC/sdl3/LICENSE.txt" "$L/SDL3.txt"
 cp "$SRC/freetype/docs/FTL.TXT" "$L/FreeType-FTL.txt"
 cp "$SRC/unshield/LICENSE" "$L/unshield-MIT.txt"
 cp "$SRC/zlib/LICENSE" "$L/zlib.txt"
+cp "$root/third_party/imgui/LICENSE.txt" "$L/DearImGui-MIT.txt"
 cp "$LLVM_MINGW/LICENSE.TXT" "$L/llvm-mingw-libc++-libunwind.txt"
 cat > "$D/THIRD-PARTY.txt" <<EOT
 Rent-A-Hero (Port) – mitgelieferte Bibliotheken (Lizenztexte in licenses/)
@@ -126,6 +127,7 @@ SDL 3.4.18 (zlib-Lizenz), statisch.
 FreeType 2.14.3 (FreeType License): Portions of this software are copyright © The FreeType
   Project (www.freetype.org). All rights reserved. Statisch.
 unshield 1.6.2 (MIT), statisch.  zlib 1.3.1 (zlib-Lizenz), statisch.
+Dear ImGui 1.92.9b (MIT), statisch (Startmenü).
 libc++/libunwind aus llvm-mingw (Apache-2.0 mit LLVM-Ausnahme) als DLLs.
 EOT
 ver=$(git -C "$root" describe --always --dirty 2>/dev/null || echo unbekannt)

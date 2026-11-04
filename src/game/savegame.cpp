@@ -167,6 +167,14 @@ void saveProcess(GameContext& ctx) {
         ctx.request.nextLocation = 40;
         ctx.request.nextScene = 114;
         ctx.request.prevScene = 0;
+        if (s.skipIntro) {
+            // Port-Option: Ziel am Ende des Intros (Loc40 S116 → Loc 1 / Szene 7, vorherige 5).
+            // Das Intro setzt sonst nur S[0x410C] (liest allein Loc37) und gibt den Gegenstand
+            // aus Loc35 wieder ab (LAUNCHER.md)
+            ctx.request.nextLocation = 1;
+            ctx.request.nextScene = 7;
+            ctx.request.prevScene = 5;
+        }
         switchLocation(ctx);
         return;
     case 4:
