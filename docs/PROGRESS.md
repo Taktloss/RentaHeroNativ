@@ -352,6 +352,8 @@
   ablegen und aufsetzen → 25/104. 141 Tests.
 - 2026-11-04: Loc25 (Cyberspace, Endkampf, Szene 105) portiert: Helfer in der richtigen
   Reihenfolge → 41/112. 142 Tests.
+- 2026-11-04: Loc41 (Schlusssequenz/Abspann, Szene 112) und Loc28 (Endavin, Szenen 31/32/35)
+  portiert. 144 Tests.
   128 Tests.
-- Nächste Schritte: Menü im Fenster prüfen (Regler ziehen, Namenseingabe); noch nicht portierte Schauplätze: Loc28–Loc30, Loc41; Ramil-Pfad (Sprungziel 1004) in Loc10 prüfen;
+- Nächste Schritte: Menü im Fenster prüfen (Regler ziehen, Namenseingabe); noch nicht portierte Schauplätze: Loc29, Loc30; Ramil-Pfad (Sprungziel 1004) in Loc10 prüfen;
   Hinweis-Countdown/`Hints_Select`.

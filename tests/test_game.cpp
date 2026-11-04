@@ -28,6 +28,8 @@
 #include "game/loc25.hpp"
 #include "game/loc26.hpp"
 #include "game/loc27.hpp"
+#include "game/loc28.hpp"
+#include "game/loc41.hpp"
 #include "game/loc31.hpp"
 #include "game/loc04.hpp"
 #include "game/loc05.hpp"
@@ -546,6 +548,22 @@ TEST(loc27_builds_both_scenes_without_data) {
     CHECK(a.location() == 27 && a.sceneNumber() == 95);
     Loc27 b(*r.ctx, 96, 95);
     CHECK(b.sceneNumber() == 96);
+}
+
+TEST(loc28_builds_all_scenes_without_data) {
+    Rig r(10);
+    Loc28 a(*r.ctx, 30, 30);
+    CHECK(a.location() == 28 && a.sceneNumber() == 31);  // 30/31/36 → Szene 31
+    Loc28 b(*r.ctx, 32, 31);
+    CHECK(b.sceneNumber() == 32);
+    Loc28 c(*r.ctx, 35, 34);
+    CHECK(c.sceneNumber() == 35);
+}
+
+TEST(loc41_builds_without_data) {
+    Rig r(10);
+    Loc41 a(*r.ctx, 112, 105);
+    CHECK(a.location() == 41 && a.sceneNumber() == 112);
 }
 
 TEST(layer_move_by_and_set_z) {

@@ -1,4 +1,4 @@
-# Loc28 (automatische Übersicht)
+# Loc28 – Endavin: Stadttor (31), Gasse (32), Kerkerfenster (35)
 
 Funktionen `0x0042C6C0`–`0x0042EE4F` (7 Stück), Ereignis-Handler `0x0042D940`, `0x0042E570`, `0x0042EA20`.
 Erzeugt mit `tools/gen_loc_docs.py`; Bedeutung der Flags und Abläufe folgt bei der Einzelanalyse (UNVERIFIED bis dahin). In der Fallübersicht ist `== N` ein Zweig einer If-Kette – Ereignis-ID **oder** Wert eines Flags/Zählers.
@@ -83,3 +83,35 @@ Erzeugt mit `tools/gen_loc_docs.py`; Bedeutung der Flags und Abläufe folgt bei 
   case 11: Sprache 035_CAP_06 035_FRE_06 035_FRE_07 | S= 40C4=1 | ruft CSzene_DisableInput CGame_Speak CAnimLayer_PlayRange CSzene_EnableInput CEvent_SetTimerHandler
   case 34: ruft CEvent_SetTimerHandler
 ```
+
+## Einzelanalyse (2026-11-04, portiert: `src/game/loc28.cpp`)
+
+### Flags
+| Offset | Start | Bedeutung |
+|---|---:|---|
+| `0x3E8C` | 0 | UNVERIFIED: Szene 31 setzt 1 (Endavin erreicht) |
+| `0x40C4` | 1 | Szene 35: Gesprächsstufe Kapitän/Fremder 1…11 (11: Kapitän schlägt zu, zurück auf 1) |
+| `0x40C8` | 1 | erste Ankunft im Busch: `031_ROD_03` |
+| `0x40CC` | 1 | erster Besuch der Gasse: `032_ROD_01` |
+| `0x40D0` | 1 | Wache fragt beim ersten Verlassen des Buschs nach der Parole (`S31_RodPirParole`) |
+| `0x40D4` | 1 | Schutt rechts: 1 Kommentar, 2 kramen (am Platz ±9) → Gegenstand 25, 3 leer |
+| `0x40D8` | 1 | Kerker-Kommentare `032_ROD_07…09` |
+| `0x40DC` | 1 | Wache in 32: `032_ROD/PW2_10…12` |
+| `0x40E0` | 0 | Fremder hat die Parole verraten (`S31_Fre*`, mit Gegenstand 1 zufällig 1:3 oder mit allen vier Teilen) |
+| `0x40E4` | 0 | im Busch als Pirat verkleidet (`0x0042E420` wechselt) |
+| `0x40E8` | 1 | Busch-Stufe ohne Verkleidungsteile: `_05`, Wachen-Szene `_06/_07`, `_08` |
+| `0x40F0` | 0 | Rodrigo steht als Pirat vor dem Busch (sonst Blick aus dem Busch) |
+
+### Ablauf
+- Ctor `0x0042C6C0`: Szenen 30/31/36 → 31 (`S31`), 32 (`S32`), 35 (`S35`, `CSzene_ClearFlag510`);
+  andere Szenennummern: kein PlayMusic, Hall auf `+0x08` (Original).
+- 31 `0x0042D940`: Verkleidungsteile 1, 3, 4, 14 (Ereignisse 5, 8, 6, 7). Mit allen vier: aus dem
+  Busch als Pirat (`S31_RodPirLeavesBush`, (4,264) Richtung 6 → (90,262)), Tor (2) →
+  `S31_EnterCity` → 28/32. Ausgang (1) → 31/113, bzw. als Pirat zurück in den Busch.
+  Ankunft aus 34 (Flucht): Gespräch mit Jasper, Deckel, Gleiter → 10/66.
+- 32 `0x0042E570`: Kommentare, Kneipe → 29/33, Schutt rechts → Gegenstand 25, Wache.
+- 35 `0x0042EA20`: Kapitän und Fremder reden über den Timer +0x148 (1 s, zwischen Zeilen 0,2 s);
+  Klick links/rechts → 30/34.
+- Probelauf 2026-11-04: 31 aus 30 (Busch, Stufen), mit allen Teilen verkleidet → Tor → 32,
+  Kneipe → 29/33 (noch nicht portiert), Schutt rechts; 35 Dialog-Schleife.
+  Nicht geprüft: Flucht-Sequenz aus 34, Fremder-Sequenz, Parole.
