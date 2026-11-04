@@ -13,7 +13,7 @@ TEST(launcher_settings_roundtrip) {
     const auto file = dir / "sub" / "launcher.ini";
     LauncherSettings s;
     CHECK(!loadLauncherSettings(file, s));  // fehlt → false, Standardwerte
-    CHECK(s.musicVol == 100 && !s.skipIntro && s.sources.empty());
+    CHECK(s.musicVol == 100 && !s.skipIntro && !s.fixWalkJump && s.sources.empty());
 
     s.sources = {"/media/Rent a Hero CD1.cue", "D:\\", "/pfad/mit Ümläut"};
     s.common = "C:\\Programme\\Rent-A-Hero\\Common";
@@ -26,6 +26,7 @@ TEST(launcher_settings_roundtrip) {
     s.saveOnClose = true;
     s.fullscreen = true;
     s.skipIntro = true;
+    s.fixWalkJump = true;
     REQUIRE(saveLauncherSettings(file, s));
 
     LauncherSettings r;
@@ -33,7 +34,7 @@ TEST(launcher_settings_roundtrip) {
     CHECK(r.sources == s.sources);
     CHECK(r.common == s.common);
     CHECK(r.saveDir.empty());
-    CHECK(r.subtitles && r.audio3d && !r.mute && r.saveOnClose && r.fullscreen && r.skipIntro);
+    CHECK(r.subtitles && r.audio3d && !r.mute && r.saveOnClose && r.fullscreen && r.skipIntro && r.fixWalkJump);
     CHECK(r.musicVol == 40 && r.sfxVol == 0 && r.speechVol == 77);
 
     // Werte außerhalb 0…100 werden begrenzt

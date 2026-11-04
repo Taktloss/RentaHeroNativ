@@ -307,10 +307,10 @@ bool Actor::walkTo(int px, int py, int handler, int d) {
 
 bool Actor::walkToClick(int px, int py) {
     dirAtTarget = -1;
-    return walkCore(px, py, false);
+    return walkCore(px, py, false, true);
 }
 
-bool Actor::walkCore(int px, int py, bool fresh) {
+bool Actor::walkCore(int px, int py, bool fresh, bool fromClick) {
     enable();
     if (!pathMap) return false;
     if (footX == px && footY == py) {
@@ -386,7 +386,10 @@ bool Actor::walkCore(int px, int py, bool fresh) {
     const auto jump = [&] {
         targetY = 0;
         targetX = 0;
-        setPosition(sx, sy, true);  // kein Weg: Figur springt ans Ziel
+        // Port-Korrektur (Standard aus): nur bei Spielerklicks stehen bleiben; Laufbefehle des
+        // Spielcodes springen weiter wie im Original (Abgänge über gesperrte Ränder)
+        if (!(fromClick && g_.fixWalkJump))
+            setPosition(sx, sy, true);  // kein Weg: Figur springt ans Ziel (Original-Fehler)
         fireWalkEvent(0x29);
         clearRun();
         return true;

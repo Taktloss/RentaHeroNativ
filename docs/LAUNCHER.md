@@ -33,7 +33,7 @@ eingerichtet (`rah.ini`, DATAPATHS.md) und startet direkt mit Auftrag 3 bzw. Aut
 `<Benutzer-Datenordner>/launcher.ini` liegt unter Linux in `~/.local/share/RentaHeroNativ/`, unter
 Windows in `%APPDATA%\RentaHeroNativ\`. Die Datei ist UTF-8 und hat den Abschnitt `[Launcher]` mit
 den Schlüsseln `Source1…16`, `Common`, `SaveDir`, `SubTitles`, `Mute`, `Audio3D`,
-`MusicVolume`, `SfxVolume`, `SpeechVolume`, `SaveOnClose`, `Fullscreen`, `SkipIntro`, `Filter`, `Crt`,
+`MusicVolume`, `SfxVolume`, `SpeechVolume`, `SaveOnClose`, `Fullscreen`, `SkipIntro`, `FixWalkJump`, `Filter`, `Crt`,
 `Deband` und `IntegerScale`.
 Gespeichert wird bei jedem Start und beim Beenden. ImGui legt kein eigenes `imgui.ini` an.
 
@@ -54,6 +54,8 @@ die Lautstärke ohnehin nirgends dauerhaft.
   - Sonst schreiben Loc35/37/40 keinen Zustand (geprüft im Port-Code).
 
   Die Option gilt auch für „Neues Spiel“ im Spielmenü.
+- `--fix-walk-jump`: **Port-Korrektur, Standard aus.** Ein Klick ohne Weg setzt Rodrigo nicht ans
+  Ziel (Original-Fehler, PATHFINDING.md).
 - `--fullscreen`: Vollbild (Desktop-Auflösung, Seitenverhältnis bleibt über die logische
   Darstellung 640×480 erhalten).
 

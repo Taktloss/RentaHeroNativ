@@ -21,6 +21,7 @@ struct LauncherSettings {
     bool saveOnClose = false;
     bool fullscreen = false;
     bool skipIntro = false;  // Port-Option, Standard aus (originalgetreu: Intro bei Neues Spiel)
+    bool fixWalkJump = false;  // Port-Korrektur, Standard aus (PATHFINDING.md)
     DisplaySettings display;  // Bildfilter (FILTERS.md)
 };
 

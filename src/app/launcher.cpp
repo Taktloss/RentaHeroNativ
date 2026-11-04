@@ -465,6 +465,10 @@ void Launcher::tabOptions() {
     ImGui::Checkbox("Intro überspringen (bei „Neues Spiel“)", &s_.skipIntro);
     ImGui::SetItemTooltip("Port-Option: startet direkt in Schauplatz 1, Szene 7 (Ende des Intros).\n"
                           "Das Original zeigt das Intro immer.");
+    ImGui::Checkbox("Korrektur: Rodrigo springt nicht an unerreichbare Stellen", &s_.fixWalkJump);
+    ImGui::SetItemTooltip("Port-Korrektur: Findet der Wegsucher zum Klickpunkt keinen Weg, setzt das\n"
+                          "Original die Figur direkt dorthin (z. B. hinter Büsche am Bildrand).\n"
+                          "An: Rodrigo bleibt stehen. Aus = wie im Original.");
     ImGui::Checkbox("Beim Schließen des Fensters automatisch speichern", &s_.saveOnClose);
     ImGui::SetItemTooltip("Port-Option: wie „Beenden“ im Spielmenü (SaveGameExit.rah).");
 

@@ -31,6 +31,9 @@ struct FoundFile;
 struct EngineGlobals {
     bool sceneChanged = false;  // g_SceneChanged 0x00481F28
     bool debug = false;         // Port: --debug (Klicks, Ereignisse, Wartestellen nach stderr)
+    // Port-Korrektur, Standard aus: Klick ohne Weg lässt den Helden stehen, statt ihn wie das
+    // Original ans Ziel zu setzen (PATHFINDING.md „Laufbefehl → Zielpunkt“, --fix-walk-jump)
+    bool fixWalkJump = false;
     // g_EventProc 0x0047E60C: OnGenericEvent des aktuellen Schauplatzes
     std::function<void(Event&, int type)> eventProc;
     // AVI öffnen (FFmpeg im Spiel); leer → Videoebenen werden nicht geladen (docs/VIDEO.md)

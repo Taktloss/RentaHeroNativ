@@ -45,6 +45,11 @@ In `CActor_WalkCore` (SCRIPTING.md), wenn Wegkarte und Wegsucher vorhanden:
      Prozessspeicher unter Wine gelesen und ist Zelle für Zelle gleich; Fußpunkt und Zwischenziel
      stehen bei `+0x15D0/+0x15D4` bzw. `+0x1AE0/+0x1AE4`.
    - Es handelt sich also um einen **Original-Fehler**, der Port bildet ihn nach.
+   - **Korrektur (Port, Standard aus):** `--fix-walk-jump` bzw. `FixWalkJump=1` in `launcher.ini`
+     (Startmenü → Optionen → Spiel). Bei einem Spielerklick ohne Weg bleibt der Held dann stehen;
+     Ereignis 0x29 kommt wie sonst. Laufbefehle des Spielcodes (`walkTo`, z. B. Abgänge über
+     gesperrte Ränder) springen weiter wie im Original. Geprüft: Ohne Schalter landet er bei
+     (3, 150), mit Schalter bleibt er bei (343, 328).
 4. Wegpunkte mit `CPathFinder_Next` (`0x00444FE0`) abholen (der erste ist der Start
    und wird verworfen); Richtung zum nächsten Wegpunkt mit `CActor_FaceTowards`.
 

@@ -83,6 +83,7 @@ struct Options {
     std::string saveDir;              // Spielstandordner (Standard: Benutzer-Datenordner; MENU.md)
     std::string loadPath;             // --load: diesen Spielstand statt Neues Spiel (Startmenü)
     bool skipIntro = false;           // Port-Option: Neues Spiel ohne Intro (LAUNCHER.md)
+    bool fixWalkJump = false;         // Port-Korrektur: Klick ohne Weg → stehen bleiben (PATHFINDING.md)
     bool fullscreen = false;
     std::string filter, crt;          // --filter / --crt (sonst launcher.ini)
     bool deband = false, noIntegerScale = false;
@@ -103,7 +104,7 @@ void usage() {
                  "          [--mute] [--music-vol <0-100>] [--sfx-vol <0-100>] [--speech-vol <0-100>]\n"
                  "          [--audio3d] [--audio-dump <datei.wav>]\n"
                  "          [--play] [--auto-load|--no-auto-load] [--save-on-close] [--save-dir <Ordner>] [--key-at <bild> <vk>]\n"
-                 "          [--load <spielstand.rah>] [--skip-intro] [--fullscreen]\n"
+                 "          [--load <spielstand.rah>] [--skip-intro] [--fix-walk-jump] [--fullscreen]\n"
                  "          [--filter <original|smooth|sharp|fsr|xbr|xbrz|hq2x|hq4x|scalefx>] [--crt <off|lottes|geom>]\n"
                  "          [--deband] [--no-integer-scale] [--renderer <gl|sdl>] [--shot <fenster.bmp>] [--sdl-key-at <bild> <alt+f>]\n"
                  "Ohne Argumente: Startmenü (Datenquelle, Spielstände, Optionen; docs/LAUNCHER.md)\n");
@@ -148,6 +149,10 @@ bool parse(int argc, char** argv, Options& o) {
         }
         if (a == "--skip-intro") {
             o.skipIntro = true;
+            continue;
+        }
+        if (a == "--fix-walk-jump") {
+            o.fixWalkJump = true;
             continue;
         }
         if (a == "--fullscreen") {
@@ -398,6 +403,7 @@ int run(int argc, char** argv) {
         opt.saveOnClose = ls.saveOnClose;
         opt.fullscreen = ls.fullscreen;
         opt.skipIntro = ls.skipIntro;
+        opt.fixWalkJump = ls.fixWalkJump;
         opt.play = true;
         opt.autoLoad = false;  // die Wahl im Menü ersetzt AutoLoadGame
         if (c.kind != LaunchChoice::NewGame) opt.loadPath = c.savePath;
@@ -462,6 +468,7 @@ int run(int argc, char** argv) {
     }
     EngineGlobals g;
     g.debug = opt.debug;
+    g.fixWalkJump = opt.fixWalkJump;
     // timeGetTime(): Millisekunden als 32-Bit-Zahl (läuft wie das Original nach ~49 Tagen über)
     g.now = [] { return static_cast<std::uint32_t>(SDL_GetTicks()); };
 

@@ -70,7 +70,7 @@ public:
     // orig: Rent-A-Hero.exe 0x00434E80 CActor_WalkToClick
     bool walkToClick(int x, int y);
     // orig: Rent-A-Hero.exe 0x00434EA0 CActor_WalkCore(x, y, neu)
-    bool walkCore(int x, int y, bool fresh);
+    bool walkCore(int x, int y, bool fresh, bool fromClick = false);
     // orig: Rent-A-Hero.exe 0x00435320 CActor_SetRun / 0x00435330 CActor_ClearRun (+0x58;
     // ClearRun setzt außerdem 0x0047D130 = 0, das nie ≠ 0 wird)
     void setRun() { alwaysUpdate = true; }

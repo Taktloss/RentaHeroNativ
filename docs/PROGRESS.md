@@ -445,6 +445,7 @@
   bei jedem Push, Tests auch auf echtem Windows (windows-2025), Release bei Tags `v*`.
 - 2026-11-04: Fehlerbericht Nutzer „Rodrigo außerhalb der Grenzen“ (Loc10/S38, Klick an den
   linken Rand): Das Original verhält sich genauso. Unter Wine ist das Wegraster gleich und der Held
-  springt ohne Weg ans Ziel (PATHFINDING.md). Kein Port-Fehler.
+  springt ohne Weg ans Ziel (PATHFINDING.md). Kein Port-Fehler. Nutzerwunsch: Korrektur als Schalter
+  `--fix-walk-jump` / `FixWalkJump` (Standard aus).
 - Nächste Schritte: Startmenü und Windows-Build auf echtem Windows 10/11 testen (Nutzer);
   Spielmenü im Fenster prüfen (Regler ziehen, Namenseingabe); Durchspielen der ungeprüften Wege.
