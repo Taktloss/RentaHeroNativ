@@ -101,7 +101,7 @@ und Handler `0x00408D50` verzweigen nach `CGame+0x2C`. Musik `Loc02_SanchosPub`,
 
 Flags: `0x3EA0` Fremder da, `0x3EA4` Gäste-Gespräch, `0x3EA8`/`0x3EAC` Sancho (ohne/mit
 Fremdem), `0x3EB0` Sanchos Ohr, `0x3EB4` Fremder, `0x3EB8` Bier, `0x3EBC` Brust, `0x3EC0`
-Begrüßung an der Theke, `0x3EC4` schaltet Sancho-Stufe 7 frei (UNVERIFIED: Herkunft).
+Begrüßung an der Theke, `0x3EC4` schaltet Sancho-Stufe 7 frei (gesetzt in Loc01, Szene 46, Gesprächsstufe 4 bei `0x00407B80`; gelesen bei `0x00409420`).
 
 - **1013:** Sancho-Animation per Timer (1–2 s, dann 5–15 s), trinkender Gast mit Zählereignissen
   (Schluck bei Bild 58, Abstellen 63; `0x00443300` Schrittzähler `+0x2D0`, `0x00443530`

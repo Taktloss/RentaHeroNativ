@@ -10,7 +10,7 @@ namespace rah {
 namespace {
 constexpr std::size_t kTharainGone = 0x3FEC;  // Tharain nicht mehr da (gesetzt in Loc22)
 constexpr std::size_t kFirstVisit = 0x4020;   // erster Besuch: Begrüßung (Start 1)
-constexpr std::size_t k4024 = 0x4024;         // UNVERIFIED: Bedeutung; nach dem letzten Gespräch 1
+constexpr std::size_t kTalkDone4024 = 0x4024;  // nach dem letzten Gespräch 1; wird nirgends gelesen (einziger Schreiber 0x00422C02)
 constexpr std::size_t kTo71 = 0x4028;         // Weg nach 71 offen (liest Loc19)
 constexpr std::size_t kTalkDone = 0x402C;     // Gespräch beendet – Szene darf verlassen werden
 constexpr std::size_t kTalk = 0x4030;         // Gesprächsstufe mit Tharain (1…8)
@@ -212,7 +212,7 @@ void Loc20::onEvent(Event& e, int) {
         case 8:
             heroSay("070_ROD_12");
             tharainSay("070_THA_12");
-            flag(k4024) = 1;
+            flag(kTalkDone4024) = 1;
             flag(kTo71) = 1;
             flag(kTalkDone) = 1;
             return;

@@ -12,7 +12,7 @@ namespace rah {
 
 namespace {
 float f32(std::uint32_t bits) { return std::bit_cast<float>(bits); }
-constexpr std::size_t k3E8C = 0x3E8C;       // UNVERIFIED: Endavin erreicht (Szene 31 setzt 1)
+constexpr std::size_t kRanamaRing = 0x3E8C;  // Szene 31 setzt 1: Ranama trägt danach den Ring (Loc06 S27 Ladebit 1, Hinweis 06_027_A)
 constexpr std::size_t kTalk35 = 0x40C4;     // Gesprächsstufe Kapitän/Fremder (1…11)
 constexpr std::size_t kFirstBush = 0x40C8;  // erster Besuch: 031_ROD_03
 constexpr std::size_t kFirst32 = 0x40CC;    // erster Besuch Gasse: 032_ROD_01
@@ -207,7 +207,7 @@ void Loc28::strangerSequence() {
 
 void Loc28::start31() {
     setEventProc(&Loc28::onEvent31);
-    flag(k3E8C) = 1;
+    flag(kRanamaRing) = 1;
     if (lid_) lid_->enable();
     if (guard31_) guard31_->enable();
     InventoryBar* bar = scene_.inventory();

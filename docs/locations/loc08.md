@@ -66,7 +66,7 @@ Erzeugt mit `tools/gen_loc_docs.py`; Bedeutung der Flags und Abläufe folgt bei 
 | `0x3F18` | Sabrina: 0 nicht da, 1 steht am Fass, 2 Klappe geöffnet, 3 aus dem Gang zurück, 4 Bootsfahrt erledigt |
 | `0x3F1C` | Weg in den Wald einmal nach 58 statt 39 geführt |
 | `0x3F20` | Boot zurückgekehrt (Szene 100, nur Ladebit) |
-| `0x4088` | UNVERIFIED: von Loc24 gesetzt; ≠ 0 → Wald einmal nach 16/58, Boot verweigert (`100_ROD_01`) |
+| `0x4088` | Rodrigo hat das Schiff mit Helm verlassen (Loc24 `0x00428A53`); ≠ 0 → Wald einmal nach 16/58, Boot verweigert (`100_ROD_01`) |
 
 ### Konstruktor `0x00411640`
 - Ladebits: 1 wenn `0x3F18 < 2`, 2 wenn `< 4`; Szene 100 zusätzlich 4 wenn `0x3F20 = 0`.

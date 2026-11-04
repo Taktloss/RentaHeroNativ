@@ -18,7 +18,7 @@ constexpr std::size_t kStranger = 0x3EB4;      // Gesprächsstufe mit dem Fremde
 constexpr std::size_t kBeer = 0x3EB8;          // Bier des Fremden (1 → 2 → 3)
 constexpr std::size_t kChest = 0x3EBC;         // Brust des Fremden (Klicks bis 3)
 constexpr std::size_t kSanGreet = 0x3EC0;      // Sancho begrüßt beim Betreten der Theke
-constexpr std::size_t kUnlock7 = 0x3EC4;       // UNVERIFIED: Bedeutung; schaltet Sancho-Stufe 7 frei
+constexpr std::size_t kKanStage4 = 0x3EC4;  // Loc01 Szene 46, Gesprächsstufe 4 erreicht (0x00407B80); schaltet Sancho-Stufe 7 frei (0x00409420)
 constexpr std::size_t kPirates = 0x3EC8;       // Piratenangriff gesehen (Loc03)
 constexpr std::size_t kSabMet = 0x3ECC;        // Loc03: Wachen weg
 }  // namespace
@@ -460,7 +460,7 @@ void Loc02::onCounter(int id) {
                 scene_.enableInput();
                 return;
             case 6:
-                if (flag(kUnlock7) != 0) flag(kSancho) = 7;
+                if (flag(kKanStage4) != 0) flag(kSancho) = 7;
                 break;
             case 7:
                 if (!bar || !bar->has(13)) {

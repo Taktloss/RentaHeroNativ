@@ -61,13 +61,13 @@ Erzeugt mit `tools/gen_loc_docs.py`; Bedeutung der Flags und Abläufe folgt bei 
 ### Flags
 | Offset | Start | Bedeutung |
 |---|---:|---|
-| `0x3F44` | 0 | UNVERIFIED (Loc10); wird 1, wenn beim Start `0x3FD4` gesetzt ist (`0x3FD4` → 0) |
+| `0x3F44` | 0 | Pilz in Szene 39 liegt (Loc10); wird beim ersten Besuch hier 1 (`0x3FD4` → 0) |
 | `0x3FA8` | 0 | gesetzt nach dem Fressen: ein Pirat folgt nach 58 (Loc16 verbrennt ihn) |
 | `0x3FC8` | 0 | Aasfresser sind satt/weg; danach Mund/Ohr nur `060_ROD_09` |
 | `0x3FCC` | 1 | Busch-Stufe: 1 → `060_ROD_04`; 2 → `060_ROD_05` (zweimal, über `0x3FD8`); 3 Busch wegziehen (`S60_BuschWeg`, Busch gleitet nach x 630); 4 Busch weg, Ohr (Ereignis `0x35`) frei |
 | `0x3FD0` | 0 | `060_ROD_08` vor dem ersten Gang ins Ohr gesagt |
 | `0x3FD8` | 1 | Hilfszähler der Busch-Stufe 2 |
-| `0x3FE4` | 0 | UNVERIFIED (Loc18): Rodrigo kommt aus dem Schädel zurück (Ankunft aus 61) |
+| `0x3FE4` | 0 | Loc18 setzt 1 beim Öffnen des Kiefers (`0x0041EDFE`): Rodrigo kommt aus dem Schädel zurück (Ankunft aus 61) |
 
 ### Ablauf
 - Ctor `0x0041CF00`: Szene 59 `S59` (Aasfresser1–7, Startpositionen per `__ftol` aus x/y +0x10/+0x18);

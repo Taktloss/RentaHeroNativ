@@ -49,7 +49,7 @@ Erzeugt mit `tools/gen_loc_docs.py`; Bedeutung der Flags und Abläufe folgt bei 
 | Offset | Start | Bedeutung (aus den Abläufen) |
 |---|---:|---|
 | `0x3F28` | 0 | Jasmin begleitet Rodrigo (aus Loc10); bei Ankunft in 69 → 0 und `0x4014 = 1` |
-| `0x3F48` | 0 | Ramil-Abfolge beendet; Weg links führt dann nach 21/71 (UNVERIFIED: Loc10 nutzt den Offset für „Jasmin auf dem Baum“) |
+| `0x3F48` | 0 | Ende der Ramil-Abfolge (`069_ROD_22`): Jasmin sitzt danach in Szene 40 auf dem Baum (Loc10), Loc09 setzt 0; hier führt der Weg links dann nach 21/71 |
 | `0x3FF0` | 0 | Tor zu Szene 70 offen (Thalion) |
 | `0x3FF4` | 0 | Zwerg 1 steht vor dem Haus |
 | `0x3FFC` | 0 | Jasmin an der Kette ansprechbar |

@@ -18,7 +18,7 @@ constexpr std::size_t kRopeFixed = 0x3F00;  // neues Seil (Gegenstand 10) befest
 constexpr std::size_t kGrid = 0x3F04;       // Gitter in 52/53 unten (Start 1)
 constexpr std::size_t kPirateSeen = 0x3F08; // Pirat in Szene 51 gesehen
 constexpr std::size_t kRopeForGirl = 0x3F30;// altes Seil gerissen → Mädchen springt Seil (Loc10)
-constexpr std::size_t k3FC8 = 0x3FC8;       // UNVERIFIED: Bedeutung (Loc16/17); ≠ 0 → kein Pirat
+constexpr std::size_t kVulturesGone = 0x3FC8;  // Aasfresser haben den Piraten (Loc17); ≠ 0 → kein Pirat in 51
 constexpr int kBubble = 1;
 }  // namespace
 
@@ -187,7 +187,7 @@ void Loc07::start() {
             case 0x34: arrive(0x1B2, 0xD3, 0, 0x1B2, 0xE9, 0); break;
             case 0x36:
                 if (hero_) hero_->setPosDir(0x1F, 0xD4, 0);
-                if (flag(kPirateSeen) == 0 && flag(k3FC8) == 0) {
+                if (flag(kPirateSeen) == 0 && flag(kVulturesGone) == 0) {
                     // ein Pirat schaut kurz herein
                     scene_.disableInput();
                     walk(0x5D, 0xFD, 7);

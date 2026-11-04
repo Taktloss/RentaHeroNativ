@@ -31,7 +31,7 @@ Erzeugt mit `tools/gen_loc_docs.py`; Bedeutung der Flags und Abläufe folgt bei 
 |---|---:|---|
 | `0x407C` | 1 | Kiste: 1 links (Sperrrechteck, Tür nicht anklickbar), 2 rechts (Luke frei) |
 | `0x4080` | 0 | Sabrina ist aus der Kajüte (Tür offen, Luke nach 103 aktiv) |
-| `0x4084` | 0 | UNVERIFIED: nirgends gesetzt; ≠ 0 → Klick auf Sabrina ohne Wirkung |
+| `0x4084` | 0 | nur `CGameState_Reset` schreibt (0), einziger Leser `0x00427919`: toter Zweig; ≠ 0 → Klick auf Sabrina ohne Wirkung |
 
 ### Ablauf
 - Ctor `0x00426A20`: `CSzene_Load("S102", 0)`; Vollbild `S102_Escape`/`S102_EnterShip`; Kisten,

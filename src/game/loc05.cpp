@@ -9,7 +9,7 @@ namespace rah {
 
 namespace {
 constexpr std::size_t kRamil = 0x3E84;        // Stufe 3 → 1: Ramil kommt zu Rodrigo (Loc04)
-constexpr std::size_t kTold3EA0 = 0x3EA0;     // Stufe 3 → 1  UNVERIFIED: Bedeutung
+constexpr std::size_t kStrangerInPub = 0x3EA0;  // Stufe 3 → 1: der Fremde sitzt in der Kneipe (Loc02, Ladebit 1; Loc02 setzt 0)
 constexpr std::size_t kLouiWalks = 0x3EC8;    // Ladebit 1 (S10_LouiWalk) und Gang-Gespräch frei
 constexpr std::size_t kGreet = 0x3ED8;        // Begrüßungsgespräch beim nächsten Betreten
 constexpr std::size_t kTalk = 0x3EDC;         // Gesprächsstufe mit Loui
@@ -271,7 +271,7 @@ void Loc05::onEvent(Event& e, int) {
             st.at(kTalk) = 4;
             exchange("028_ROD_03", "028_LOU_03");
             flag(kRamil) = 1;
-            flag(kTold3EA0) = 1;
+            flag(kStrangerInPub) = 1;
             return;
         case 4:
             st.at(kTalk) = 5;

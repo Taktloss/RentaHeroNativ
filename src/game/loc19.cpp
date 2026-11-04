@@ -8,7 +8,7 @@ namespace rah {
 
 namespace {
 constexpr std::size_t kJasmin = 0x3F28;      // Jasmin begleitet Rodrigo (Loc10)
-constexpr std::size_t kRamilGone = 0x3F48;   // Ramil-Abfolge beendet → Weg 71 führt nach 21/71 (UNVERIFIED: Name; Loc10 liest es als „Jasmin auf dem Baum“)
+constexpr std::size_t kJasminOnTree = 0x3F48;  // Ende der Ramil-Abfolge → Jasmin sitzt in Szene 40 auf dem Baum (Loc10), Loc09 setzt 0; hier: Weg links → 21/71
 constexpr std::size_t kDoorOpen = 0x3FF0;    // Tür zu Szene 70 offen
 constexpr std::size_t kDwarfOut = 0x3FF4;    // Zwerg 1 steht vor dem Tor
 constexpr std::size_t kJasTalkOn = 0x3FFC;   // Jasmin an der Kette ansprechbar
@@ -481,7 +481,7 @@ void Loc19::onEvent69(Event& e, int) {
     }
     switch (id) {
     case 1:
-        if (flag(kRamilGone) != 0) {
+        if (flag(kJasminOnTree) != 0) {
             if (walk(0x11, 0x114, 2)) changeScene(0x47, 0x15);
             return;
         }
@@ -690,7 +690,7 @@ void Loc19::onEvent69(Event& e, int) {
                 playRange(door_, 11, 10, 0);
                 if (thaWalk_) thaWalk_->disable();
                 faceAndSay("069_ROD_22");
-                flag(kRamilGone) = 1;
+                flag(kJasminOnTree) = 1;
                 flag(kJasHere) = 0;
                 flag(kLayers) = -1;
                 if (hero_) hero_->unblockRect(0xB7, 0x12E, 0x114, 0x141);

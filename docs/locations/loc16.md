@@ -35,7 +35,7 @@ Erzeugt mit `tools/gen_loc_docs.py`; Bedeutung der Flags und Abläufe folgt bei 
 | Offset | Bedeutung |
 |---|---|
 | `0x3E80` | Nacht: Szenenmaske 2, `S58_DragonTalk_nd`, Hintergrund `S58_Back_nd`, Held-Farbe (−52,−11,43), Eule/Donner statt Vögel |
-| `0x3E90` | UNVERIFIED (auch Loc27); ≠ 0 und ohne Helm → bei der Landung Hinweis `058_*_05/06` |
+| `0x3E90` | Megophias hat vom Helm erzählt (Loc27 `0x0042C078`); ≠ 0 und ohne Helm → bei der Landung Hinweis `058_*_05/06` |
 | `0x3F40` | Helm-Hinweis gegeben |
 | `0x3F74` | Loc12-Zustand: 1 → 2 nach Nacht-Gesprächsstufe 6 |
 | `0x3FA4` | erster Besuch (Start 1): Begrüßung `058_DRA_01`, `058_ROD_01`/`058_DRA_02` |
@@ -46,8 +46,8 @@ Erzeugt mit `tools/gen_loc_docs.py`; Bedeutung der Flags und Abläufe folgt bei 
 | `0x3FB8` | Weg nach 59 frei (sonst Sperrrechteck (0,0)–(639,262) per `0x0041C860`) |
 | `0x3FBC` | Drache fliegt Rodrigo: `S58_DragonTakeOff` → 26/93 (`0x0041C890`) |
 | `0x3FC0`/`0x3FC4` | Hut (Gegenstand 4) / Hand (Gegenstand 3) liegen da |
-| `0x3FC8` | Drache hat genug (Loc07/Loc17): Gespräch nur noch Abflug-Pfad, Weg 59 `058_DRA_34`/`ROD_35` |
-| `0x409C` | UNVERIFIED (Loc12/26): ≠ 0 → auch nachts mit Flugerlaubnis zuerst zum Drachen laufen |
+| `0x3FC8` | Aasfresser haben den Piraten (Loc17, Rückkehr aus dem Schädel): Gespräch nur noch Abflug-Pfad, Weg 59 `058_DRA_34`/`ROD_35` |
+| `0x409C` | Start 1, Loc26 setzt 0 bei der ersten Landung auf der Insel: ≠ 0 → auch nachts mit Flugerlaubnis zuerst zum Drachen laufen |
 
 ### Haltungssteuerung `0x0041CA50`
 Wie Loui in Loc05: Modus 1/2 Übergang direkt, 3/4 zurück in Ruhe bzw. in Geste `arg`, 5 zufällige

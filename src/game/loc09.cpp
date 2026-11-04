@@ -113,8 +113,8 @@ void Loc09::start() {
     if (AudioBuffer* ocean = sfx(0xA4)) ocean->playLoop();  // vtable +0x10
     flag(0x3E80) = 1;  // Nacht (Loc15 u. a.)
     flag(0x3F04) = 1;  // Gitter in der Kanalisation wieder unten (Loc07)
-    flag(0x3F48) = 0;
-    flag(0x3F54) = 4;  // Loc10: Stufe nach dem Angriff (UNVERIFIED Bedeutung)
+    flag(0x3F48) = 0;  // Jasmin nicht mehr auf dem Baum (Loc10/Loc19)
+    flag(0x3F54) = 4;  // Loc10 Stroh/Feuer-Abfolge Szene 40: Stufe 4 (abgeschlossen)
 }
 
 void Loc09::onEvent(Event& e, int) {

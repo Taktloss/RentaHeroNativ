@@ -191,3 +191,7 @@ Die Bedeutung der einzelnen Flags folgt mit der Analyse der Schauplätze.
 | `0x4104` | 161 | 1 | 1 | 2 | 2 (1×), 3 (1×) | Loc30 |  |
 | `0x4108` | 162 | 1 | 0 | 1 | 4 (1×) | Loc30 |  |
 | `0x410C` | 163 | 1 | 1 | 1 | 2 (1×) | Loc37 |  |
+
+Hinweis (2026-11-04): Die Zählung oben erfasst nur Zugriffe über `this+0x78`. Vollständig über
+alle Befehle: `re/scripts/ScalarUses.java <off>`; Querverweis im Port: `tools/flag_xref.py`.
+Beispiel: `0x3EC4` liest auch Loc02 (`0x00409420`, über Zwischenregister).

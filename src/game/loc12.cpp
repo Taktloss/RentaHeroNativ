@@ -11,7 +11,7 @@ constexpr std::size_t kWell = 0x3F74;         // Brunnen-Stufe (1 leer, 2 Geldsa
 constexpr std::size_t kWellTalk = 0x3F78;     // Gespräch mit dem Brunnen nach dem Bezahlen (1…4)
 constexpr std::size_t kNoMoneyBag = 0x3FA0;   // Stufe 2 ohne Gegenstand 7 gesehen
 constexpr std::size_t kWellAdvice = 0x3FBC;   // Brunnen-Rat vollständig gehört
-constexpr std::size_t kUnlock = 0x409C;       // UNVERIFIED: Bedeutung; 0 → Brunnen-Stufe 4
+constexpr std::size_t kBeforeFirstFlight = 0x409C;  // Start 1, Loc26 setzt 0 bei der ersten Landung auf der Insel; 0 → Brunnen-Stufe 4
 constexpr std::size_t kBush42 = 0x3F60;       // Loc10: Busch in Szene 42 weg
 constexpr int kAmbient = 6;
 }  // namespace
@@ -73,7 +73,7 @@ void Loc12::start() {
     for (const auto& [n, ev] : {std::pair{"S91_Door1", 1}, {"S91_Door2", 2}, {"S91_CynDoor", 3}, {"S91_Wald", 5}})
         if (Area* a = scene_.getArea(n)) a->setEvent(ev);
     if (well_ && well_->area) well_->area->setEvent(4);
-    if (flag(kUnlock) == 0) flag(kWell) = 4;
+    if (flag(kBeforeFirstFlight) == 0) flag(kWell) = 4;
     if (restored_ == 0) {
         if (prevScene_ == 42) {
             if (hero_) {

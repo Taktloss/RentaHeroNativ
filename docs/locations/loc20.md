@@ -37,7 +37,7 @@ Erzeugt mit `tools/gen_loc_docs.py`; Bedeutung der Flags und Abläufe folgt bei 
 |---|---:|---|
 | `0x3FEC` | 0 | Tharain nicht mehr da (gesetzt in Loc22): Ladebit 1 fehlt, nur Boden-Kommentar |
 | `0x4020` | 1 | erster Besuch: Begrüßung `070_THA_01`/`070_ROD_01`/`070_THA_02`; danach fehlt zufällig eine der sechs Farbebenen |
-| `0x4024` | 0 | UNVERIFIED: nach Gesprächsstufe 8 gesetzt, sonst nicht gelesen |
+| `0x4024` | 0 | nach Gesprächsstufe 8 gesetzt (`0x00422C02`); wird im ganzen Binary nicht gelesen |
 | `0x4028` | 0 | Weg nach 71 offen (liest Loc19) |
 | `0x402C` | 0 | Gespräch beendet – vorher ruft Tharain Rodrigo zurück |
 | `0x4030` | 1 | Gesprächsstufe 1…8 |

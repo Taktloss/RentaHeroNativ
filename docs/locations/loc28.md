@@ -89,7 +89,7 @@ Erzeugt mit `tools/gen_loc_docs.py`; Bedeutung der Flags und Abläufe folgt bei 
 ### Flags
 | Offset | Start | Bedeutung |
 |---|---:|---|
-| `0x3E8C` | 0 | UNVERIFIED: Szene 31 setzt 1 (Endavin erreicht) |
+| `0x3E8C` | 0 | Szene 31 setzt 1; Ranama trägt danach den Ring (Loc06 `S27` Ladebit 1, Hinweis `06_027_A`). Loc06 setzt es nur in den Sprungzielen 2001/2003 |
 | `0x40C4` | 1 | Szene 35: Gesprächsstufe Kapitän/Fremder 1…11 (11: Kapitän schlägt zu, zurück auf 1) |
 | `0x40C8` | 1 | erste Ankunft im Busch: `031_ROD_03` |
 | `0x40CC` | 1 | erster Besuch der Gasse: `032_ROD_01` |

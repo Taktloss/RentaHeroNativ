@@ -9,14 +9,14 @@
 namespace rah {
 
 namespace {
-constexpr std::size_t k3F44 = 0x3F44;         // UNVERIFIED: Bedeutung; 1, wenn 0x3FD4 gesetzt war
+constexpr std::size_t kMushroom39 = 0x3F44;  // Pilz in Szene 39 liegt (Loc10); erster Besuch hier setzt 1
 constexpr std::size_t kPirate = 0x3FA8;       // Loc16: Pirat folgt nach 58
 constexpr std::size_t kVulturesGone = 0x3FC8; // Aasfresser sind satt (Pirat gefressen)
 constexpr std::size_t kBush = 0x3FCC;         // Busch-Stufe (1…4; 4 = Busch weg, Ohr frei)
 constexpr std::size_t kEarSaid = 0x3FD0;      // Kommentar am Ohr gesagt
-constexpr std::size_t k3FD4 = 0x3FD4;         // UNVERIFIED: wird beim Start zu 0x3F44
+constexpr std::size_t kFirstVisit = 0x3FD4;  // Start 1, nur hier gelesen und auf 0 gesetzt (0x0041D4EE/0x0041D4F6)
 constexpr std::size_t k3FD8 = 0x3FD8;         // Busch zweimal angesehen (2)
-constexpr std::size_t kFromSkull = 0x3FE4;    // UNVERIFIED (Loc18): Rodrigo kommt aus dem Schädel
+constexpr std::size_t kFromSkull = 0x3FE4;  // Loc18 setzt 1 beim Öffnen des Kiefers (0x0041EDFE): Rodrigo kommt aus dem Schädel
 constexpr int kScene59 = 0x3B, kScene60 = 0x3C, kScene61 = 0x3D, kScene58 = 0x3A;
 constexpr int kAmbient = 100;
 }  // namespace
@@ -119,9 +119,9 @@ void Loc17::start() {
     if (auto* bg = scene_.background()) bg->enable();  // +0x60
     setEventProc(&Loc17::onEvent);
     setTimerHandler(*ambientTimer_, static_cast<std::uint32_t>(random(5, 15) * 1000), 0, kAmbient);
-    if (flag(k3FD4) != 0) {
-        flag(k3FD4) = 0;
-        flag(k3F44) = 1;
+    if (flag(kFirstVisit) != 0) {
+        flag(kFirstVisit) = 0;
+        flag(kMushroom39) = 1;
     }
     if (sceneNr_ == kScene59)
         start59();

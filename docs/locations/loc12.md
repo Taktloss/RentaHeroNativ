@@ -31,7 +31,7 @@ Erzeugt mit `tools/gen_loc_docs.py`; Bedeutung der Flags und Abläufe folgt bei 
 Konstruktor `0x00418700` (Szene fest 91, `S91` komplett, Herkunft 90 → Hintergrund `S91_Back2`),
 Abbau `0x00418900` gibt alles frei, Start `0x004189E0`, Handler `0x00418BF0`.
 
-- Start: `0x409C == 0` → Brunnen-Stufe `0x3F74 = 4` (UNVERIFIED: Bedeutung von `0x409C`).
+- Start: `0x409C == 0` → Brunnen-Stufe `0x3F74 = 4` (`0x409C`: Start 1, Loc26 setzt 0 bei der ersten Landung auf der Insel).
   Herkunft 42 → von links, sonst Kamerafahrt `S91_RodRausCam` aus Cynthias Haus.
 - Ereignisse: 1/2 Türen rütteln, 3 → Cynthias Haus (Szene 90, Loc14; Kamerafahrt nur, wenn man
   nicht von dort kam), 4 Brunnen, 5 → Wald (Szene 42, setzt `0x3F60 = 1`), 6 Umgebung (Eule,

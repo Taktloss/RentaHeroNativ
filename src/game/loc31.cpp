@@ -7,8 +7,8 @@ namespace rah {
 
 namespace {
 constexpr int kAmbientEvent = 200;
-constexpr std::size_t kTo57Open = 0x3F98;  // Ziel Szene 57 freigeschaltet (UNVERIFIED: Herkunft)
-constexpr std::size_t kTo30Open = 0x3E88;  // Ziel Szene 31/Loc28 freigeschaltet (UNVERIFIED: Herkunft)
+constexpr std::size_t kTo57Open = 0x3F98;  // Ziel Szene 57 frei: Loc15 setzt es, wenn der Pirat gesehen wurde (0x0041AC0E)
+constexpr std::size_t kTo30Open = 0x3E88;  // Ziel Szene 31/Loc28 frei: Loc04 setzt es nach Ramils Geschichte (0x0040CE3C)
 }  // namespace
 
 Loc31::Loc31(GameContext& ctx, int scene, int prevScene) : Game(ctx, 31, 113, prevScene) {

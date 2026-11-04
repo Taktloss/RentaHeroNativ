@@ -16,7 +16,7 @@ constexpr std::size_t kFlagGiven = 0x3F14; // Fahne (Gegenstand 2) am Boot
 constexpr std::size_t kSab = 0x3F18;       // Sabrina: 0 fort, 1 da, 2 Klappe offen, 3 im Gang, 4 Boot
 constexpr std::size_t kForestOnce = 0x3F1C;// Weg in den Wald schon nach 58 geführt
 constexpr std::size_t kBoatBack = 0x3F20;  // Boot zurück (Szene 100)
-constexpr std::size_t k4088 = 0x4088;      // UNVERIFIED: Bedeutung; ≠ 0 → Wald einmal nach 58, Boot verweigert
+constexpr std::size_t kLeftShip = 0x4088;  // Rodrigo hat das Schiff mit Helm verlassen (Loc24 0x00428A53); ≠ 0 → Wald einmal nach 58, Boot verweigert
 constexpr int kAmbient = 0x48;
 constexpr int kWindTimer = 0x46;
 constexpr int kBushTimer = 0x47;
@@ -395,7 +395,7 @@ void Loc08::onEvent99(int id) {
     case 9:
         if (flag(kSab) == 1 && flag(kSabTalk) < 4) sabSpeak("099_SAB_08", 0x0C, false);
         if (!walk(0x26A, 0x102, 5)) return;
-        if (flag(k4088) == 0 || flag(kForestOnce) != 0) {
+        if (flag(kLeftShip) == 0 || flag(kForestOnce) != 0) {
             changeScene(0x27, 10);
             return;
         }
@@ -535,7 +535,7 @@ void Loc08::onEvent100(int id) {
         sabSpeak("100_SAB_02", 0x0D, true);
         return;
     case 100:
-        if (flag(k4088) != 0) {
+        if (flag(kLeftShip) != 0) {
             faceAndSay("100_ROD_01");
             return;
         }

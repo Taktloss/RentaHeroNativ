@@ -14,7 +14,7 @@ namespace rah {
 namespace {
 float f32(std::uint32_t bits) { return std::bit_cast<float>(bits); }
 constexpr std::size_t kNight = 0x3E80;
-constexpr std::size_t k3E90 = 0x3E90;        // UNVERIFIED (Loc27); ≠ 0 → Hinweis zum Helm bei der Landung
+constexpr std::size_t kMegophiasHelm = 0x3E90;  // Megophias hat vom Helm erzählt (Loc27 0x0042C078); ≠ 0 → Hinweis bei der Landung
 constexpr std::size_t kHelmHint = 0x3F40;    // Hinweis zum Helm gegeben
 constexpr std::size_t k3F74 = 0x3F74;        // Loc12: 1 → 2 nach Gesprächsstufe 6 (Nacht)
 constexpr std::size_t kFirstVisit = 0x3FA4;  // erster Besuch: Begrüßung (Start 1)
@@ -26,8 +26,8 @@ constexpr std::size_t kTo59Open = 0x3FB8;    // Weg nach 59 freigegeben
 constexpr std::size_t kCanFly = 0x3FBC;      // Drache fliegt Rodrigo (nachts)
 constexpr std::size_t kHat = 0x3FC0;         // Hut liegt da (Gegenstand 4)
 constexpr std::size_t kHand = 0x3FC4;        // Hand liegt da (Gegenstand 3)
-constexpr std::size_t kDragonGone = 0x3FC8;  // Drache hat genug (Loc17)
-constexpr std::size_t k409C = 0x409C;        // UNVERIFIED (Loc12/26)
+constexpr std::size_t kVulturesGone = 0x3FC8;  // Aasfresser haben den Piraten (Loc17 0x0041D480, Rückkehr aus dem Schädel)
+constexpr std::size_t kBeforeFirstFlight = 0x409C;  // Start 1, Loc26 setzt 0 bei der ersten Landung auf der Insel
 constexpr int kHelm = 5;
 constexpr int kPoseEvent = 6;
 constexpr int kAmbient = 7;
@@ -290,7 +290,7 @@ void Loc16::start() {
             if (hero_) hero_->setPosDir(0x1AB, 0x11E, 4);
             walk(0x11D, 0x140, 6);
             auto* bar = scene_.inventory();
-            if ((!bar || !bar->has(kHelm)) && flag(k3E90) != 0 && flag(kHelmHint) == 0) {
+            if ((!bar || !bar->has(kHelm)) && flag(kMegophiasHelm) != 0 && flag(kHelmHint) == 0) {
                 exchange("058_ROD_05", "058_DRA_05");
                 exchange("058_ROD_06", "058_DRA_06");
                 flag(kHelmHint) = 1;
@@ -312,7 +312,7 @@ void Loc16::start() {
     } else if (hero_) {
         hero_->show(scene_.clicksEnabled);
     }
-    if (flag(kTo59Open) == 0 || flag(kDragonGone) != 0) blockSky(true);
+    if (flag(kTo59Open) == 0 || flag(kVulturesGone) != 0) blockSky(true);
     if (to57_) to57_->setEvent(1);
     if (to59_) to59_->setEvent(2);
     if (Area* a = scene_.getArea("S58_Dragon")) a->setEvent(3);
@@ -339,12 +339,12 @@ void Loc16::takeOff() {
 
 void Loc16::talkToDragon() {
     // Original: CGame_Wait auch ohne vorherigen Weg (nachts mit Flugerlaubnis)
-    if (flag(kNight) == 0 || flag(kCanFly) == 0 || flag(k409C) != 0) {
+    if (flag(kNight) == 0 || flag(kCanFly) == 0 || flag(kBeforeFirstFlight) != 0) {
         const int cb = beginWait();
         if (hero_) hero_->walkTo(0x11D, 0x140, cb, 6);
     }
     if (!wait()) return;
-    if (flag(kDragonGone) == 0) {
+    if (flag(kVulturesGone) == 0) {
         // Tag: Gesprächsstufen 1…11 (0x3FAC)
         const int t = flag(kDayTalk);
         if (t == 1) {
@@ -475,7 +475,7 @@ void Loc16::onEvent(Event& e, int) {
         if (walk(0x10, 300, 2)) changeScene(0x39, 0x0F);
         return;
     case 2:  // → 59 (Loc17)
-        if (flag(kDragonGone) != 0) {
+        if (flag(kVulturesGone) != 0) {
             dragonSay("058_DRA_34");
             heroSay("058_ROD_35");
             return;

@@ -76,7 +76,7 @@ Erzeugt mit `tools/gen_loc_docs.py`; Bedeutung der Flags und Abläufe folgt bei 
 | `0x3F04` | 1 | Gitter in 52/53 unten (Loc15 setzt es beim Einstieg mit Gleiter/Nacht wieder) |
 | `0x3F08` | 0 | Pirat in Szene 51 gesehen |
 | `0x3F30` | 0 | altes Seil gerissen → Mädchen in Loc10 springt Seil |
-| `0x3FC8` | 0 | UNVERIFIED (Loc16/17); ≠ 0 → kein Pirat in 51 |
+| `0x3FC8` | 0 | Aasfresser haben den Piraten (Loc17); ≠ 0 → kein Pirat in 51 |
 
 ### Konstruktor `0x0040F7B0`
 - Szene 52: `CSzene_Load("52", Maske)` mit Bit 1 = Sack, Bit 2 = Gitter unten; Kurbel, Gitter,

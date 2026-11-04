@@ -12,7 +12,7 @@ namespace {
 float f32(std::uint32_t bits) { return std::bit_cast<float>(bits); }
 constexpr std::size_t kBox = 0x407C;     // Kiste: 1 links (vor der Luke), 2 rechts (vor der Tür)
 constexpr std::size_t kSabOut = 0x4080;  // Sabrina ist aus der Kajüte
-constexpr std::size_t k4084 = 0x4084;    // UNVERIFIED: nirgends gesetzt; ≠ 0 → Sabrina stumm
+constexpr std::size_t kNeverSet4084 = 0x4084;  // nur CGameState_Reset schreibt (0), einziger Leser 0x00427919: Zweig „Sabrina stumm“ ist im Original tot
 // Sperrrechtecke
 constexpr int kDoorL = 0x184, kDoorT = 0xD1, kDoorR = 0x1EA, kDoorB = 0xF8;  // vor der Kajütentür
 constexpr int kBoxL = 0x16D, kBoxT = 0xE8, kBoxR = 0x235, kBoxB = 0x10A;     // Kiste links
@@ -289,7 +289,7 @@ void Loc23::onEvent(Event& e, int) {
         scene_.enableInput();
         return;
     case 4:  // Sabrina
-        if (flag(k4084) != 0) return;
+        if (flag(kNeverSet4084) != 0) return;
         if (flag(kSabOut) == 0 && flag(kBox) == 2) {
             // Sabrina geht zur Tür, schlägt sie zu und kommt heraus
             if (!walk(0x13B, 0x163, 7)) return;
