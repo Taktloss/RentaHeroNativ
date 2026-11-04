@@ -203,7 +203,7 @@
   wirkt ohne SINGLELINE nicht (Statustext und Hilfe oben, umgebrochen): `drawTextWordBreak`.
   TCC-Ebenen ohne Alpha füllen jetzt ihre Ebenenoberfläche (Bild-Slot 3). Betrachter:
   `--hint <HLP>`, `--click x y`. 68 Tests grün.
-  Offen: Tastatur `0x0044CE50`.
+  Tastatur `0x0044CE50` inzwischen portiert (`Scene::onKeyDown`; Editor-Zweig `0x0044CF00` entfällt).
 - 2026-10-28: Intro (Loc40). Vollbildobjekt `CSzene+0x5DC` (`SetModal`, `CGame_LoadAnim`,
   AVI direkt auf den Bildschirm, VIDEO.md); Sprache/Untertitel (`docs/SPEECH.md`,
   `engine/speech`: ohne Ton Timer-Weg des Originals, Dauer nach Textlänge); `CGame`-Gerüst
@@ -362,4 +362,6 @@
   Hinweis des aktuellen Schauplatzes. 147 Tests.
 - 2026-11-04: Loc04 Ramil-Pfad (Vorgänger 1004) im Probelauf geprüft: Ramil kommt, neun
   Gesprächsstufen, Ramil geht, Geldsack aus der Kiste per Schreibtisch.
+- 2026-11-04: Rauchtest `tools/smoke_scenes.py`: startet jedes `changeScene`-Ziel (86) per
+  `--game` mit Vorgänger 0; alle laufen ohne Absturz (Loc35 meldet sich wie im Original als 1).
 - Nächste Schritte: Menü im Fenster prüfen (Regler ziehen, Namenseingabe); noch nicht portierte Schauplätze: keine.
