@@ -450,5 +450,8 @@
 - 2026-11-04: **Hotspots mit Tab** (HOTSPOTS.md): Solange Tab gedrückt ist, werden alle anklickbaren
   Stellen markiert (über `CSzene_HitTest`, als ImGui-Overlay). Abschaltbar über `HotspotKey`;
   Tab ist im Original frei (am Disassembly geprüft).
+- 2026-11-07: v0.1.1 als „Latest“ (nur Tags mit `-` sind noch Vorabversion). Historie vor der
+  Veröffentlichung geprüft (keine Originaldaten), Autor-Adresse auf die GitHub-noreply-Adresse
+  umgeschrieben, Repository **öffentlich**.
 - Nächste Schritte: Startmenü und Windows-Build auf echtem Windows 10/11 testen (Nutzer);
   Spielmenü im Fenster prüfen (Regler ziehen, Namenseingabe); Durchspielen der ungeprüften Wege.
