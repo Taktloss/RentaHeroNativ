@@ -161,8 +161,8 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           ls -l out
-          # v0.x und Tags mit Bindestrich (v1.0-rc1) als Vorabversion
-          pre=; case $GITHUB_REF_NAME in v0.*|*-*) pre=--prerelease ;; esac
+          # Tags mit Bindestrich (v1.0-rc1) als Vorabversion, sonst „Latest“ auf der Startseite
+          pre=; case $GITHUB_REF_NAME in *-*) pre=--prerelease ;; esac
           gh release create "$GITHUB_REF_NAME" out/* --repo "$GITHUB_REPOSITORY" $pre \
             --title "Rent-A-Hero (Port) $GITHUB_REF_NAME" --generate-notes \
             --notes-file - <<'EOT'

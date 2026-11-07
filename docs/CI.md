@@ -9,7 +9,7 @@ werden übersprungen (`RAH_TEST_DATA` fehlt).
 | `appimage` | ubuntu-24.04 | `tools/appimage/build.sh` im Docker-Container (Ubuntu 22.04), mit Tests; Artefakte `rentahero-linux-appimage` und `rentahero-linux-tar` |
 | `windows` | ubuntu-24.04 | llvm-mingw 20261006 (SHA-256 geprüft), `tools/windows/build.sh`; Artefakt `rentahero-win64` (ZIP) |
 | `windows-test` | windows-2025 | `rah_tests.exe` mit den DLLs auf echtem Windows; dazu ein Startmenü-Bild (`RAH_LAUNCHER_SHOT`), das scheitern darf, weil der Runner keine GPU hat |
-| `release` | ubuntu-24.04 | nur bei Tags `v*`: **Release** mit AppImage, Linux-tar.gz und Windows-ZIP; `v0.*` und Tags mit `-` als Vorabversion |
+| `release` | ubuntu-24.04 | nur bei Tags `v*`: **Release** mit AppImage, Linux-tar.gz und Windows-ZIP; Tags mit `-` (z. B. `v1.0-rc1`) als Vorabversion, sonst „Latest“ |
 
 - Die Quellen und gebauten Abhängigkeiten (`build-*/src`, `build-*/deps`) liegen im Actions-Cache.
   Der Schlüssel ist der Hash von `tools/deps/sources.sh`, der Bauskripte und des Containerfile bzw. der
