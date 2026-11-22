@@ -1,0 +1,23 @@
+# Kapitel 33: mit dem Helm (5) über den Wald (einmal direkt nach 16/58) und den Drachen zur Insel,
+# im Geheimraum (27/96) den Helm aufsetzen → Loc25
+click 100_WayBack
+wait
+click 099_Wald
+wait
+expect scene 16 58
+click S58_Dragon
+wait
+click S58_Dragon
+wait
+expect scene 26 93
+click S93_Huette
+wait
+click S95_WindowN
+wait
+expect scene 27 96
+item 5                # Helm in die Anlage legen (0x40BC)
+wait
+expect flag 0x40BC 1
+click S96_Helm        # aufsetzen → 25/104
+wait
+expect scene 25 105

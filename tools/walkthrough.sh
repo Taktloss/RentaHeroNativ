@@ -1,9 +1,9 @@
-#!/bin/sh
+#!/usr/bin/env bash
 # SPDX-License-Identifier: GPL-3.0-or-later
 # Durchspiel-Skripte nacheinander in EINEM Spiel abspielen (docs/WALKTHROUGH.md).
 # Aufruf: tools/walkthrough.sh <CD-Ordner|.cue> <Common-Ordner> [skript…]
 # Ohne Skripte: alle tests/walkthrough/*.txt in Namensreihenfolge.
-set -eu
+set -euo pipefail
 cd "$(dirname "$0")/.."
 cd_src=$1; common=$2; shift 2
 [ $# -gt 0 ] || set -- tests/walkthrough/*.txt

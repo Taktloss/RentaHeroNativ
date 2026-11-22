@@ -456,9 +456,10 @@
 - 2026-11-22: **Durchspiel-Test** (WALKTHROUGH.md): `--walkthrough <skript>` spielt Skripte mit
   Klicks auf benannte Bereiche, Gegenständen und Tasten ab und prüft Szene, Gegenstände und Flags.
   Eingaben laufen über `pumpMessage`; „bereit“ heißt: keine Wartestelle, keine Sprache, Held steht.
-  `--virtual-clock <ms>` spult die Spielzeit vor (Ton im Gleichschritt gemischt). 27 Kapitel
-  (`tests/walkthrough/`, Büro bis zur Insel Loc26/S93, ~4100 s Spielzeit) laufen in etwa 20 s
-  fehlerfrei durch: `tools/walkthrough.sh RentAHero <Common>`.
+  `--virtual-clock <ms>` spult die Spielzeit vor (Ton im Gleichschritt gemischt). 34 Kapitel
+  (`tests/walkthrough/`) spielen das **ganze Spiel** vom neuen Spiel bis zum Abspann (~5230 s
+  Spielzeit) in etwa 40 s fehlerfrei durch: `tools/walkthrough.sh RentAHero <Common>` (Rückgabe 0,
+  sonst 3). Befehl `end`: Spiel muss sich selbst beenden; vorzeitiges Ende ist ein Fehler.
 - Nächste Schritte: Startmenü und Windows-Build auf echtem Windows 10/11 testen (Nutzer);
-  Spielmenü im Fenster prüfen (Regler ziehen, Namenseingabe); Durchspiel-Kapitel ab der Insel
-  Loc26/S93 fortsetzen (Loc26, Loc27, Loc25, Loc23/24, Loc35/37/41).
+  Spielmenü im Fenster prüfen (Regler ziehen, Namenseingabe); Durchspiel-Test um Nebenwege
+  erweitern (falsche Helfer im Endkampf, Laden/Speichern unterwegs, Spielstände je Kapitel).

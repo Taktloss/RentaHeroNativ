@@ -29,6 +29,9 @@ public:
     // Aus pumpMessage: liegt eine Eingabe an, wird sie ausgeführt → true (= eine Nachricht)
     bool takeInput(GameContext& ctx);
 
+    // Spiel hat sich beendet: Erfolg nur, wenn der laufende Befehl `end` ist (danach nichts mehr)
+    Status onQuit();
+
     const std::string& message() const { return message_; }
     Status status() const { return status_; }
 

@@ -1028,6 +1028,8 @@ int run(int argc, char** argv) {
 
     closeWindow();
     SDL_Quit();
+    if (walker && walker->status() == Walkthrough::Status::Running)
+        walkRc = walker->onQuit() == Walkthrough::Status::Done ? 0 : 3;
     return walkRc;
 }
 

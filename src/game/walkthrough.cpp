@@ -37,7 +37,7 @@ bool Walkthrough::load(const std::string& path, std::string* error) {
 
 bool Walkthrough::parse(const std::string& text, std::string* error) {
     static const char* const kKnown[] = {"wait",  "sleep", "click", "clickxy", "move", "item",
-                                         "key",   "expect", "shot", "note", "areas"};
+                                         "key",   "expect", "shot", "note", "areas", "end"};
     cmds_.clear();
     std::istringstream in(text);
     std::string line;
@@ -139,6 +139,18 @@ bool Walkthrough::takeInput(GameContext& ctx) {
     return true;
 }
 
+Walkthrough::Status Walkthrough::onQuit() {
+    if (status_ != Status::Running) return status_;
+    if (pc_ < cmds_.size() && cmds_[pc_].args[0] == "end" && pc_ + 1 == cmds_.size()) {
+        status_ = Status::Done;
+        say("[walk] Spiel beendet (erwartet) – fertig");
+        return status_;
+    }
+    if (pc_ < cmds_.size()) fail(cmds_[pc_], "Spiel hat sich vorzeitig beendet");
+    else status_ = Status::Done;
+    return status_;
+}
+
 Walkthrough::Status Walkthrough::onIdle(GameContext& ctx) {
     if (status_ != Status::Running) return status_;
     if (pc_ >= cmds_.size()) {
@@ -201,6 +213,11 @@ bool Walkthrough::runCommand(GameContext& ctx, const Command& c) {
     if (op == "note") {
         say(where() + full());
         return true;
+    }
+    if (op == "end") {
+        // wartet, bis sich das Spiel selbst beendet (onQuit); läuft nie von allein weiter
+        timedOut(defaultTimeoutMs * 4);
+        return false;
     }
     if (op == "sleep") {
         return now - t0_ >= static_cast<std::uint32_t>(toInt(arg(1)));

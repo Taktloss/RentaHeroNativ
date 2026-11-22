@@ -1,0 +1,24 @@
+# Kapitel 34: Endkampf im Cyberspace (Loc25/S105) – Zauberer anklicken, dann die Helfer in der
+# Reihenfolge 0x4090 = 1…6: Mad, Sabrina, Cynthia, Louis, Sancho, Drache → Abspann (Loc41)
+click S105_WizWalk
+wait
+expect flag 0x4090 1
+click S105_MadHead
+wait
+expect flag 0x4090 2
+click S105_SabHead
+wait
+expect flag 0x4090 3
+click S105_CynHead
+wait
+expect flag 0x4090 4
+click S105_LouHead
+wait
+expect flag 0x4090 5
+click S105_SanHead
+wait
+expect flag 0x4090 6
+click S105_DraHead    # Megophias besiegt → Schlusssequenz und Abspann (Loc41/S112)
+sleep 15000
+expect scene 41 112
+end                   # Abspann endet mit g_SaveRequest = 5 (Spiel beendet sich)

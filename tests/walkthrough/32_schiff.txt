@@ -1,0 +1,20 @@
+# Kapitel 32: Piratenschiff (Loc23) – Kiste schieben, Sabrina öffnet die Kajüte → Loc24
+click S102_KisteLinks
+wait
+expect flag 0x407C 2
+click SabWalk
+wait
+expect flag 0x4080 1
+click S102_To103
+wait
+expect scene 24 103
+click S103_Flasche    # Gegenstand 24
+wait
+expect item 24
+click S103_Helm       # Gegenstand 5, während Sabrina mit dem Kapitän kämpft
+wait
+expect item 5
+click S103_To102
+wait
+expect scene 8 100     # Treppe mit Helm (0x4088 = 1) → zurück zum Hafen
+expect flag 0x4088 1

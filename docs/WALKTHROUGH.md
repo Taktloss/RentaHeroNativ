@@ -36,6 +36,7 @@ Takt-Stufen sehen also immer dasselbe Raster.
 | `shot <datei.ppm>` | Bildschirm speichern |
 | `areas` | anklickbare Bereiche und Gegenstände ausgeben (zum Erkunden) |
 | `note <Text>` | nur Ausgabe |
+| `end` | letzter Befehl: das Spiel muss sich nun selbst beenden (Abspann); jedes andere vorzeitige Ende ist ein Fehler |
 
 Bereichsnamen sind die Namen aus SZN bzw. Dateinamen der Ebenen (AREAS.md), wie in
 `docs/locations/locNN.md`. Ein Bereich muss aktiv und an mindestens einem Punkt treffbar sein.
@@ -80,9 +81,18 @@ Eingaben werden erst abgeschickt, wenn alles gilt (sonst nennt die Zeitüberschr
 | `25_nacht.txt` | Nachtgespräch mit dem Drachen (Brunnen-Stufe 2), Brunnen ohne Geldsack | 2026-11-22 |
 | `26_brunnen.txt` | Geldsack aus 15/57, Brunnen bezahlt, Rat (0x3FBC) | 2026-11-22 |
 | `27_flug.txt` | Gespräch vor dem Abflug (5 Stufen) → Insel 26/93 | 2026-11-22 |
+| `28_megophias.txt` | Hütte 27/95, Geheimgang, Megophias 27/96 (16 Stufen), Weg zur Grube | 2026-11-22 |
+| `29_grube.txt` | Grube 26/98, Helm-Hinweis, Drache zurück (Busch in 10/39 weg) | 2026-11-22 |
+| `30_hafen.txt` | Hafen 8/99: Sabrina aus dem Fass, 5 Gesprächsstufen, Gang → 8/100 | 2026-11-22 |
+| `31_fahne.txt` | Fahne (2) aus 26/98, ans Boot, Fahrt zum Piratenschiff 23/103 | 2026-11-22 |
+| `32_schiff.txt` | Kiste, Sabrina öffnet die Kajüte 24/103: Flasche (24), Helm (5), zurück | 2026-11-22 |
+| `33_helm.txt` | Helm in die Anlage in 27/96, aufsetzen → Cyberspace 25/105 | 2026-11-22 |
+| `34_endkampf.txt` | Endkampf (Helfer 1…6), Schlusssequenz 41/112, Spiel beendet sich (`end`) | 2026-11-22 |
 
-Alle Kapitel zusammen: rund 4100 s Spielzeit (gut eine Stunde), etwa 20 s Laufzeit. Bisher keine
-Port-Fehler gefunden; alle Flag-/Gegenstandsänderungen wie im Port-Code erwartet.
-Nächstes Kapitel: ab der Insel Loc26/S93 (Bereiche `S93_Huette S93_Meer S93_Wald S93_Dragon`).
+**Das ganze Spiel** läuft vom neuen Spiel bis zum Abspann durch: rund 5230 s Spielzeit bis zum
+Abspann (knapp 90 Minuten), etwa 40 s Laufzeit, Rückgabe 0. Bisher keine Port-Fehler gefunden; alle
+Flag-/Gegenstandsänderungen wie im Port-Code erwartet. Nicht abgedeckt: Nebenwege und falsche
+Lösungen (z. B. falsche Helfer im Endkampf, Gespräche außerhalb der Hauptlinie), Laden/Speichern
+unterwegs, Schauplätze nur über Sprungziele (Szenen ≥ 1000).
 Gegenstand 13 bleibt nach dem Benutzen in der Leiste – wie im Original: `0x004079E0` ruft
 nur `Inventory_SetEvent(13, 0)` (`0x00442240`), keine Entfernen-Funktion (Callee-Liste).
