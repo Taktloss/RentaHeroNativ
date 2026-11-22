@@ -1,0 +1,23 @@
+# Kapitel 7: durch den Kanal (Loc01/S46 → Loc07) zur Kurbel in Szene 52
+click 007a_Treppe
+wait
+click 007b_LiftRunter
+wait
+expect scene 1 46
+click 046_Kanal       # ohne Kanalwesen → 7/47
+wait
+expect scene 7 47
+click 047_DoorTo49
+wait
+expect scene 7 49
+click 049_DoorTo52
+wait
+expect scene 7 52
+expect flag 0x3EF8 1
+click 52_Sack         # Sack ins Wasser (0x4B)
+wait
+expect flag 0x3EF8 0
+click 52_Kurbel       # altes Seil reißt (0x4A), Gitter fällt wieder
+wait
+expect flag 0x3EFC 0
+expect flag 0x3F30 1

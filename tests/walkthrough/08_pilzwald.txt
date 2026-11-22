@@ -1,0 +1,46 @@
+# Kapitel 8: zurück aus dem Kanal, mit dem Gleiter über die Karte (Loc31) in den Pilzwald (Loc10)
+click 052_DoorTo49
+wait
+click 049_DoorTo47
+wait
+click 047_Ladder
+wait
+expect scene 1 46
+click 046_Lift
+wait
+click 007b_Treppe
+wait
+click GliderLayer
+wait
+click 008_Raus
+wait
+expect scene 31 113
+click S113_To37
+wait
+expect scene 10 37
+click S37_To38
+wait
+expect scene 10 38
+expect flag 0x3F30 1  # Mädchen springt (altes Seil aus Kapitel 7)
+click S38_To37
+wait
+click S37_To41
+wait
+expect scene 10 41
+expect flag 0x3F5C 1
+click S41_Wald        # Stufe 1: Kommentar
+wait
+expect flag 0x3F5C 2
+click S41_Wald        # Stufe 2: Teddy holen
+wait
+expect item 12
+click S41_To37
+wait
+click S37_To38
+wait
+expect scene 10 38
+item 12               # Teddy auf das Mädchen (0x1C) → Seil = Gegenstand 10
+wait
+expect item 10
+expect noitem 12
+expect flag 0x3F30 0
