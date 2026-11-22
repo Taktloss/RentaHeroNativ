@@ -1,0 +1,31 @@
+# Kapitel 17: Piratenkneipe (Loc29/S33) – Piraten ansprechen, Krug wird serviert, austrinken →
+# Rodrigo wacht im Kerker auf (Loc30/S34)
+click S33_Pirate1
+wait
+expect flag 0x40F8 2
+click S33_Pirate1     # Krug wird serviert
+wait
+expect flag 0x40F4 1
+click S33_Krug1
+wait
+expect scene 30 34
+click S34_Window      # durchs Fenster (Loc28/S35), schaltet die zweite Gesprächsreihe frei
+wait
+expect scene 28 35
+expect flag 0x40FC 1
+click S35_To34
+wait
+expect scene 30 34
+click S34_JasStehTalk
+wait
+click S34_JasStehTalk
+wait
+click S34_JasStehTalk
+wait
+expect flag 0x4108 4
+click S34_JasStehTalk # Jasper erzählt vom Gitter
+wait
+expect flag 0x4100 1
+click S34_Straw       # Gitter unter dem Stroh, durch den Schacht → 28/36
+wait
+expect item 15
