@@ -1,0 +1,26 @@
+# Kapitel 10: Schlucht 15/57 → Drachenhorst 16/58, Gespräch mit dem Drachen (Tag, 0x3FAC 1…9) → 17/59
+click S57_To58
+wait
+expect scene 16 58
+expect flag 0x3FAC 1
+click S58_Dragon
+wait
+click S58_Dragon
+wait
+click S58_Dragon
+wait
+click S58_Dragon
+wait
+click S58_Dragon
+wait
+click S58_Dragon
+wait
+click S58_Dragon
+wait
+click S58_Dragon
+wait
+expect flag 0x3FAC 9
+click S58_Dragon      # Stufe 9: Weg nach 59 frei (0x3FB8) → Loc17
+wait
+expect flag 0x3FB8 1
+expect scene 17 59

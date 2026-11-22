@@ -1,0 +1,18 @@
+# Kapitel 11: Lichtung 17/59 → Totenschädel 17/60, Busch wegräumen (0x3FCC 1…4), durchs Ohr → Loc18
+click S59_Head
+wait
+expect scene 17 60
+expect flag 0x3FCC 1
+click S60_Busch       # 1 → 2
+wait
+click S60_Busch       # 2, merkt sich 0x3FD8 = 2
+wait
+click S60_Busch       # 2 → 3
+wait
+expect flag 0x3FCC 3
+click S60_Busch       # Busch weg, Ohr frei
+wait
+expect flag 0x3FCC 4
+click S60_Ear
+wait
+expect scene 18 61

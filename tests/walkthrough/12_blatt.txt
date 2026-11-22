@@ -1,0 +1,38 @@
+# Kapitel 12: zurück in den Pilzwald – Pilz (Gegenstand 8) aus 10/39, an die Schnecke in 10/44,
+# Blatt (Gegenstand 6) nehmen. Der Pilz liegt erst nach dem ersten Besuch in 17/59 (0x3F44).
+click S61_To60
+wait
+expect scene 17 60
+click S60_To59
+wait
+click S59_To58
+wait
+expect scene 16 58
+click S58_To57
+wait
+expect scene 15 57
+click S57_To38
+wait
+expect scene 10 38
+click S38_To39
+wait
+expect scene 10 39
+expect flag 0x3F44 1
+click S39_Pilz
+wait
+expect item 8
+click S39_To37
+wait
+click S37_To43
+wait
+expect scene 10 43
+click S43_To44
+wait
+expect scene 10 44
+item 8                # Schnecke explodiert (0x73)
+wait
+expect noitem 8
+expect flag 0x3F6C 1
+click S44_Leaf        # Blatt nehmen (0x72)
+wait
+expect item 6
