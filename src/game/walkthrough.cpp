@@ -37,7 +37,7 @@ bool Walkthrough::load(const std::string& path, std::string* error) {
 
 bool Walkthrough::parse(const std::string& text, std::string* error) {
     static const char* const kKnown[] = {"wait",  "sleep", "click", "clickxy", "move", "item",
-                                         "key",   "expect", "shot", "note"};
+                                         "key",   "expect", "shot", "note", "areas"};
     cmds_.clear();
     std::istringstream in(text);
     std::string line;
@@ -212,6 +212,25 @@ bool Walkthrough::runCommand(GameContext& ctx, const Command& c) {
         if (stableFor(st)) return true;
         timedOut(to);
         return false;
+    }
+    if (op == "areas") {
+        // anklickbare Bereiche der Szene (aktiv und an mindestens einem Punkt treffbar)
+        if (!stableFor(200)) {
+            timedOut(defaultTimeoutMs);
+            return false;
+        }
+        Scene& s = ctx.curScene();
+        std::string list;
+        for (int i = 0; i < Scene::kMaxAreas && s.area(i); ++i) {
+            Area* ar = s.area(i);
+            int x = 0, y = 0;
+            if (ar->active && findPoint(s, ar, x, y)) list += " " + ar->name;
+        }
+        const InventoryBar* bar = ctx.scene.inventory();
+        std::string items;
+        for (int i = 0; bar && i < bar->count(); ++i) items += " " + std::to_string(bar->entry(i).id);
+        say(where() + " Bereiche:" + list + (items.empty() ? "" : " | Gegenstände:" + items));
+        return true;
     }
     if (op == "shot") {
         if (shot) shot(arg(1));

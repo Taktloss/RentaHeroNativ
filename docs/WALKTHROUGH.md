@@ -34,6 +34,7 @@ Takt-Stufen sehen also immer dasselbe Raster.
 | `key <VK>` | Taste (`WM_KEYDOWN`) |
 | `expect scene <Loc> <Szene>` / `item <ID>` / `noitem <ID>` / `flag <Offset> <Wert>` / `area <Bereich>` | Prüfung, sonst Abbruch |
 | `shot <datei.ppm>` | Bildschirm speichern |
+| `areas` | anklickbare Bereiche und Gegenstände ausgeben (zum Erkunden) |
 | `note <Text>` | nur Ausgabe |
 
 Bereichsnamen sind die Namen aus SZN bzw. Dateinamen der Ebenen (AREAS.md), wie in
