@@ -1,0 +1,49 @@
+# Kapitel 31: Fahne (Gegenstand 2) aus der Grube 26/98 holen (erst seit Sabrina da ist, 0x3F18),
+# zurück zum Boot in 8/100, Fahne anbringen, ablegen → Loc23
+click 100_WayBack
+wait
+click 099_Wald
+wait
+expect scene 10 39
+click S39_To38
+wait
+click S38_To57
+wait
+click S57_To58
+wait
+click S58_Dragon      # hinstellen
+wait
+click S58_Dragon      # abfliegen
+wait
+expect scene 26 93
+click S93_To98
+wait
+click S98_Fahne       # erst Kommentar
+wait
+click S98_Fahne       # aufheben
+wait
+expect item 2
+click S98_To93
+wait
+click S93_Dragon
+wait
+click S93_Dragon
+wait
+expect scene 16 58
+click S58_To57
+wait
+click S57_To38
+wait
+click S38_To39
+wait
+click S39_To99
+wait
+click 099_Gang
+wait
+expect scene 8 100
+item 2                # Fahne ans Boot
+wait
+expect flag 0x3F14 1
+click BootFahne       # mit Sabrina hinausfahren → Loc23/S103
+wait
+expect scene 23 103

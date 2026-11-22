@@ -1,0 +1,27 @@
+# Kapitel 30: Busch in 10/39 ist weg (0x3F40) → Hafen (Loc08/S99), Sabrina
+click S58_To57
+wait
+click S57_To38
+wait
+click S38_To39
+wait
+click S39_To99
+wait
+expect scene 8 99
+click 099_Fass        # Sabrina springt aus dem Fass (0x3F18 = 1)
+wait
+expect flag 0x3F18 1
+click SabStand
+wait
+click SabStand
+wait
+click SabStand
+wait
+click SabStand
+wait
+click SabStand
+wait
+expect flag 0x3F18 2  # Klappe offen
+click 099_Gang
+wait
+expect scene 8 100
