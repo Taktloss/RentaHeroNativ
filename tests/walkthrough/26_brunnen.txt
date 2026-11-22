@@ -1,0 +1,36 @@
+# Kapitel 26: Geldsack (7) nachts aus der Schlucht holen, den Brunnen bezahlen, Rat anhören
+# (0x3FBC = 1), dann fliegt der Drache Rodrigo zur Insel
+click S91_Wald
+wait
+click S42_To37
+wait
+click S37_To38
+wait
+click S38_To57
+wait
+expect scene 15 57
+click S57_Sack
+wait
+expect item 7
+expect flag 0x3FA0 0
+click S57_To38
+wait
+click S38_To37
+wait
+click S37_To42
+wait
+click S42_To91
+wait
+expect scene 12 91
+item 7                # Geldsack in den Brunnen → Stufe 3
+wait
+expect flag 0x3F74 3
+click S91_Brunnen
+wait
+click S91_Brunnen
+wait
+click S91_Brunnen
+wait
+click S91_Brunnen
+wait
+expect flag 0x3FBC 1

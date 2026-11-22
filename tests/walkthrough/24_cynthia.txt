@@ -1,0 +1,14 @@
+# Kapitel 24: bei Cynthia (Loc14/S90) – Gespräch bis Stufe 5, dann hinaus zum Brunnen (Loc12/S91)
+click S90_CynTalk
+wait
+click S90_CynTalk
+wait
+click S90_CynTalk
+wait
+click S90_CynTalk
+wait
+expect flag 0x3F88 5
+expect flag 0x3F7C 1
+click S90_Exit
+wait
+expect scene 12 91

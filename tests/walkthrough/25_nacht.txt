@@ -1,0 +1,41 @@
+# Kapitel 25: nachts zum Drachen (Gesprächsreihe 0x3FB0 1…6; Stufe 6 setzt Brunnen 0x3F74 = 2),
+# zurück zum Brunnen: ohne Geldsack (0x3FA0 = 1) → Sack liegt nachts in der Schlucht 15/57
+click S91_Wald        # → 10/42 (Busch weg, 0x3F60)
+wait
+expect scene 10 42
+click S42_To37
+wait
+click S37_To38
+wait
+click S38_To57
+wait
+click S57_To58
+wait
+expect scene 16 58
+click S58_Dragon
+wait
+click S58_Dragon
+wait
+click S58_Dragon
+wait
+click S58_Dragon
+wait
+click S58_Dragon
+wait
+click S58_Dragon
+wait
+expect flag 0x3F74 2
+click S58_To57
+wait
+click S57_To38
+wait
+click S38_To37
+wait
+click S37_To42
+wait
+click S42_To91
+wait
+expect scene 12 91
+click S91_Brunnen     # Stufe 2 ohne Geldsack
+wait
+expect flag 0x3FA0 1

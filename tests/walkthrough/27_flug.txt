@@ -1,0 +1,23 @@
+# Kapitel 27: Gespräch vor dem Abflug (0x3FB4 1…5) – der Drache fliegt Rodrigo zur Insel (Loc26)
+click S91_Wald
+wait
+click S42_To37
+wait
+click S37_To38
+wait
+click S38_To57
+wait
+click S57_To58
+wait
+expect scene 16 58
+click S58_Dragon
+wait
+click S58_Dragon
+wait
+click S58_Dragon
+wait
+click S58_Dragon
+wait
+click S58_Dragon
+wait
+expect scene 26 93
