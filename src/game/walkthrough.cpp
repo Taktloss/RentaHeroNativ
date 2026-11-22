@@ -11,6 +11,8 @@
 #include "engine/inventory.hpp"
 #include "engine/scene.hpp"
 #include "game/game.hpp"
+#include "game/gamestate.hpp"
+#include "game/savegame.hpp"
 
 namespace rah {
 
@@ -37,7 +39,7 @@ bool Walkthrough::load(const std::string& path, std::string* error) {
 
 bool Walkthrough::parse(const std::string& text, std::string* error) {
     static const char* const kKnown[] = {"wait",  "sleep", "click", "clickxy", "move", "item",
-                                         "key",   "expect", "shot", "note", "areas", "end"};
+                                         "key",   "expect", "shot", "note", "areas", "end", "save", "load"};
     cmds_.clear();
     std::istringstream in(text);
     std::string line;
@@ -139,6 +141,49 @@ bool Walkthrough::takeInput(GameContext& ctx) {
     return true;
 }
 
+Walkthrough::Snapshot Walkthrough::snapshot(GameContext& ctx) const {
+    Snapshot sn;
+    if (ctx.current) {
+        sn.location = ctx.current->location();
+        sn.scene = ctx.current->sceneNumber();
+    }
+    if (const InventoryBar* bar = ctx.scene.inventory()) {
+        for (int i = 0; i < 100; ++i)
+            if (bar->has(i)) sn.items.push_back(i);
+    }
+    for (std::size_t o = GameState::kFlags; o < GameState::kSize; o += 4) sn.flags.push_back(ctx.state.at(o));
+    return sn;
+}
+
+bool Walkthrough::compare(const Command& c, const Snapshot& a, const Snapshot& b) {
+    if (a.location != b.location || a.scene != b.scene) {
+        fail(c, "nach dem Laden Szene " + std::to_string(b.location) + "/" + std::to_string(b.scene) +
+                    " statt " + std::to_string(a.location) + "/" + std::to_string(a.scene));
+        return false;
+    }
+    if (a.items != b.items) {
+        std::string x, y;
+        for (int i : a.items) x += " " + std::to_string(i);
+        for (int i : b.items) y += " " + std::to_string(i);
+        fail(c, "Gegenstände nach dem Laden:" + y + " statt" + x);
+        return false;
+    }
+    // Flags: Abweichungen nur melden – der Schauplatz-Konstruktor läuft beim Laden erneut und darf
+    // Flags wie beim Betreten setzen (Original-Verhalten, z. B. Besuchszähler)
+    std::string diff;
+    int n = 0;
+    for (std::size_t i = 0; i < a.flags.size(); ++i) {
+        if (a.flags[i] == b.flags[i]) continue;
+        if (++n <= 8) {
+            char buf[48];
+            std::snprintf(buf, sizeof buf, " 0x%04zX:%d→%d", GameState::kFlags + i * 4, a.flags[i], b.flags[i]);
+            diff += buf;
+        }
+    }
+    if (n > 0) say("[walk]   Flags nach dem Laden geändert (" + std::to_string(n) + "):" + diff);
+    return true;
+}
+
 Walkthrough::Status Walkthrough::onQuit() {
     if (status_ != Status::Running) return status_;
     if (pc_ < cmds_.size() && cmds_[pc_].args[0] == "end" && pc_ + 1 == cmds_.size()) {
@@ -212,6 +257,59 @@ bool Walkthrough::runCommand(GameContext& ctx, const Command& c) {
     const std::string& op = a[0];
     if (op == "note") {
         say(where() + full());
+        return true;
+    }
+    if (op == "save" || op == "load") {
+        // über den Spielstand-Auftrag wie das Spielmenü (g_SaveRequest 2/1, Save_Process 0x004045C0)
+        SaveGlobals& sv = ctx.save;
+        const std::string name = arg(1).empty() ? std::string("walk") : arg(1);
+        if (itemPhase_ == 0) {
+            if (!stableFor(200)) {
+                timedOut(defaultTimeoutMs);
+                return false;
+            }
+            if (op == "save") {
+                // wie Save_Write 0x00404930 / GameMenu_Open (canSave): nur mit aktivem Helden
+                const Actor* h = ctx.current ? ctx.current->hero() : nullptr;
+                if (!h || !h->active) {
+                    skipped_[name] = true;
+                    say(where() + full() + " übersprungen (kein aktiver Held, Speichern wie im Original gesperrt)");
+                    return true;
+                }
+                skipped_.erase(name);
+            }
+            if (op == "load" && skipped_.count(name)) {
+                say(where() + full() + " übersprungen");
+                return true;
+            }
+            if (op == "load" && snaps_.find(name) == snaps_.end()) {
+                fail(c, "kein Spielstand " + name + " gespeichert");
+                return false;
+            }
+            if (op == "save") snaps_[name] = snapshot(ctx);
+            sv.path = sv.dir_ + "Walk_" + name + ".rah";
+            copySaveName(sv.name, name);
+            sv.request = op == "save" ? 2 : 1;
+            itemPhase_ = 1;
+            wasReady_ = false;
+            return false;
+        }
+        if (sv.request != 0) return false;  // noch nicht verarbeitet
+        if (op == "save") {
+            std::ifstream f(sv.path, std::ios::binary);
+            if (!f) {
+                fail(c, "Spielstand nicht geschrieben: " + sv.path);
+                return false;
+            }
+            say(where() + full() + " ok");
+            return true;
+        }
+        if (!stableFor(defaultStableMs)) {
+            timedOut(defaultTimeoutMs);
+            return false;
+        }
+        if (!compare(c, snaps_[name], snapshot(ctx))) return false;
+        say(where() + full() + " ok");
         return true;
     }
     if (op == "end") {

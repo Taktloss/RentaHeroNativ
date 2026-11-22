@@ -460,6 +460,8 @@
   (`tests/walkthrough/`) spielen das **ganze Spiel** vom neuen Spiel bis zum Abspann (~5230 s
   Spielzeit) in etwa 40 s fehlerfrei durch: `tools/walkthrough.sh RentAHero <Common>` (Rückgabe 0,
   sonst 3). Befehl `end`: Spiel muss sich selbst beenden; vorzeitiges Ende ist ein Fehler.
+  `--save-load`: nach jedem Kapitel speichern, laden, vergleichen – ganzes Spiel fehlerfrei; dabei
+  behoben: `--save-dir` wird angelegt, wenn er fehlt.
 - Nächste Schritte: Startmenü und Windows-Build auf echtem Windows 10/11 testen (Nutzer);
   Spielmenü im Fenster prüfen (Regler ziehen, Namenseingabe); Durchspiel-Test um Nebenwege
-  erweitern (falsche Helfer im Endkampf, Laden/Speichern unterwegs, Spielstände je Kapitel).
+  erweitern (falsche Helfer im Endkampf, Spielstände je Kapitel).

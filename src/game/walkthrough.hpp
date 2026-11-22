@@ -8,6 +8,7 @@
 
 #include <cstdint>
 #include <functional>
+#include <map>
 #include <string>
 #include <vector>
 
@@ -73,6 +74,16 @@ private:
     std::uint32_t readySince_ = 0;  // seit wann ununterbrochen bereit
     bool wasReady_ = false;
     int itemPhase_ = 0;
+    // save/load: Zustand beim Speichern, nach dem Laden verglichen
+    struct Snapshot {
+        int location = -1, scene = -1;
+        std::vector<int> items;               // als Menge (der Spielstand speichert keine Reihenfolge)
+        std::vector<std::int32_t> flags;      // GameState ab kFlags
+    };
+    std::map<std::string, Snapshot> snaps_;
+    std::map<std::string, bool> skipped_;  // Speichern hier nicht möglich (kein aktiver Held)
+    Snapshot snapshot(GameContext& ctx) const;
+    bool compare(const Command& c, const Snapshot& before, const Snapshot& after);
 };
 
 }  // namespace rah

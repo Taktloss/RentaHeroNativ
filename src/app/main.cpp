@@ -688,6 +688,12 @@ int run(int argc, char** argv) {
             }
         }
         if (!dir.empty() && dir.back() != '/' && dir.back() != '\\') dir += '/';
+        // eigener Ordner wie SDL_GetPrefPath anlegen, sonst schlägt Speichern still fehl
+        if (!dir.empty()) {
+            std::error_code ec;
+            std::filesystem::create_directories(std::filesystem::path(dir), ec);
+            if (ec) std::fprintf(stderr, "Spielstandordner %s: %s\n", dir.c_str(), ec.message().c_str());
+        }
         ctx.save.dir_ = dir;
         dbg(g, "Spielstände: %s", dir.c_str());
     }

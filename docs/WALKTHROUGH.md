@@ -35,11 +35,22 @@ Takt-Stufen sehen also immer dasselbe Raster.
 | `expect scene <Loc> <Szene>` / `item <ID>` / `noitem <ID>` / `flag <Offset> <Wert>` / `area <Bereich>` | Prüfung, sonst Abbruch |
 | `shot <datei.ppm>` | Bildschirm speichern |
 | `areas` | anklickbare Bereiche und Gegenstände ausgeben (zum Erkunden) |
+| `save [Name]` / `load [Name]` | über den Spielstand-Auftrag wie das Spielmenü (`g_SaveRequest` 2/1, Datei `Walk_<Name>.rah` im Spielstandordner); `load` vergleicht danach Szene, Gegenstände (als Menge) und Flags ab `0x3E80` mit dem Stand beim Speichern. Szene/Gegenstände abweichend → Fehler, Flags → nur Meldung. Ohne aktiven Helden wird übersprungen (Original sperrt dort das Speichern) |
 | `note <Text>` | nur Ausgabe |
 | `end` | letzter Befehl: das Spiel muss sich nun selbst beenden (Abspann); jedes andere vorzeitige Ende ist ein Fehler |
 
 Bereichsnamen sind die Namen aus SZN bzw. Dateinamen der Ebenen (AREAS.md), wie in
 `docs/locations/locNN.md`. Ein Bereich muss aktiv und an mindestens einem Punkt treffbar sein.
+
+## Speichern und Laden (`--save-load`)
+`tools/walkthrough.sh --save-load …` fügt nach jedem Kapitel `save`/`load` ein und spielt mit dem
+geladenen Stand weiter. Stand 2026-11-22: ganzes Spiel fehlerfrei. Ergebnisse:
+- In Loc29/S33 (nach Kapitel 16) und Loc25/S105 (nach Kapitel 33) ist Speichern gesperrt (kein
+  aktiver Held) – wie im Original.
+- Einzige Flag-Änderung durch das Laden: `S[0x3ED0]` (Bürobesuche) +1 nach Kapitel 3. Original:
+  der Schauplatzstart `0x0040C010` zählt bei jedem Start hoch, also auch nach dem Laden.
+- Gefunden und behoben: ein mit `--save-dir` angegebener, noch nicht vorhandener Ordner wurde nicht
+  angelegt; Speichern schlug still fehl (jetzt `create_directories` wie beim Standardordner).
 
 ## „Bereit“
 Eingaben werden erst abgeschickt, wenn alles gilt (sonst nennt die Zeitüberschreitung den Grund):
