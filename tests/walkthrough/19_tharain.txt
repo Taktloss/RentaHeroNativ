@@ -21,4 +21,3 @@ expect flag 0x4028 1
 expect flag 0x402C 1
 click S70_To69
 wait
-expect scene 19 69

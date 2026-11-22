@@ -1,0 +1,64 @@
+# Kapitel 21: Leuchtstein (23) in den Kessel in 73, Bohrer nach 76 (Zunder = Gegenstand 26),
+# Weiche in 74 mit der Schaufel umstellen, Bohrer nach 79, Schutt weg → 81 (Loc22)
+click S80_To77
+wait
+click S77_To74
+wait
+click S74_To72
+wait
+click S72_To73
+wait
+expect scene 21 73
+item 23               # Leuchtstein in den Kessel
+wait
+expect flag 0x4038 1
+click S73_Hebel       # Bohrer fährt nach 76
+wait
+expect flag 0x4034 2
+click S73_To75
+wait
+click S75_To76
+wait
+expect scene 21 76
+click S76_DrillLever  # Schutt 1 → 2
+wait
+click S76_DrillLever  # 2 → 3, Zunder liegt frei
+wait
+expect flag 0x4044 3
+click S76_Zunder
+wait
+expect item 26
+click S76_To75
+wait
+click S75_To74
+wait
+expect scene 21 74
+item 11               # Weiche mit der Schaufel umstellen
+wait
+expect flag 0x403C 1
+click S74_To75
+wait
+click S75_To76
+wait
+click S76_DriveLever  # Bohrer fährt über die Weiche nach 79
+wait
+expect flag 0x4034 3
+click S76_To75
+wait
+click S75_To74
+wait
+click S74_To77
+wait
+click S77_To78
+wait
+click S78_To79
+wait
+expect scene 21 79
+click S79_DrillLever
+wait
+click S79_DrillLever
+wait
+expect flag 0x404C 3
+click S79_To81
+wait
+expect scene 22 81
