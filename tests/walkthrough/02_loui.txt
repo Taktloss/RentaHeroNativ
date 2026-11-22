@@ -1,0 +1,26 @@
+# Kapitel 2: Smashville → Louis Büro (Loc05/S10), Gespräch bis Stufe 4
+# (Stufe 3 setzt 0x3E84 = 1: Ramil kommt ins Büro; 0x3EA0 = 1: Fremder in der Kneipe)
+click 007a_Treppe     # Szene 1007, unterer Stock
+wait
+expect scene 1 1007
+click 007b_Lift       # hinauf zu Szene 9
+wait
+expect scene 1 9
+click 009_Tuer        # Louis Büro
+wait
+expect scene 5 10
+expect flag 0x3EDC 1
+click S10_Loui
+wait
+expect flag 0x3EDC 2
+click S10_Loui
+wait
+expect flag 0x3EDC 3
+click S10_Loui
+wait
+expect flag 0x3EDC 4
+expect flag 0x3E84 1
+expect flag 0x3EA0 1
+click S10_Exit
+wait
+expect scene 1 9

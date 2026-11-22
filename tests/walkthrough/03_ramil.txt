@@ -1,0 +1,35 @@
+# Kapitel 3: zurück ins Büro – Ramil (0x3E84 = 1) bezahlt, Geldsack aus der Kiste
+click 009_Lift
+wait
+click 007b_Treppe
+wait
+expect scene 1 7
+click 007a_Tuer       # Büro (Loc04)
+wait
+expect scene 4 6
+expect area RamTalk
+# Stufe 1 (Begrüßung), dann 2…9; Stufe 9 = Ramil geht
+click RamTalk
+wait
+click RamTalk
+wait
+click RamTalk
+wait
+click RamTalk
+wait
+click RamTalk
+wait
+click RamTalk
+wait
+expect flag 0x3ED4 1    # 6. Klick (Stufe 6): Geldsack in die Kiste
+click RamTalk
+wait
+click RamTalk
+wait
+click RamTalk
+wait
+expect flag 0x3E84 2  # Ramil ist gegangen
+click 006_Desktop     # Sack holen (0x3ED4 != 0) → Gegenstand 7
+wait
+expect item 7
+expect flag 0x3ED4 0

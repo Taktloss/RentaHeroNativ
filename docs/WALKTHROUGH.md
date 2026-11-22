@@ -53,4 +53,13 @@ Eingaben werden erst abgeschickt, wenn alles gilt (sonst nennt die Zeitüberschr
 ## Stand
 | Skript | Weg | geprüft |
 |---|---|---|
-| `01_buero.txt` | 4/6 → 1/7 | 2026-11-22 |
+| `01_buero.txt` | Büro 4/6 → Smashville 1/7 | 2026-11-22 |
+| `02_loui.txt` | 1/1007 → 1/9 → Louis Büro 5/10, Gespräch bis Stufe 4 | 2026-11-22 |
+| `03_ramil.txt` | Büro mit Ramil (9 Gesprächsstufen), Geldsack = Gegenstand 7 | 2026-11-22 |
+| `04_kanal.txt` | Sack abgelegt, Kanalwesen 1/46 bis Stufe 5 | 2026-11-22 |
+| `05_fremder.txt` | Kneipe 3/12 → 2/13 → 2/2013 → 2/15, Piratenangriff, Gegenstand 1 | 2026-11-22 |
+| `06_sancho.txt` | Sancho 2/14 gibt Gegenstand 13, in 1/7 benutzt (Kanalwesen weg) | 2026-11-22 |
+
+Alle Kapitel zusammen: rund 745 s Spielzeit, unter 5 s Laufzeit.
+Beobachtung (nicht als Fehler gewertet, UNVERIFIED gegen das Original): Gegenstand 13
+bleibt nach dem Benutzen in der Leiste (`0x004079E0` im Port entfernt ihn nicht).

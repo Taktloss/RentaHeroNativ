@@ -1,0 +1,36 @@
+# Kapitel 5: Kneipe (Loc02) – der Fremde (0x3EA0 = 1) packt aus, Piratenangriff, Gegenstand 1
+click 046_Lift
+wait
+click 007b_Treppe
+wait
+click GliderLayer
+wait
+click 008_Kneipe      # → Loc03 Szene 12
+wait
+expect scene 3 12
+click S12_To13
+wait
+expect scene 2 13
+click S0013_To2013
+wait
+expect scene 2 2013
+click S2013_Fremder
+wait
+expect scene 2 15
+expect flag 0x3EB4 1
+click S0015_Fremder
+wait
+expect flag 0x3EB4 2
+click S0015_Fremder
+wait
+expect flag 0x3EB4 3
+click S0015_Fremder
+wait
+expect flag 0x3EB4 4
+click S0015_Fremder   # Stufe 4: Piraten greifen an → Loc03 Szene 12
+wait
+expect scene 3 12
+expect flag 0x3EB4 5
+expect flag 0x3EA0 0
+expect flag 0x3ECC 1
+expect item 1

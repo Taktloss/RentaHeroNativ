@@ -1,0 +1,40 @@
+# Kapitel 6: Sancho an der Theke (Loc02/S14) gibt Gegenstand 13 – nur ohne den Fremden
+# (0x3EA0 = 0) und nach Kanal-Stufe 4 (0x3EC4); dann in Smashville benutzen
+click S12_To13
+wait
+click S0013_To1013
+wait
+click S1013_San
+wait
+expect scene 2 14
+click S0014_Sancho
+wait
+click S0014_Sancho
+wait
+click S0014_Sancho
+wait
+click S0014_Sancho
+wait
+click S0014_Sancho
+wait
+click S0014_Sancho
+wait
+click S0014_Sancho
+wait
+click S0014_Sancho
+wait
+expect item 13
+click S0014_To1013
+wait
+click S1013_To0013
+wait
+click S0013_Exit
+wait
+expect scene 3 12
+click S12_RodGlider
+wait
+expect scene 1 7
+expect flag 0x3E94 1
+item 13               # Ereignis kItemEvent in Szene 7 mit Kanalwesen → 0x004079E0
+wait
+expect flag 0x3E94 0

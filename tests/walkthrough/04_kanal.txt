@@ -1,0 +1,24 @@
+# Kapitel 4: Sack beim Hinuntergehen abgelegt, dann Gespräch mit dem Kanalwesen (Szene 46)
+click 006_Door
+wait
+expect scene 1 7
+expect noitem 7       # Treppe hinunter mit Gegenstand 7 → Sack abgelegt (0x00407860)
+expect flag 0x3E9C 1
+click 007a_Treppe
+wait
+click 007b_LiftRunter
+wait
+expect scene 1 46
+click KanalTalk
+wait
+expect flag 0x3E98 2
+click KanalTalk
+wait
+expect flag 0x3E98 3
+click KanalTalk
+wait
+expect flag 0x3E98 4
+expect flag 0x3EC4 1
+click KanalTalk
+wait
+expect flag 0x3E98 5
