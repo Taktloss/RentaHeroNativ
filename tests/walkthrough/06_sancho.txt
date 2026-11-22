@@ -38,3 +38,4 @@ expect flag 0x3E94 1
 item 13               # Ereignis kItemEvent in Szene 7 mit Kanalwesen → 0x004079E0
 wait
 expect flag 0x3E94 0
+expect item 13        # bleibt (0x004079E0 entfernt nicht, WALKTHROUGH.md)

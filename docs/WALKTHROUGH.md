@@ -61,5 +61,5 @@ Eingaben werden erst abgeschickt, wenn alles gilt (sonst nennt die Zeitüberschr
 | `06_sancho.txt` | Sancho 2/14 gibt Gegenstand 13, in 1/7 benutzt (Kanalwesen weg) | 2026-11-22 |
 
 Alle Kapitel zusammen: rund 745 s Spielzeit, unter 5 s Laufzeit.
-Beobachtung (nicht als Fehler gewertet, UNVERIFIED gegen das Original): Gegenstand 13
-bleibt nach dem Benutzen in der Leiste (`0x004079E0` im Port entfernt ihn nicht).
+Gegenstand 13 bleibt nach dem Benutzen in der Leiste – wie im Original: `0x004079E0` ruft
+nur `Inventory_SetEvent(13, 0)` (`0x00442240`), keine Entfernen-Funktion (Callee-Liste).
