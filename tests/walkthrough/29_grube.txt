@@ -1,0 +1,37 @@
+# Kapitel 29: Grube (Loc26/S98) ansehen, Megophias erzählt vom Helm (0x3E90),
+# mit dem Drachen zurück: bei der Landung Hinweis zum Helm (0x3F40 = Busch in 10/39 weg)
+click S96_ExitTo95
+wait
+click S95_ExitTo93
+wait
+expect scene 26 93
+click S93_To98
+wait
+expect scene 26 98
+click S98_Grube
+wait
+expect flag 0x4094 1
+click S98_To93
+wait
+click S93_Huette
+wait
+click S95_WindowN
+wait
+expect scene 27 96
+click S96_Megophias
+wait
+click S96_Megophias
+wait
+click S96_Megophias
+wait
+expect flag 0x3E90 1
+click S96_ExitTo95
+wait
+click S95_ExitTo93
+wait
+click S93_Dragon      # hinlaufen, Gespräch
+wait
+click S93_Dragon      # dort: aufsteigen → 16/58
+wait
+expect scene 16 58
+expect flag 0x3F40 1

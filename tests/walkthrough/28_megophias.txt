@@ -1,0 +1,48 @@
+# Kapitel 28: Insel – Hütte (Loc27/S95), Stuhl und Boden zeigen den Geheimgang, Megophias (S96)
+# erzählt in 16 Stufen (0x40C0); danach ist der Weg zur Grube (0x4098) frei
+click S93_Huette
+wait
+expect scene 27 95
+click S95_WindowN     # Stuhl: Boden wird anklickbar
+wait
+click S95_Floor
+wait
+click S95_Floor
+wait
+expect flag 0x40A8 1
+click S95_WindowN     # durch den Geheimgang → 96
+wait
+expect scene 27 96
+click S96_Megophias
+wait
+click S96_Megophias
+wait
+click S96_Megophias
+wait
+click S96_Megophias
+wait
+click S96_Megophias
+wait
+click S96_Megophias
+wait
+click S96_Megophias
+wait
+click S96_Megophias
+wait
+click S96_Megophias
+wait
+click S96_Megophias
+wait
+click S96_Megophias
+wait
+click S96_Megophias
+wait
+click S96_Megophias
+wait
+click S96_Megophias
+wait
+click S96_Megophias
+wait
+click S96_Megophias
+wait
+expect flag 0x4098 1
