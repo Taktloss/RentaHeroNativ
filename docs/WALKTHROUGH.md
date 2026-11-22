@@ -52,6 +52,19 @@ geladenen Stand weiter. Stand 2026-11-22: ganzes Spiel fehlerfrei. Ergebnisse:
 - Gefunden und behoben: ein mit `--save-dir` angegebener, noch nicht vorhandener Ordner wurde nicht
   angelegt; Speichern schlug still fehl (jetzt `create_directories` wie beim Standardordner).
 
+## Nebenwege (`--side`)
+`tools/walkthrough.sh --side RentAHero <Common> [skript…]` prüft jedes Skript aus
+`tests/walkthrough/side/` einzeln: Die Kopfzeile `# nach: NN_name` nennt das Hauptkapitel, bis zu dem
+vorher gespielt wird; dann folgt der Nebenweg. Rückgabe 3, wenn einer fehlschlägt.
+
+| Skript | nach | geprüft |
+|---|---|---|
+| `drache_versperrt.txt` | 09 | Drache lässt ohne Tagesgespräch nicht nach 59 (`0x3FB8` bleibt 0) |
+| `gegenstand_falsch.txt` | 12 | Blatt (6) ohne Ereignis in 10/44 und 10/38: nur Beschreibung, nichts ändert sich |
+| `endkampf_falscher_helfer.txt` | 33 | Jasmin/Ranama (Nummer 0) setzen `0x4090` auf 1 zurück; richtige Reihenfolge danach führt zum Abspann |
+
+Stand 2026-11-22: alle drei fehlerfrei (zusammen etwa 50 s).
+
 ## „Bereit“
 Eingaben werden erst abgeschickt, wenn alles gilt (sonst nennt die Zeitüberschreitung den Grund):
 - keine Wartestelle aktiv (`g_IdleDepth == 1`), kein Spielmenü, kein Schauplatzwechsel;

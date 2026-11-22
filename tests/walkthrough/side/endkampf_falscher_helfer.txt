@@ -1,0 +1,33 @@
+# nach: 33_helm
+# Nebenweg: falscher Helfer im Endkampf (Jasmin = Nummer 0) setzt die Reihenfolge auf 1 zurück
+# (Loc25 attack: 0x4090 = 1), danach geht es mit der richtigen Reihenfolge trotzdem zu Ende
+click S105_WizWalk
+wait
+click S105_MadHead
+wait
+expect flag 0x4090 2
+click S105_JasHead    # falsch
+wait
+expect flag 0x4090 1
+expect scene 25 105
+click S105_MadHead
+wait
+click S105_SabHead
+wait
+click S105_RanHead    # falsch (Ranama = 0)
+wait
+expect flag 0x4090 1
+click S105_MadHead
+wait
+click S105_SabHead
+wait
+click S105_CynHead
+wait
+click S105_LouHead
+wait
+click S105_SanHead
+wait
+click S105_DraHead
+sleep 15000
+expect scene 41 112
+end

@@ -1,0 +1,16 @@
+# nach: 12_blatt
+# Nebenweg: Gegenstände an der falschen Stelle – nur Beschreibung (CGame_DescribeItem), nichts ändert sich
+item 6                # Blatt in 10/44 (kein Ereignis registriert)
+wait
+expect item 6
+expect flag 0x3FE0 0
+click S44_To43
+wait
+click S43_To37
+wait
+click S37_To38
+wait
+item 6                # beim Mädchen: Seil hat Rodrigo schon (nur 12 hat dort ein Ereignis)
+wait
+expect item 6
+expect scene 10 38

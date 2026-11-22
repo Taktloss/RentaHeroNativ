@@ -1,0 +1,12 @@
+# nach: 09_gitter
+# Nebenweg: ohne das Tagesgespräch lässt der Drache Rodrigo nicht nach 59 (Loc16, Ereignis 2)
+click S57_To58
+wait
+expect scene 16 58
+click S58_To59
+wait
+expect scene 16 58
+expect flag 0x3FB8 0
+click S58_To59
+wait
+expect scene 16 58
