@@ -1,0 +1,11 @@
+# Kapitel 1: Rodrigos Büro (Loc04/S6) → Smashville (Loc01/S7)
+# Start: --play --skip-intro (neues Spiel ohne Intro, landet über 1/7 in 4/6)
+wait
+expect scene 4 6
+click 006_Desktop     # erster Besuch: nur Kommentar (Sack erst bei Flag 0x3ED4)
+wait
+click 006_Eber
+wait
+click 006_Door        # Ereignis 6: Rodrigo geht hinaus → 1/7
+wait
+expect scene 1 7

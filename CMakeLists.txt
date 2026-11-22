@@ -46,6 +46,7 @@ add_library(rah_core STATIC
   src/game/game.cpp
   src/game/menu.cpp
   src/game/savegame.cpp
+  src/game/walkthrough.cpp
   src/game/loc01.cpp
   src/game/loc02.cpp
   src/game/loc03.cpp

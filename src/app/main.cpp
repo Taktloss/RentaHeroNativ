@@ -26,6 +26,7 @@
 #include "game/game.hpp"
 #include "game/menu.hpp"
 #include "game/savegame.hpp"
+#include "game/walkthrough.hpp"
 #include "formats/pe.hpp"
 #include "render/font.hpp"
 #include "video/ffvideo.hpp"
@@ -54,6 +55,8 @@ struct Options {
     int frames = -1;  // > 0: nach so vielen Frames beenden
     int frameMs = 1;  // Pause je Frame (Original: keine, TIMING.md)
     std::string dump; // PPM des Bildschirms am Ende
+    std::string walkthrough;  // --walkthrough <skript> (Durchspiel-Treiber, WALKTHROUGH.md)
+    int virtualClock = 0;     // --virtual-clock <ms>: Uhr je Bild um ms weiter, ohne Warten
     bool hidden = false;
     bool debug = false;  // --debug
     std::string exe;   // installierte Rent-A-Hero.exe (Zeiger); sonst <Common>/../Rent-A-Hero.exe
@@ -106,6 +109,7 @@ void usage() {
                  "          [--mute] [--music-vol <0-100>] [--sfx-vol <0-100>] [--speech-vol <0-100>]\n"
                  "          [--audio3d] [--audio-dump <datei.wav>]\n"
                  "          [--play] [--auto-load|--no-auto-load] [--save-on-close] [--save-dir <Ordner>] [--key-at <bild> <vk>]\n"
+                 "          [--walkthrough <skript>] [--virtual-clock <ms>]\n"
                  "          [--load <spielstand.rah>] [--skip-intro] [--fix-walk-jump] [--show-hotspots] [--fullscreen]\n"
                  "          [--filter <original|smooth|sharp|fsr|xbr|xbrz|hq2x|hq4x|scalefx>] [--crt <off|lottes|geom>]\n"
                  "          [--deband] [--no-integer-scale] [--renderer <gl|sdl>] [--shot <fenster.bmp>] [--sdl-key-at <bild> <alt+f>]\n"
@@ -227,6 +231,8 @@ bool parse(int argc, char** argv, Options& o) {
             const int x = std::atoi(argv[++i]);
             o.clicksAt.push_back({f, x, std::atoi(argv[++i])});
         }
+        else if (a == "--walkthrough") o.walkthrough = v;
+        else if (a == "--virtual-clock") o.virtualClock = std::atoi(v);
         else if (a == "--walk" && i + 1 < argc) {
             o.walkX = std::atoi(v);
             o.walkY = std::atoi(argv[++i]);
@@ -477,6 +483,10 @@ int run(int argc, char** argv) {
     g.fixWalkJump = opt.fixWalkJump;
     // timeGetTime(): Millisekunden als 32-Bit-Zahl (läuft wie das Original nach ~49 Tagen über)
     g.now = [] { return static_cast<std::uint32_t>(SDL_GetTicks()); };
+    // Port-Prüfmodus: vorgespulte Uhr (Spielzeit läuft je Bild um --virtual-clock ms weiter);
+    // der Ton wird dann im Gleichschritt gemischt statt vom Audiogerät abgerufen
+    std::uint32_t virtualNow = 1000;
+    if (opt.virtualClock > 0) g.now = [&virtualNow] { return virtualNow; };
 
     g.openVideo = [](const FoundFile& f, std::string* err) -> std::unique_ptr<VideoDecoder> {
         auto data = f.read();
@@ -528,7 +538,7 @@ int run(int argc, char** argv) {
     Mixer& mixer = sink.mixer;
     sink.record = !opt.audioDump.empty();
     SDL_AudioStream* audioOut = nullptr;
-    if (!opt.mute && SDL_InitSubSystem(SDL_INIT_AUDIO)) {
+    if (!opt.mute && opt.virtualClock <= 0 && SDL_InitSubSystem(SDL_INIT_AUDIO)) {
         const SDL_AudioSpec spec{SDL_AUDIO_S16, 2, Mixer::kRate};
         audioOut = SDL_OpenAudioDeviceStream(
             SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &spec,
@@ -547,7 +557,7 @@ int run(int argc, char** argv) {
     }
     // CSzene+0x5C4 = g_Audio; ohne Ausgabegerät kein Manager (Sprache dann über den Timer-Weg)
     std::unique_ptr<AudioManager> audio;
-    if (audioOut) {
+    if (audioOut || (opt.virtualClock > 0 && !opt.mute)) {
         audio = std::make_unique<AudioManager>(g, &mixer, opt.audio3d);
         audio->setMusicVolume(opt.musicVol);
         audio->setSfxVolume(opt.sfxVol);
@@ -782,8 +792,22 @@ int run(int argc, char** argv) {
         if (ok) text = edit;
         return ok;
     };
+    // Durchspiel-Treiber (Port-Prüfwerkzeug, docs/WALKTHROUGH.md)
+    std::unique_ptr<Walkthrough> walker;
+    int walkRc = 0;
+    if (!opt.walkthrough.empty()) {
+        walker = std::make_unique<Walkthrough>();
+        std::string err;
+        if (!walker->load(opt.walkthrough, &err)) {
+            std::fprintf(stderr, "Durchspiel-Skript: %s\n", err.c_str());
+            return 2;
+        }
+        walker->mouseMove = mouseMove;
+        walker->shot = [&](const std::string& path) { writePpm(screen, path); };
+    }
     ctx.pumpMessage = [&]() -> int {
         if (quit) return GameContext::kQuit;
+        if (walker && walker->takeInput(ctx)) return GameContext::kMessage;
         if (!commands.empty()) {
             ctx.lastCommand = commands.front();
             commands.pop_front();
@@ -938,7 +962,27 @@ int run(int argc, char** argv) {
             if (!ctx.current && frame == 0 && !opt.play)
                 std::fprintf(stderr, "Schauplatz %d/%d nicht verfügbar\n", opt.gameLoc, opt.gameScene);
         }
-        if (opt.frameMs > 0) SDL_Delay(static_cast<Uint32>(opt.frameMs));
+        if (walker) {
+            const auto st = walker->onIdle(ctx);
+            if (st != Walkthrough::Status::Running) {
+                walkRc = st == Walkthrough::Status::Done ? 0 : 3;
+                quit = true;
+            }
+        }
+        if (opt.virtualClock > 0) {
+            // Ton im Gleichschritt mit der Spielzeit mischen (22050 Hz, Rest mitführen)
+            static std::uint64_t mixed = 0;
+            virtualNow += static_cast<std::uint32_t>(opt.virtualClock);
+            const std::uint64_t due = std::uint64_t{virtualNow} * Mixer::kRate / 1000;
+            if (mixed == 0) mixed = due;
+            if (due > mixed && audio) {
+                std::vector<std::int16_t> buf(static_cast<std::size_t>(due - mixed) * 2);
+                mixer.mix(buf.data(), static_cast<int>(due - mixed));
+            }
+            mixed = due;
+        } else if (opt.frameMs > 0) {
+            SDL_Delay(static_cast<Uint32>(opt.frameMs));
+        }
         ++frame;
         if (opt.frames >= 0 && frame >= opt.frames) quit = true;  // Port: Bildbegrenzung (Prüfläufe)
         --g.idleDepth;
@@ -984,7 +1028,7 @@ int run(int argc, char** argv) {
 
     closeWindow();
     SDL_Quit();
-    return 0;
+    return walkRc;
 }
 
 }  // namespace
