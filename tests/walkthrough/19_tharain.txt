@@ -1,0 +1,24 @@
+# Kapitel 19: Bibliothek (Loc20/S70) – Gespräch mit Tharain (0x4030 1…8), Gegenstand 21,
+# danach ist der Weg nach 71 offen (0x4028)
+click S70_Tharain
+wait
+click S70_Tharain
+wait
+click S70_Tharain
+wait
+click S70_Tharain
+wait
+click S70_Tharain
+wait
+click S70_Tharain
+wait
+expect item 21
+click S70_Tharain
+wait
+click S70_Tharain
+wait
+expect flag 0x4028 1
+expect flag 0x402C 1
+click S70_To69
+wait
+expect scene 19 69

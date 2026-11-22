@@ -1,0 +1,22 @@
+# Kapitel 18: mit Jasmin (0x3F28) aus dem Pilzwald nach Esragoth (Loc19): Waldweg 68 → Zwergentor 69
+click S37_To38
+wait
+click S38_To68        # Busch weg seit der Flucht (0x3F3C)
+wait
+expect scene 19 68
+click S68_To69
+wait
+expect scene 19 69
+click S69_Zwerg1      # Zwerg vor dem Tor (0x4010 1 → 2)
+wait
+expect flag 0x4010 2
+click S69_RamBackTalk # Ramil, Stufe 1 → 2
+wait
+click S69_RamBackTalk # Stufe 2: Jasmin geht (0x4018)
+wait
+expect flag 0x4018 1
+expect flag 0x400C 3
+click S69_To68        # Tür geht auf, Zwerg holt Rodrigo hinein → 20/70
+wait
+expect flag 0x3FF0 1
+expect scene 20 70
