@@ -1,0 +1,50 @@
+# Kapitel 22: zurück in den Pilzwald (10/40) – Jasmin auf dem Baum, Stroh (15) unterlegen,
+# mit dem Zunder (26) anzünden, Halskette (16) aufheben
+click S81_To79
+wait
+click S79_To78
+wait
+click S78_To77
+wait
+click S77_To74
+wait
+click S74_To71
+wait
+click S71_To69
+wait
+expect scene 19 69
+click S69_To68
+wait
+click S68_To67
+wait
+expect scene 10 38
+click S38_To37
+wait
+click S37_To40
+wait
+expect scene 10 40
+expect flag 0x3F48 1
+click S40_Baum        # Jasmin rufen (0x3F4C)
+wait
+click S40_Baum        # Gespräch 1 → 2
+wait
+click S40_Baum        # 2 → 3
+wait
+click S40_Baum        # 3 → 4
+wait
+expect flag 0x3F50 4
+click S40_Baum        # hinaufklettern: Wurzel entdeckt (0x3F54 = 1)
+wait
+expect flag 0x3F54 1
+item 15               # Stroh unter den Baum
+wait
+expect flag 0x3F54 2
+item 26               # Zunder: Feuer, Jasmin lässt die Kette fallen
+wait
+expect flag 0x3F54 3
+click S40_Necklace
+wait
+expect item 16
+click S40_FireLoops   # Feuer austreten
+wait
+expect flag 0x3F54 4

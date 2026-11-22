@@ -1,0 +1,44 @@
+# Kapitel 23: Kristallhöhle (Loc22/S1081) – Beutel (16) öffnen, Kristalle in die sechs Plätze
+# (12, 2, 4, 6, 8, 10 Uhr = 21, 22, 17, 18, 20, 19) → Steinscheibe öffnet sich → Loc09
+click S40_To37
+wait
+click S37_To38
+wait
+click S38_To68
+wait
+click S68_To69
+wait
+click S69_To71
+wait
+click S71_To74
+wait
+click S74_To77
+wait
+click S77_To78
+wait
+click S78_To79
+wait
+click S79_To81
+wait
+expect scene 22 81
+click S81_To1081
+wait
+expect scene 22 1081
+item 16               # Beutel öffnen → Kristalle 17–20, 22
+wait
+expect item 17
+expect item 22
+item 21
+wait
+item 22
+wait
+item 17
+wait
+item 18
+wait
+item 20
+wait
+expect flag 0x4074 20
+item 19               # gelöst: Zwischensequenz Loc09/S89, dann Cynthia (Loc14/S90)
+wait
+expect scene 14 90
