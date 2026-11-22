@@ -59,7 +59,12 @@ Eingaben werden erst abgeschickt, wenn alles gilt (sonst nennt die Zeitüberschr
 | `04_kanal.txt` | Sack abgelegt, Kanalwesen 1/46 bis Stufe 5 | 2026-11-22 |
 | `05_fremder.txt` | Kneipe 3/12 → 2/13 → 2/2013 → 2/15, Piratenangriff, Gegenstand 1 | 2026-11-22 |
 | `06_sancho.txt` | Sancho 2/14 gibt Gegenstand 13, in 1/7 benutzt (Kanalwesen weg) | 2026-11-22 |
+| `07_kanal_labyrinth.txt` | 1/46 → Kanal 7/47 → 7/49 → 7/52: Sack ins Wasser, altes Seil reißt | 2026-11-22 |
+| `08_pilzwald.txt` | Karte 31/113 → Pilzwald 10/37: Teddy (12) aus 10/41 gegen Seil (10) in 10/38 | 2026-11-22 |
+| `09_gitter.txt` | Seil an die Kurbel 7/52, Gitter hoch, 7/53 → Loc15 Szene 57 | 2026-11-22 |
 
-Alle Kapitel zusammen: rund 745 s Spielzeit, unter 5 s Laufzeit.
+Alle Kapitel zusammen: rund 1150 s Spielzeit, wenige Sekunden Laufzeit. Bisher keine
+Port-Fehler gefunden; alle Flag-/Gegenstandsänderungen wie im Port-Code erwartet.
+Nächstes Kapitel: ab Loc15/S57 (Bereiche `S57_Kanal S57_To38 S57_To58 S57_Schlucht`).
 Gegenstand 13 bleibt nach dem Benutzen in der Leiste – wie im Original: `0x004079E0` ruft
 nur `Inventory_SetEvent(13, 0)` (`0x00442240`), keine Entfernen-Funktion (Callee-Liste).

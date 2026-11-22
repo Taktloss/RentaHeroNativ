@@ -453,5 +453,12 @@
 - 2026-11-07: v0.1.1 als „Latest“ (nur Tags mit `-` sind noch Vorabversion). Historie vor der
   Veröffentlichung geprüft (keine Originaldaten), Autor-Adresse auf die GitHub-noreply-Adresse
   umgeschrieben, Repository **öffentlich**.
+- 2026-11-22: **Durchspiel-Test** (WALKTHROUGH.md): `--walkthrough <skript>` spielt Skripte mit
+  Klicks auf benannte Bereiche, Gegenständen und Tasten ab und prüft Szene, Gegenstände und Flags.
+  Eingaben laufen über `pumpMessage`; „bereit“ heißt: keine Wartestelle, keine Sprache, Held steht.
+  `--virtual-clock <ms>` spult die Spielzeit vor (Ton im Gleichschritt gemischt). 9 Kapitel
+  (`tests/walkthrough/`, Büro bis Loc15/S57, ~1150 s Spielzeit) laufen in wenigen Sekunden
+  fehlerfrei durch: `tools/walkthrough.sh RentAHero <Common>`.
 - Nächste Schritte: Startmenü und Windows-Build auf echtem Windows 10/11 testen (Nutzer);
-  Spielmenü im Fenster prüfen (Regler ziehen, Namenseingabe); Durchspielen der ungeprüften Wege.
+  Spielmenü im Fenster prüfen (Regler ziehen, Namenseingabe); Durchspiel-Kapitel ab Loc15/S57
+  fortsetzen (Loc15, Loc16, Loc17 …).

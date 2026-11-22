@@ -1,0 +1,30 @@
+# Kapitel 9: neues Seil (Gegenstand 10) an die Kurbel in 7/52, Gitter hoch, weiter nach Loc15
+click S38_To37
+wait
+click S37_Glider      # Gleiter fliegt heim (über 1/8 nach 1/7)
+wait
+expect scene 1 7
+click 007a_Treppe
+wait
+click 007b_LiftRunter
+wait
+click 046_Kanal
+wait
+click 047_DoorTo49
+wait
+click 049_DoorTo52
+wait
+expect scene 7 52
+item 10               # Seil befestigen (0x4C)
+wait
+expect noitem 10
+expect flag 0x3F00 1
+click 52_Kurbel       # Gitter hochziehen (0x4A)
+wait
+expect flag 0x3F04 0
+click 052_DoorTo53
+wait
+expect scene 7 53
+click 053_DoorTo57
+wait
+expect scene 15 57
