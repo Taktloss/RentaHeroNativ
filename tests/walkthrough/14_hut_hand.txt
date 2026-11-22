@@ -1,0 +1,14 @@
+# Kapitel 14: Pirat im Drachenhorst verbrannt – Hut (Gegenstand 4) und Hand (Gegenstand 3) aufheben
+click S60_To59
+wait
+click S59_To58
+wait
+expect scene 16 58
+expect flag 0x3FC0 1
+expect flag 0x3FC4 1
+click S58_Hut
+wait
+expect item 4
+click S58_Hand
+wait
+expect item 3

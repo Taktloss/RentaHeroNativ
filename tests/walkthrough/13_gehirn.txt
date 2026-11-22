@@ -1,0 +1,31 @@
+# Kapitel 13: Blatt (Gegenstand 6) aufs Gehirn im Schädel 18/61, Kiefer öffnen →
+# Aasfresser holen den Piraten (0x3FC8 = 1, 0x3FA8 = 1)
+click S44_To43
+wait
+click S43_To37
+wait
+click S37_To38
+wait
+click S38_To57
+wait
+expect scene 15 57
+click S57_To58
+wait
+click S58_To59
+wait
+expect scene 17 59
+click S59_Head
+wait
+click S60_Ear
+wait
+expect scene 18 61
+expect flag 0x3FE0 0
+item 6                # aufs Gehirn streuen
+wait
+expect flag 0x3FE0 1
+expect noitem 6
+click S61_To60_2      # Kiefer öffnen → 17/60
+wait
+expect scene 17 60
+expect flag 0x3FE4 1
+expect flag 0x3FC8 1

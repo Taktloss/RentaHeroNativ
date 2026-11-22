@@ -1,0 +1,63 @@
+# Kapitel 15: über die Karte nach Endavin (Loc28/S31: Ranama trägt danach den Ring, 0x3E8C),
+# dann ins Kloster (Loc06): zweiter Besuch, Ring-Gespräch, beim Hinschauen ans Ohr → Gegenstand 14
+click S58_To57
+wait
+click S57_Kanal       # zurück durch den Kanal (Gleiter steht seit Kapitel 9 in Smashville)
+wait
+expect scene 7 53
+click 053_DoorTo52
+wait
+click 052_DoorTo49
+wait
+click 049_DoorTo47
+wait
+click 047_Ladder
+wait
+click 046_Lift
+wait
+click 007b_Treppe
+wait
+expect scene 1 7
+click GliderLayer
+wait
+click 008_Raus
+wait
+expect scene 31 113
+click S113_To30
+wait
+expect scene 28 31
+expect flag 0x3E8C 1
+click S31_To30_113
+wait
+expect scene 31 113
+click S113_To8        # Landung in Smashville (über 1/8 nach 1/7)
+wait
+expect scene 1 7
+click GliderLayer
+wait
+click 008_Kloster
+wait
+expect scene 6 26
+expect flag 0x3EE8 1  # erster Besuch: Ranama fällt herunter
+click S26_Exit
+wait
+click GliderLayer
+wait
+click 008_Kloster     # zweiter Besuch
+wait
+expect scene 6 26
+expect flag 0x3EE8 2
+click S26_Ranama
+wait
+expect scene 6 27
+click S27_RanTalkRing # Ring-Stufe 1 → 2
+wait
+expect flag 0x3EEC 2
+click S27_RanTalkRing # 2 → 3
+wait
+expect flag 0x3EEC 3
+click S27_RanTalkRing # Ranama schaut weg (2 s Zeit, Ereignis 20)
+wait 200
+click S27_RanSchautRing   # ans Ohr greifen → Gegenstand 14, zurück nach 26
+wait
+expect item 14
